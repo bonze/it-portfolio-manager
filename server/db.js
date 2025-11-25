@@ -147,6 +147,21 @@ export const dbOps = {
         }
     },
 
+    // Create new user
+    async createUser(username, hashedPassword, role) {
+        if (IS_VERCEL) {
+            await supabase.from('users').insert({
+                username,
+                password: hashedPassword,
+                role
+            });
+        } else {
+            db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+                [username, hashedPassword, role]);
+            saveDatabase();
+        }
+    },
+
     // Get all items from a table
     async getAll(tableName) {
         if (IS_VERCEL) {

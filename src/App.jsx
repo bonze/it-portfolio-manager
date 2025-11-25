@@ -3,6 +3,7 @@ import { StoreProvider, useStore } from './context/StoreContext';
 import Dashboard from './components/Dashboard';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import Login from './components/Login';
+import Register from './components/Register';
 import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt } from 'react-icons/fa';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
@@ -100,6 +101,7 @@ function App() {
     <StoreProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={
           <ProtectedRoute>
             <MainLayout />

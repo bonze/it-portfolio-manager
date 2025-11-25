@@ -12,6 +12,31 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Auth
 router.post('/login', login);
 
+// Register
+router.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        // Check if username already exists
+        const existingUser = await dbOps.getUserByUsername(username);
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        // Hash password
+        const bcrypt = await import('bcryptjs');
+        const hashedPassword = await bcrypt.default.hash(password, 10);
+
+        // Insert new user with 'user' role by default
+        await dbOps.createUser(username, hashedPassword, 'user');
+
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Registration failed' });
+    }
+});
+
 // Helper for CRUD
 const createCrud = (entityName, tableName) => {
     // GET All
@@ -73,53 +98,117 @@ router.get('/export', authenticateToken, async (req, res) => {
         const scopes = await dbOps.getAll('scopes');
         const deliverables = await dbOps.getAll('deliverables');
 
-        const templatePath = path.join(__dirname, '../public/project_template.xlsx');
-        if (!fs.existsSync(templatePath)) {
-            return res.status(404).json({ error: 'Template not found' });
-        }
-
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(templatePath);
 
-        const worksheet = workbook.getWorksheet(1) || workbook.addWorksheet('Export');
-
-        let rowId = 2;
-        const lastRow = worksheet.lastRow ? worksheet.lastRow.number : 1;
-        rowId = lastRow + 1;
+        // Sheet 1: Projects
+        const projectsSheet = workbook.addWorksheet('Projects');
+        projectsSheet.columns = [
+            { header: 'Name', key: 'name', width: 30 },
+            { header: 'Description', key: 'description', width: 50 },
+            { header: 'Owner', key: 'owner', width: 20 },
+            { header: 'Status', key: 'status', width: 15 },
+            { header: 'BusinessUnit', key: 'businessUnit', width: 25 },
+            { header: 'Budget', key: 'budget', width: 15 }
+        ];
 
         projects.forEach(p => {
-            const pGoals = goals.filter(g => g.projectId === p.id);
-            if (pGoals.length === 0) {
-                worksheet.getRow(rowId).values = [p.name, '', '', '', ''];
-                rowId++;
-            }
-            pGoals.forEach(g => {
-                const gScopes = scopes.filter(s => s.goalId === g.id);
-                if (gScopes.length === 0) {
-                    worksheet.getRow(rowId).values = [p.name, g.title, '', '', ''];
-                    rowId++;
-                }
-                gScopes.forEach(s => {
-                    const sDeliverables = deliverables.filter(d => d.scopeIds ? d.scopeIds.includes(s.id) : d.scopeId === s.id);
-                    if (sDeliverables.length === 0) {
-                        worksheet.getRow(rowId).values = [p.name, g.title, s.title, '', ''];
-                        rowId++;
-                    }
-                    sDeliverables.forEach(d => {
-                        worksheet.getRow(rowId).values = [
-                            p.name,
-                            g.title,
-                            s.title,
-                            d.title,
-                            d.status + '%',
-                            d.startDate,
-                            d.endDate,
-                            d.budget ? (d.budget.plan || d.budget) : ''
-                        ];
-                        rowId++;
-                    });
-                });
+            projectsSheet.addRow({
+                name: p.name,
+                description: p.description || '',
+                owner: p.owner || '',
+                status: p.status || 'Planning',
+                businessUnit: p.businessUnit || '',
+                budget: p.budget || 0
             });
+        });
+
+        // Sheet 2: Goals
+        const goalsSheet = workbook.addWorksheet('Goals');
+        goalsSheet.columns = [
+            { header: 'Project Name', key: 'projectName', width: 30 },
+            { header: 'Description', key: 'description', width: 50 },
+            { header: 'Owner', key: 'owner', width: 20 },
+            { header: 'Budget', key: 'budget', width: 15 }
+        ];
+
+        goals.forEach(g => {
+            const project = projects.find(p => p.id === g.projectId);
+            if (project) {
+                goalsSheet.addRow({
+                    projectName: project.name,
+                    description: g.description || g.title || '',
+                    owner: g.owner || '',
+                    budget: g.budget || 0
+                });
+            }
+        });
+
+        // Sheet 3: Scopes
+        const scopesSheet = workbook.addWorksheet('Scopes');
+        scopesSheet.columns = [
+            { header: 'Goal Description', key: 'goalDescription', width: 50 },
+            { header: 'Description', key: 'description', width: 50 },
+            { header: 'Owner', key: 'owner', width: 20 },
+            { header: 'Budget', key: 'budget', width: 15 },
+            { header: 'Timeline', key: 'timeline', width: 20 }
+        ];
+
+        scopes.forEach(s => {
+            const goal = goals.find(g => g.id === s.goalId);
+            if (goal) {
+                scopesSheet.addRow({
+                    goalDescription: goal.description || goal.title || '',
+                    description: s.description || s.title || '',
+                    owner: s.owner || '',
+                    budget: s.budget || 0,
+                    timeline: s.timeline || 'TBD'
+                });
+            }
+        });
+
+        // Sheet 4: Deliverables
+        const deliverablesSheet = workbook.addWorksheet('Deliverables');
+        deliverablesSheet.columns = [
+            { header: 'Scope Description(s)', key: 'scopeDescriptions', width: 50 },
+            { header: 'Description', key: 'description', width: 50 },
+            { header: 'Assignee', key: 'assignee', width: 20 },
+            { header: 'Owner', key: 'owner', width: 20 },
+            { header: 'Budget', key: 'budget', width: 15 },
+            { header: 'Status', key: 'status', width: 10 }
+        ];
+
+        deliverables.forEach(d => {
+            // Get scope descriptions
+            const scopeIds = d.scopeIds || (d.scopeId ? [d.scopeId] : []);
+            const scopeDescriptions = scopeIds
+                .map(scopeId => {
+                    const scope = scopes.find(s => s.id === scopeId);
+                    return scope ? (scope.description || scope.title || '') : '';
+                })
+                .filter(desc => desc)
+                .join(', ');
+
+            if (scopeDescriptions) {
+                deliverablesSheet.addRow({
+                    scopeDescriptions,
+                    description: d.description || d.title || '',
+                    assignee: d.assignee || 'Unassigned',
+                    owner: d.owner || '',
+                    budget: d.budget || 0,
+                    status: d.status || 0
+                });
+            }
+        });
+
+        // Style headers for all sheets
+        [projectsSheet, goalsSheet, scopesSheet, deliverablesSheet].forEach(sheet => {
+            sheet.getRow(1).font = { bold: true };
+            sheet.getRow(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4472C4' }
+            };
+            sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
         });
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

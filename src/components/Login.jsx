@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -33,7 +33,7 @@ const Login = () => {
                             className="w-full p-2 border rounded"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="admin / operator / user"
+                            required
                         />
                     </div>
                     <div className="mb-6">
@@ -43,7 +43,7 @@ const Login = () => {
                             className="w-full p-2 border rounded"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="password"
+                            required
                         />
                     </div>
                     <button
@@ -53,11 +53,10 @@ const Login = () => {
                         Login
                     </button>
                 </form>
-                <div className="mt-4 text-sm text-gray-500 text-center">
-                    <p>Default Users:</p>
-                    <p>admin / admin123</p>
-                    <p>operator / op123</p>
-                    <p>user / user123</p>
+                <div className="mt-4 text-center">
+                    <Link to="/register" className="text-blue-600 hover:text-blue-800 text-sm">
+                        Don't have an account? Register here
+                    </Link>
                 </div>
             </div>
         </div>

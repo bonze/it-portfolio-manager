@@ -13,8 +13,11 @@ app.use(express.json());
 (async () => {
     await initializeDatabase();
 
-    // Routes
-    app.use('/api', routes);
+    // Routes - use different prefix for local vs Vercel
+    // Vercel rewrites /api/* to /api/index.js, so we mount at /
+    // Local dev needs /api prefix
+    const apiPrefix = process.env.VERCEL ? '/' : '/api';
+    app.use(apiPrefix, routes);
 
     if (process.env.NODE_ENV !== 'production') {
         app.listen(PORT, () => {

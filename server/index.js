@@ -30,10 +30,9 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// Routes - mount at root for both local and Vercel
-// Vercel rewrites /api/* to /api, so the request path will be like /projects, /goals, etc.
-// Local dev uses /api prefix in vite proxy
-app.use('/', routes);
+// Mount routes at /api
+// Vercel will automatically route /api/* to /api/index.js serverless function
+app.use('/api', routes);
 
 // Start server for local development
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {

@@ -30,9 +30,12 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// Mount routes at /api
-// Vercel will automatically route /api/* to /api/index.js serverless function
-app.use('/api', routes);
+// Mount routes
+// On Vercel: /api/* is routed to /api/index.js, and the path is stripped to /*
+// So /api/projects becomes /projects in the serverless function
+// On local: we use /api prefix
+const routePrefix = process.env.VERCEL ? '/' : '/api';
+app.use(routePrefix, routes);
 
 // Start server for local development
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {

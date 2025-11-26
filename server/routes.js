@@ -132,12 +132,44 @@ const createCrud = (entityName, tableName) => {
         const { id } = req.params;
         const item = req.body;
         try {
+            // Check if this is a project update and if baseline changed
+            if (tableName === 'projects') {
+                const currentProject = await dbOps.getAll('projects').then(projects => projects.find(p => p.id === id));
+                const currentBaseline = currentProject ? (currentProject.baseline || 0) : 0;
+                const newBaseline = item.baseline || 0;
+
+                // If baseline incremented, create snapshot BEFORE updating (or after? usually snapshot represents the state AT that version)
+                // Actually, if we approve changes, we are saying "Current state is now v1". So we should save the state.
+                // But usually 'baseline' means "This is the plan for v1".
+                // So if we increment to v1, we snapshot the CURRENT state as v1.
+                if (newBaseline > currentBaseline) {
+                    // Update the project first to save the new baseline number
+                    await dbOps.update(tableName, id, item);
+                    // Then snapshot everything
+                    await dbOps.createBaselineSnapshot(id, newBaseline);
+                    return res.json(item);
+                }
+            }
+
             await dbOps.update(tableName, id, item);
             res.json(item);
         } catch (e) {
             res.status(500).json({ error: e.message });
         }
     });
+
+    // Get Project Baselines
+    if (tableName === 'projects') {
+        router.get('/projects/:id/baselines', authenticateToken, async (req, res) => {
+            try {
+                const { id } = req.params;
+                const baselines = await dbOps.getProjectBaselines(id);
+                res.json(baselines);
+            } catch (e) {
+                res.status(500).json({ error: e.message });
+            }
+        });
+    }
 
     // DELETE
     router.delete(`/${entityName}/:id`, authenticateToken, authorizeRole(['admin', 'operator']), async (req, res) => {

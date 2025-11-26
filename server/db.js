@@ -95,6 +95,16 @@ function createSQLiteTables() {
         );
     `);
 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS project_baselines (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            projectId TEXT,
+            version INTEGER,
+            data TEXT,
+            FOREIGN KEY(projectId) REFERENCES projects(id) ON DELETE CASCADE
+        );
+    `);
+
     saveDatabase();
 }
 
@@ -363,6 +373,112 @@ export const dbOps = {
                 result[0].columns.forEach((col, idx) => { item[col] = row[idx]; });
                 const parsedData = JSON.parse(item.data);
                 items.push({ ...parsedData, id: item.id, baseline: parsedData.baseline || 0 });
+            });
+            return items;
+        }
+    },
+
+    // Create a baseline snapshot
+    async createBaselineSnapshot(projectId, version) {
+        // 1. Fetch all data for the project
+        let project, goals, scopes, deliverables;
+
+        if (IS_VERCEL) {
+            const { data: pData } = await supabase.from('projects').select('*').eq('id', projectId).single();
+            project = { ...pData.data, id: pData.id };
+
+            const { data: gData } = await supabase.from('goals').select('*').eq('projectId', projectId);
+            goals = (gData || []).map(i => ({ ...i.data, id: i.id }));
+
+            const goalIds = goals.map(g => g.id);
+            const { data: sData } = await supabase.from('scopes').select('*').in('goalId', goalIds);
+            scopes = (sData || []).map(i => ({ ...i.data, id: i.id }));
+
+            const scopeIds = scopes.map(s => s.id);
+            // Note: Deliverables might link to scopeId (singular) or scopeIds (array). 
+            // For simplicity in snapshot, we fetch all and filter in memory or fetch by scopeId if possible.
+            // Since we don't have a direct 'in' query for JSON arrays easily here without complex filters,
+            // we'll fetch all deliverables and filter (assuming dataset isn't huge) OR better:
+            // Fetch deliverables where scopeId is in list.
+            const { data: dData } = await supabase.from('deliverables').select('*'); // Fetching all is safest for mixed schema
+            deliverables = (dData || []).map(i => ({ ...i.data, id: i.id }))
+                .filter(d => {
+                    if (d.scopeId && scopeIds.includes(d.scopeId)) return true;
+                    if (d.scopeIds && d.scopeIds.some(id => scopeIds.includes(id))) return true;
+                    return false;
+                });
+
+        } else {
+            // SQLite implementation
+            const pRes = db.exec('SELECT * FROM projects WHERE id = ?', [projectId]);
+            project = JSON.parse(pRes[0].values[0][1]);
+            project.id = pRes[0].values[0][0];
+
+            const gRes = db.exec('SELECT * FROM goals WHERE projectId = ?', [projectId]);
+            goals = gRes.length ? gRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+
+            const goalIds = goals.map(g => g.id);
+            let scopes = [];
+            if (goalIds.length > 0) {
+                const placeholders = goalIds.map(() => '?').join(',');
+                const sRes = db.exec(`SELECT * FROM scopes WHERE goalId IN (${placeholders})`, goalIds);
+                scopes = sRes.length ? sRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+            }
+
+            const scopeIds = scopes.map(s => s.id);
+            let deliverables = [];
+            // SQLite doesn't strictly enforce FKs on JSON content, so fetching all and filtering is robust
+            const dRes = db.exec('SELECT * FROM deliverables');
+            const allDeliverables = dRes.length ? dRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+            deliverables = allDeliverables.filter(d => {
+                if (d.scopeId && scopeIds.includes(d.scopeId)) return true;
+                if (d.scopeIds && d.scopeIds.some(id => scopeIds.includes(id))) return true;
+                return false;
+            });
+        }
+
+        // 2. Construct Snapshot
+        const snapshot = {
+            version,
+            createdAt: new Date().toISOString(),
+            project,
+            goals,
+            scopes,
+            deliverables
+        };
+
+        // 3. Insert into project_baselines
+        if (IS_VERCEL) {
+            await supabase.from('project_baselines').insert({
+                projectId,
+                version,
+                data: snapshot
+            });
+        } else {
+            db.run('INSERT INTO project_baselines (projectId, version, data) VALUES (?, ?, ?)',
+                [projectId, version, JSON.stringify(snapshot)]);
+            saveDatabase();
+        }
+    },
+
+    // Get baseline history
+    async getProjectBaselines(projectId) {
+        if (IS_VERCEL) {
+            const { data } = await supabase
+                .from('project_baselines')
+                .select('*')
+                .eq('projectId', projectId)
+                .order('version', { ascending: false });
+            return (data || []).map(item => ({ ...item.data, id: item.id }));
+        } else {
+            const result = db.exec('SELECT * FROM project_baselines WHERE projectId = ? ORDER BY version DESC', [projectId]);
+            if (result.length === 0) return [];
+
+            const items = [];
+            result[0].values.forEach(row => {
+                // row: [id, projectId, version, data]
+                const data = JSON.parse(row[3]);
+                items.push({ ...data, id: row[0] });
             });
             return items;
         }

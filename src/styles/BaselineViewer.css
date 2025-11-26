@@ -1,0 +1,137 @@
+.viewer-overlay {
+    z-index: 1100;
+    /* Higher than normal modal */
+}
+
+.viewer-content {
+    max-width: 900px;
+    width: 95%;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.viewer-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.viewer-header h2 {
+    margin: 0;
+    color: #2196f3;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.viewer-body {
+    padding: 2rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.section {
+    margin-bottom: 2rem;
+    background: white;
+    border: 1px solid #eee;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #333;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 0.5rem;
+}
+
+.meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.meta-item label {
+    font-size: 0.8rem;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.meta-item span {
+    font-weight: 500;
+}
+
+.goal-item-viewer {
+    border: 1px solid #eee;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+}
+
+.goal-header {
+    padding: 0.75rem;
+    background: #f9f9f9;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.goal-content {
+    padding: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.scope-item-viewer {
+    margin-bottom: 1rem;
+    padding-left: 1rem;
+    border-left: 2px solid #e0e0e0;
+}
+
+.scope-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.deliverable-item-viewer {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0 0.25rem 1.5rem;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    background: #f0f0f0;
+    padding: 0.1rem 0.4rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}

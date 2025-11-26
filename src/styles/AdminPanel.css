@@ -38,7 +38,7 @@
     background: white;
     border-radius: 8px;
     padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .users-table {
@@ -183,11 +183,15 @@
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #333;
+    /* Enforce dark text color */
 }
 
 .modal-content h2 {
     margin-top: 0;
     margin-bottom: 1rem;
+    color: #333;
+    /* Enforce dark text color */
 }
 
 .modal-description {
@@ -200,17 +204,28 @@
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 4px;
-    padding: 1rem;
+    padding: 0.5rem;
+    /* Reduced padding */
     margin-bottom: 1.5rem;
+    background-color: #fff;
+    /* Ensure background is white */
 }
 
 .project-checkbox {
     display: flex;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0.75rem;
     cursor: pointer;
     border-radius: 4px;
     transition: background-color 0.2s;
+    margin-bottom: 0.25rem;
+    /* Add spacing between items */
+    border-bottom: 1px solid #f0f0f0;
+    /* Add separator */
+}
+
+.project-checkbox:last-child {
+    border-bottom: none;
 }
 
 .project-checkbox:hover {
@@ -218,16 +233,26 @@
 }
 
 .project-checkbox input[type="checkbox"] {
-    margin-right: 0.75rem;
+    margin-right: 1rem;
+    /* Increase spacing */
     cursor: pointer;
+    width: 18px;
+    /* Fixed width */
+    height: 18px;
+    /* Fixed height */
 }
 
 .project-checkbox span {
     flex: 1;
+    color: #333;
+    /* Enforce dark text color */
+    font-size: 1rem;
+    line-height: 1.4;
 }
 
 .modal-actions {
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
+    margin-top: 2rem;
 }

@@ -30,17 +30,15 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// Mount routes
-// On Vercel/production: routes at root since /api/* is handled by Vercel routing
-// On local dev: routes at /api
-const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
-const routePrefix = isProduction ? '/' : '/api';
+// Mount routes at /api for ALL environments
+// Vercel routes /api/* to /api/index.js but KEEPS the /api prefix in the path
+// So Express needs to handle paths like /api/projects, /api/goals, etc.
+app.use('/api', routes);
 
-console.log('[Server] Environment:', { NODE_ENV: process.env.NODE_ENV, VERCEL: process.env.VERCEL, routePrefix });
-
-app.use(routePrefix, routes);
+console.log('[Server] Routes mounted at /api');
 
 // Start server for local development
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
 if (!isProduction) {
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);

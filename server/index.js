@@ -30,12 +30,25 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// Mount routes at /api for ALL environments
-// Vercel routes /api/* to /api/index.js but KEEPS the /api prefix in the path
-// So Express needs to handle paths like /api/projects, /api/goals, etc.
-app.use('/api', routes);
+// Debug endpoint to check what path Express is seeing
+app.get('/debug-path', (req, res) => {
+    res.json({
+        url: req.url,
+        originalUrl: req.originalUrl,
+        baseUrl: req.baseUrl,
+        headers: req.headers,
+        env: process.env.NODE_ENV,
+        vercel: process.env.VERCEL
+    });
+});
 
-console.log('[Server] Routes mounted at /api');
+// Mount routes at BOTH / and /api to handle all Vercel routing scenarios
+// If Vercel strips /api, the '/' mount will catch it
+// If Vercel keeps /api, the '/api' mount will catch it
+app.use('/api', routes);
+app.use('/', routes);
+
+console.log('[Server] Routes mounted at both / and /api');
 
 // Start server for local development
 const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;

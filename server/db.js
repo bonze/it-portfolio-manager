@@ -332,7 +332,8 @@ export const dbOps = {
     async getProjectsByUserAccess(userId, userRole) {
         // Admin sees all projects
         if (userRole === 'admin') {
-            return await this.getAll('projects');
+            const projects = await this.getAll('projects');
+            return projects.map(p => ({ ...p, baseline: p.baseline || 0 }));
         }
 
         // Non-admin users see only assigned projects
@@ -346,7 +347,7 @@ export const dbOps = {
 
             const projectIds = accessData.map(item => item.projectId);
             const { data } = await supabase.from('projects').select('*').in('id', projectIds);
-            return (data || []).map(item => ({ ...item.data, id: item.id }));
+            return (data || []).map(item => ({ ...item.data, id: item.id, baseline: item.data.baseline || 0 }));
         } else {
             const result = db.exec(`
                 SELECT p.* FROM projects p
@@ -360,7 +361,8 @@ export const dbOps = {
             result[0].values.forEach(row => {
                 const item = {};
                 result[0].columns.forEach((col, idx) => { item[col] = row[idx]; });
-                items.push({ ...JSON.parse(item.data), id: item.id });
+                const parsedData = JSON.parse(item.data);
+                items.push({ ...parsedData, id: item.id, baseline: parsedData.baseline || 0 });
             });
             return items;
         }

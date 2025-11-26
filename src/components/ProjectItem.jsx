@@ -3,14 +3,16 @@ import { useStore } from '../context/StoreContext';
 import ProgressBar from './ProgressBar';
 import GoalItem from './GoalItem';
 import InlineAdd from './InlineAdd';
-import { FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaEdit } from 'react-icons/fa';
+import { FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaEdit, FaHistory } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 import EditModal from './EditModal';
+import BaselineModal from './BaselineModal';
 
 const ProjectItem = ({ project }) => {
-    const { state, calculateCompletion, calculateBudgetVariance, calculateResourceUtilization, dispatch } = useStore();
+    const { state, calculateCompletion, calculateBudgetVariance, calculateResourceUtilization, dispatch, user } = useStore();
     const [expanded, setExpanded] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
+    const [isBaselineModalOpen, setIsBaselineModalOpen] = useState(false);
 
     const completion = calculateCompletion(project.id, 'project');
     const goals = state.goals.filter(g => g.projectId === project.id);
@@ -42,7 +44,15 @@ const ProjectItem = ({ project }) => {
         });
     };
 
+    const handleUpdateBaseline = (projectId, updatedProject) => {
+        dispatch({
+            type: 'UPDATE_ENTITY',
+            payload: { type: 'project', id: projectId, data: updatedProject }
+        });
+    };
+
     const hasPendingChanges = project.pendingChanges !== null && project.pendingChanges !== undefined;
+    const isAdmin = user?.role === 'admin';
 
     return (
         <>
@@ -54,11 +64,11 @@ const ProjectItem = ({ project }) => {
                         <h3 className="text-lg">{project.name}</h3>
                         {project.businessUnit && <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color">{project.businessUnit}</span>}
                         {project.pm && <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color">PM: {project.pm}</span>}
-                        {project.currentBaseline !== undefined && (
-                            <span className="text-xs bg-accent text-white px-2 py-0.5 rounded">
-                                v{project.currentBaseline}
-                            </span>
-                        )}
+
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium border border-blue-200">
+                            Baseline: v{project.baseline || 0}
+                        </span>
+
                         {hasPendingChanges && (
                             <span className="text-xs bg-yellow-500 text-white px-2 py-0.5 rounded flex items-center gap-1">
                                 <FaExclamationCircle size={10} /> Pending
@@ -66,9 +76,19 @@ const ProjectItem = ({ project }) => {
                         )}
                     </div>
                     <div className="flex items-center gap-3">
+                        {isAdmin && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setIsBaselineModalOpen(true); }}
+                                className="text-muted hover:text-blue-600 text-sm flex items-center gap-1"
+                                title="Manage Baseline"
+                            >
+                                <FaHistory />
+                            </button>
+                        )}
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
                             className="text-muted hover:text-accent text-sm"
+                            title="Edit Project"
                         >
                             <FaEdit />
                         </button>
@@ -127,6 +147,15 @@ const ProjectItem = ({ project }) => {
                 entity={project}
                 type="project"
             />
+
+            {isBaselineModalOpen && (
+                <BaselineModal
+                    project={project}
+                    onClose={() => setIsBaselineModalOpen(false)}
+                    onUpdate={handleUpdateBaseline}
+                    userRole={user?.role}
+                />
+            )}
         </>
     );
 };

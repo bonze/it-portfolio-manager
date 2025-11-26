@@ -178,313 +178,269 @@ export const dbOps = {
                 const user = {};
                 columns.forEach((col, idx) => { user[col] = row[idx]; });
                 return user;
+            } else {
+                const result = db.exec(`SELECT * FROM ${tableName}`);
+                if (result.length === 0) return [];
+
+                const items = [];
+                result[0].values.forEach(row => {
+                    const item = {};
+                    result[0].columns.forEach((col, idx) => { item[col] = row[idx]; });
+                    items.push({ ...JSON.parse(item.data), id: item.id });
+                });
+                return items;
             }
-            return null;
-        }
-    },
-
-    // Create new user
-    async createUser(username, hashedPassword, role, isActive = false) {
-        if (IS_VERCEL) {
-            await supabase.from('users').insert({
-                username,
-                password: hashedPassword,
-                role,
-                isActive
-            });
-        } else {
-            db.run('INSERT INTO users (username, password, role, isActive) VALUES (?, ?, ?, ?)',
-                [username, hashedPassword, role, isActive ? 1 : 0]);
-            saveDatabase();
-        }
-    },
-
-    // Get all items from a table
-    async getAll(tableName) {
-        if (IS_VERCEL) {
-            const { data } = await supabase.from(tableName).select('*');
-            return (data || []).map(item => ({ ...item.data, id: item.id }));
-        } else {
-            const result = db.exec(`SELECT * FROM ${tableName}`);
-            if (result.length === 0) return [];
-
-            const items = [];
-            result[0].values.forEach(row => {
-                const item = {};
-                result[0].columns.forEach((col, idx) => { item[col] = row[idx]; });
-                items.push({ ...JSON.parse(item.data), id: item.id });
-            });
-            return items;
-        }
-    },
+        },
 
     // Insert item
     async insert(tableName, item) {
-        if (IS_VERCEL) {
-            const row = { id: item.id, data: item };
-            if (tableName === 'goals') row.projectId = item.projectId;
-            if (tableName === 'scopes') row.goalId = item.goalId;
-            if (tableName === 'deliverables') row.scopeId = item.scopeId || (item.scopeIds ? item.scopeIds[0] : null);
+            if (IS_VERCEL) {
+                const row = { id: item.id, data: item };
+                if (tableName === 'goals') row.projectId = item.projectId;
+                if (tableName === 'scopes') row.goalId = item.goalId;
+                if (tableName === 'deliverables') row.scopeId = item.scopeId || (item.scopeIds ? item.scopeIds[0] : null);
 
-            await supabase.from(tableName).insert(row);
-        } else {
-            let projectId = null, goalId = null, scopeId = null;
-            if (tableName === 'goals') projectId = item.projectId;
-            if (tableName === 'scopes') goalId = item.goalId;
-            if (tableName === 'deliverables') scopeId = item.scopeId || (item.scopeIds ? item.scopeIds[0] : null);
+                await supabase.from(tableName).insert(row);
+            } else {
+                let projectId = null, goalId = null, scopeId = null;
+                if (tableName === 'goals') projectId = item.projectId;
+                if (tableName === 'scopes') goalId = item.goalId;
+                if (tableName === 'deliverables') scopeId = item.scopeId || (item.scopeIds ? item.scopeIds[0] : null);
 
-            const cols = ['id'];
-            const vals = [item.id];
-            const placeholders = ['?'];
+                const cols = ['id'];
+                const vals = [item.id];
+                const placeholders = ['?'];
 
-            if (projectId) { cols.push('projectId'); vals.push(projectId); placeholders.push('?'); }
-            if (goalId) { cols.push('goalId'); vals.push(goalId); placeholders.push('?'); }
-            if (scopeId) { cols.push('scopeId'); vals.push(scopeId); placeholders.push('?'); }
+                if (projectId) { cols.push('projectId'); vals.push(projectId); placeholders.push('?'); }
+                if (goalId) { cols.push('goalId'); vals.push(goalId); placeholders.push('?'); }
+                if (scopeId) { cols.push('scopeId'); vals.push(scopeId); placeholders.push('?'); }
 
-            cols.push('data');
-            vals.push(JSON.stringify(item));
-            placeholders.push('?');
+                cols.push('data');
+                vals.push(JSON.stringify(item));
+                placeholders.push('?');
 
-            db.run(`INSERT INTO ${tableName} (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`, vals);
-            saveDatabase();
-        }
-    },
+                db.run(`INSERT INTO ${tableName} (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`, vals);
+                saveDatabase();
+            }
+        },
 
     // Update item
     async update(tableName, id, item) {
-        if (IS_VERCEL) {
-            await supabase.from(tableName).update({ data: item }).eq('id', id);
-        } else {
-            db.run(`UPDATE ${tableName} SET data = ? WHERE id = ?`, [JSON.stringify(item), id]);
-            saveDatabase();
-        }
-    },
+            if (IS_VERCEL) {
+                await supabase.from(tableName).update({ data: item }).eq('id', id);
+            } else {
+                db.run(`UPDATE ${tableName} SET data = ? WHERE id = ?`, [JSON.stringify(item), id]);
+                saveDatabase();
+            }
+        },
 
     // Delete item
-    async delete(tableName, id) {
-        if (IS_VERCEL) {
-            await supabase.from(tableName).delete().eq('id', id);
-        } else {
-            db.run(`DELETE FROM ${tableName} WHERE id = ?`, [id]);
-            saveDatabase();
-        }
-    },
+    async delete (tableName, id) {
+            if (IS_VERCEL) {
+                await supabase.from(tableName).delete().eq('id', id);
+            } else {
+                db.run(`DELETE FROM ${tableName} WHERE id = ?`, [id]);
+                saveDatabase();
+            }
+        },
 
     // Get all users (admin only)
     async getAllUsers() {
-        if (IS_VERCEL) {
-            const { data } = await supabase.from('users').select('id, username, role, isActive');
-            return data || [];
-        } else {
-            const result = db.exec('SELECT id, username, role, isActive FROM users');
-            if (result.length === 0) return [];
+            if (IS_VERCEL) {
+                const { data } = await supabase.from('users').select('id, username, role, isActive');
+                return data || [];
+            } else {
+                const result = db.exec('SELECT id, username, role, isActive FROM users');
+                if (result.length === 0) return [];
 
-            const users = [];
-            result[0].values.forEach(row => {
-                users.push({
-                    id: row[0],
-                    username: row[1],
-                    role: row[2],
-                    isActive: row[3] === 1
+                const users = [];
+                result[0].values.forEach(row => {
+                    users.push({
+                        id: row[0],
+                        username: row[1],
+                        role: row[2],
+                        isActive: row[3] === 1
+                    });
                 });
-            });
-            return users;
-        }
-    },
+                return users;
+            }
+        },
 
     // Update user active status
     async updateUserStatus(userId, isActive) {
-        if (IS_VERCEL) {
-            await supabase.from('users').update({ isActive }).eq('id', userId);
-        } else {
-            db.run('UPDATE users SET isActive = ? WHERE id = ?', [isActive ? 1 : 0, userId]);
-            saveDatabase();
-        }
-    },
+            if (IS_VERCEL) {
+                await supabase.from('users').update({ isActive }).eq('id', userId);
+            } else {
+                db.run('UPDATE users SET isActive = ? WHERE id = ?', [isActive ? 1 : 0, userId]);
+                saveDatabase();
+            }
+        },
 
     // Get user's project access
     async getUserProjectAccess(userId) {
-        if (IS_VERCEL) {
-            const { data } = await supabase.from('user_project_access').select('projectId').eq('userId', userId);
-            return (data || []).map(item => item.projectId);
-        } else {
-            const result = db.exec('SELECT projectId FROM user_project_access WHERE userId = ?', [userId]);
-            if (result.length === 0) return [];
-            return result[0].values.map(row => row[0]);
-        }
-    },
+            if (IS_VERCEL) {
+                const { data } = await supabase.from('user_project_access').select('projectId').eq('userId', userId);
+                return (data || []).map(item => item.projectId);
+            } else {
+                const result = db.exec('SELECT projectId FROM user_project_access WHERE userId = ?', [userId]);
+                if (result.length === 0) return [];
+                return result[0].values.map(row => row[0]);
+            }
+        },
 
     // Set user's project access (replaces all existing access)
     async setUserProjectAccess(userId, projectIds) {
-        if (IS_VERCEL) {
-            // Delete existing access
-            await supabase.from('user_project_access').delete().eq('userId', userId);
+            if (IS_VERCEL) {
+                // Delete existing access
+                await supabase.from('user_project_access').delete().eq('userId', userId);
 
-            // Insert new access
-            if (projectIds.length > 0) {
-                const rows = projectIds.map(projectId => ({ userId, projectId }));
-                await supabase.from('user_project_access').insert(rows);
+                // Insert new access
+                if (projectIds.length > 0) {
+                    const rows = projectIds.map(projectId => ({ userId, projectId }));
+                    await supabase.from('user_project_access').insert(rows);
+                }
+            } else {
+                // Delete existing access
+                db.run('DELETE FROM user_project_access WHERE userId = ?', [userId]);
+
+                // Insert new access
+                projectIds.forEach(projectId => {
+                    db.run('INSERT INTO user_project_access (userId, projectId) VALUES (?, ?)', [userId, projectId]);
+                });
+
+                saveDatabase();
             }
-        } else {
-            // Delete existing access
-            db.run('DELETE FROM user_project_access WHERE userId = ?', [userId]);
-
-            // Insert new access
-            projectIds.forEach(projectId => {
-                db.run('INSERT INTO user_project_access (userId, projectId) VALUES (?, ?)', [userId, projectId]);
-            });
-
-            saveDatabase();
-        }
-    },
+        },
 
     // Get projects filtered by user access (for non-admin users)
     async getProjectsByUserAccess(userId, userRole) {
-        // Admin sees all projects
-        if (userRole === 'admin') {
-            const projects = await this.getAll('projects');
-            return projects.map(p => ({ ...p, baseline: p.baseline || 0 }));
-        }
+            // Admin sees all projects
+            if (userRole === 'admin') {
+                const projects = await this.getAll('projects');
+                return projects.map(p => ({ ...p, baseline: p.baseline || 0 }));
+            }
 
-        // Non-admin users see only assigned projects
-        if (IS_VERCEL) {
-            const { data: accessData } = await supabase
-                .from('user_project_access')
-                .select('projectId')
-                .eq('userId', userId);
+            // Non-admin users see only assigned projects
+            if (IS_VERCEL) {
+                const { data: accessData } = await supabase
+                    .from('user_project_access')
+                    .select('projectId')
+                    .eq('userId', userId);
 
-            if (!accessData || accessData.length === 0) return [];
+                if (!accessData || accessData.length === 0) return [];
 
-            const projectIds = accessData.map(item => item.projectId);
-            const { data } = await supabase.from('projects').select('*').in('id', projectIds);
-            return (data || []).map(item => ({ ...item.data, id: item.id, baseline: item.data.baseline || 0 }));
-        } else {
-            const result = db.exec(`
+                const projectIds = accessData.map(item => item.projectId);
+                const { data } = await supabase.from('projects').select('*').in('id', projectIds);
+                return (data || []).map(item => ({ ...item.data, id: item.id, baseline: item.data.baseline || 0 }));
+            } else {
+                const result = db.exec(`
                 SELECT p.* FROM projects p
                 INNER JOIN user_project_access upa ON p.id = upa.projectId
                 WHERE upa.userId = ?
             `, [userId]);
 
-            if (result.length === 0) return [];
+                if (result.length === 0) return [];
 
-            const items = [];
-            result[0].values.forEach(row => {
-                const item = {};
-                result[0].columns.forEach((col, idx) => { item[col] = row[idx]; });
-                const parsedData = JSON.parse(item.data);
-                items.push({ ...parsedData, id: item.id, baseline: parsedData.baseline || 0 });
-            });
-            return items;
-        }
-    },
+                const items = [];
+                result[0].values.forEach(row => {
+                    const item = {};
+                    result[0].columns.forEach((col, idx) => { item[col] = row[idx]; });
+                    const parsedData = JSON.parse(item.data);
+                    items.push({ ...parsedData, id: item.id, baseline: parsedData.baseline || 0 });
+                });
+                return items;
+            }
+        },
 
     // Create a baseline snapshot
     async createBaselineSnapshot(projectId, version) {
-        // 1. Fetch all data for the project
-        let project, goals, scopes, deliverables;
+            // 1. Fetch all data for the project
+            let project, goals, scopes, deliverables;
 
-        if (IS_VERCEL) {
-            const { data: pData } = await supabase.from('projects').select('*').eq('id', projectId).single();
-            project = { ...pData.data, id: pData.id };
+            if (IS_VERCEL) {
+                const { data: pData } = await supabase.from('projects').select('*').eq('id', projectId).single();
+                project = { ...pData.data, id: pData.id };
 
-            const { data: gData } = await supabase.from('goals').select('*').eq('projectId', projectId);
-            goals = (gData || []).map(i => ({ ...i.data, id: i.id }));
+                const { data: gData } = await supabase.from('goals').select('*').eq('projectId', projectId);
+                goals = (gData || []).map(i => ({ ...i.data, id: i.id }));
 
-            const goalIds = goals.map(g => g.id);
-            const { data: sData } = await supabase.from('scopes').select('*').in('goalId', goalIds);
-            scopes = (sData || []).map(i => ({ ...i.data, id: i.id }));
+                const goalIds = goals.map(g => g.id);
+                const { data: sData } = await supabase.from('scopes').select('*').in('goalId', goalIds);
+                scopes = (sData || []).map(i => ({ ...i.data, id: i.id }));
 
-            const scopeIds = scopes.map(s => s.id);
-            // Note: Deliverables might link to scopeId (singular) or scopeIds (array). 
-            // For simplicity in snapshot, we fetch all and filter in memory or fetch by scopeId if possible.
-            // Since we don't have a direct 'in' query for JSON arrays easily here without complex filters,
-            // we'll fetch all deliverables and filter (assuming dataset isn't huge) OR better:
-            // Fetch deliverables where scopeId is in list.
-            const { data: dData } = await supabase.from('deliverables').select('*'); // Fetching all is safest for mixed schema
-            deliverables = (dData || []).map(i => ({ ...i.data, id: i.id }))
-                .filter(d => {
+                const scopeIds = scopes.map(s => s.id);
+                // Note: Deliverables might link to scopeId (singular) or scopeIds (array). 
+                // For simplicity in snapshot, we fetch all and filter in memory or fetch by scopeId if possible.
+                // Since we don't have a direct 'in' query for JSON arrays easily here without complex filters,
+                // we'll fetch all deliverables and filter (assuming dataset isn't huge) OR better:
+                // Fetch deliverables where scopeId is in list.
+                const { data: dData } = await supabase.from('deliverables').select('*'); // Fetching all is safest for mixed schema
+                deliverables = (dData || []).map(i => ({ ...i.data, id: i.id }))
+                    .filter(d => {
+                        if (d.scopeId && scopeIds.includes(d.scopeId)) return true;
+                        if (d.scopeIds && d.scopeIds.some(id => scopeIds.includes(id))) return true;
+                        return false;
+                    });
+
+            } else {
+                // SQLite implementation
+                const pRes = db.exec('SELECT * FROM projects WHERE id = ?', [projectId]);
+                project = JSON.parse(pRes[0].values[0][1]);
+                project.id = pRes[0].values[0][0];
+
+                const gRes = db.exec('SELECT * FROM goals WHERE projectId = ?', [projectId]);
+                goals = gRes.length ? gRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+
+                const goalIds = goals.map(g => g.id);
+                let scopes = [];
+                if (goalIds.length > 0) {
+                    const placeholders = goalIds.map(() => '?').join(',');
+                    const sRes = db.exec(`SELECT * FROM scopes WHERE goalId IN (${placeholders})`, goalIds);
+                    scopes = sRes.length ? sRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+                }
+
+                const scopeIds = scopes.map(s => s.id);
+                let deliverables = [];
+                // SQLite doesn't strictly enforce FKs on JSON content, so fetching all and filtering is robust
+                const dRes = db.exec('SELECT * FROM deliverables');
+                const allDeliverables = dRes.length ? dRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+                deliverables = allDeliverables.filter(d => {
                     if (d.scopeId && scopeIds.includes(d.scopeId)) return true;
                     if (d.scopeIds && d.scopeIds.some(id => scopeIds.includes(id))) return true;
                     return false;
                 });
-
-        } else {
-            // SQLite implementation
-            const pRes = db.exec('SELECT * FROM projects WHERE id = ?', [projectId]);
-            project = JSON.parse(pRes[0].values[0][1]);
-            project.id = pRes[0].values[0][0];
-
-            const gRes = db.exec('SELECT * FROM goals WHERE projectId = ?', [projectId]);
-            goals = gRes.length ? gRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
-
-            const goalIds = goals.map(g => g.id);
-            let scopes = [];
-            if (goalIds.length > 0) {
-                const placeholders = goalIds.map(() => '?').join(',');
-                const sRes = db.exec(`SELECT * FROM scopes WHERE goalId IN (${placeholders})`, goalIds);
-                scopes = sRes.length ? sRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
             }
 
-            const scopeIds = scopes.map(s => s.id);
-            let deliverables = [];
-            // SQLite doesn't strictly enforce FKs on JSON content, so fetching all and filtering is robust
-            const dRes = db.exec('SELECT * FROM deliverables');
-            const allDeliverables = dRes.length ? dRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
-            deliverables = allDeliverables.filter(d => {
-                if (d.scopeId && scopeIds.includes(d.scopeId)) return true;
-                if (d.scopeIds && d.scopeIds.some(id => scopeIds.includes(id))) return true;
-                return false;
-            });
-        }
-
-        // 2. Construct Snapshot
-        const snapshot = {
-            version,
-            createdAt: new Date().toISOString(),
-            project,
-            goals,
-            scopes,
-            deliverables
-        };
-
-        // 3. Insert into project_baselines
-        if (IS_VERCEL) {
-            await supabase.from('project_baselines').insert({
-                projectId,
+            // 2. Construct Snapshot
+            const snapshot = {
                 version,
-                data: snapshot
-            });
-        } else {
-            db.run('INSERT INTO project_baselines (projectId, version, data) VALUES (?, ?, ?)',
-                [projectId, version, JSON.stringify(snapshot)]);
-            saveDatabase();
-        }
-    },
+                createdAt: new Date().toISOString(),
+                project,
+                goals,
+                scopes,
+                async getProjectBaselines(projectId) {
+                    if (IS_VERCEL) {
+                        const { data } = await supabase
+                            .from('project_baselines')
+                            .select('*')
+                            .eq('projectId', projectId)
+                            .order('version', { ascending: false });
+                        return (data || []).map(item => ({ ...item.data, id: item.id }));
+                    } else {
+                        const result = db.exec('SELECT * FROM project_baselines WHERE projectId = ? ORDER BY version DESC', [projectId]);
+                        if (result.length === 0) return [];
 
-    // Get baseline history
-    async getProjectBaselines(projectId) {
-        if (IS_VERCEL) {
-            const { data } = await supabase
-                .from('project_baselines')
-                .select('*')
-                .eq('projectId', projectId)
-                .order('version', { ascending: false });
-            return (data || []).map(item => ({ ...item.data, id: item.id }));
-        } else {
-            const result = db.exec('SELECT * FROM project_baselines WHERE projectId = ? ORDER BY version DESC', [projectId]);
-            if (result.length === 0) return [];
+                        const items = [];
+                        result[0].values.forEach(row => {
+                            // row: [id, projectId, version, data]
+                            const data = JSON.parse(row[3]);
+                            items.push({ ...data, id: row[0] });
+                        });
+                        return items;
+                    }
+                }
+            };
 
-            const items = [];
-            result[0].values.forEach(row => {
-                // row: [id, projectId, version, data]
-                const data = JSON.parse(row[3]);
-                items.push({ ...data, id: row[0] });
-            });
-            return items;
-        }
-    }
-};
-
-export function getDb() {
-    return db;
-}
+            export function getDb() {
+                return db;
+            }

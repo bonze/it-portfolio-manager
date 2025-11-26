@@ -14,7 +14,7 @@ const BaselineModal = ({ project, onClose, onUpdate, userRole }) => {
 
     useEffect(() => {
         fetchHistory();
-    }, []);
+    }, [project.baseline]);
 
     const fetchHistory = async () => {
         try {

@@ -4,7 +4,8 @@ import Dashboard from './components/Dashboard';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import Login from './components/Login';
 import Register from './components/Register';
-import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt } from 'react-icons/fa';
+import AdminPanel from './components/AdminPanel';
+import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
 
@@ -69,6 +70,18 @@ const MainLayout = () => {
               <FaChartBar />
               <span>Analytics</span>
             </button>
+            {user?.role === 'admin' && (
+              <button
+                onClick={() => setActiveView('admin')}
+                className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${activeView === 'admin'
+                  ? 'bg-accent-color text-white'
+                  : 'text-muted hover:text-text-primary hover:bg-bg-primary'
+                  }`}
+              >
+                <FaUserCog />
+                <span>Admin</span>
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted">Logged in as: <strong>{user?.username}</strong> ({user?.role})</span>
@@ -91,7 +104,9 @@ const MainLayout = () => {
       </nav>
 
       {/* Main Content */}
-      {activeView === 'projects' ? <Dashboard /> : <AnalyticsDashboard />}
+      {activeView === 'projects' && <Dashboard />}
+      {activeView === 'analytics' && <AnalyticsDashboard />}
+      {activeView === 'admin' && <AdminPanel />}
     </div>
   );
 };

@@ -14,6 +14,11 @@ export async function login(req, res) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // Check if user is active
+        if (!user.isActive) {
+            return res.status(403).json({ message: 'Your account is pending admin approval. Please contact an administrator.' });
+        }
+
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
             return res.status(401).json({ message: 'Invalid credentials' });

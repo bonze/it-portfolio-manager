@@ -57,10 +57,10 @@ const Register = () => {
                 throw new Error(data.message || 'Registration failed');
             }
 
-            setSuccess('Registration successful! Redirecting to login...');
+            setSuccess('Registration successful! Your account is pending admin approval. You will be able to login once approved.');
             setTimeout(() => {
                 navigate('/login');
-            }, 2000);
+            }, 3000);
         } catch (err) {
             setError(err.message || 'Registration failed');
         }

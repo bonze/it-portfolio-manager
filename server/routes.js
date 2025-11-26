@@ -27,13 +27,73 @@ router.post('/register', async (req, res) => {
         const bcrypt = await import('bcryptjs');
         const hashedPassword = await bcrypt.default.hash(password, 10);
 
-        // Insert new user with 'user' role by default
-        await dbOps.createUser(username, hashedPassword, 'user');
+        // Insert new user with 'user' role and inactive status (requires admin approval)
+        await dbOps.createUser(username, hashedPassword, 'user', false);
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(201).json({ message: 'Registration successful! Your account is pending admin approval.' });
     } catch (e) {
         console.error(e);
         res.status(500).json({ message: 'Registration failed' });
+    }
+});
+
+// Admin: Get all users
+router.get('/admin/users', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const users = await dbOps.getAllUsers();
+        res.json(users);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Admin: Activate user
+router.put('/admin/users/:id/activate', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        await dbOps.updateUserStatus(parseInt(id), true);
+        res.json({ message: 'User activated successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Admin: Deactivate user
+router.put('/admin/users/:id/deactivate', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        await dbOps.updateUserStatus(parseInt(id), false);
+        res.json({ message: 'User deactivated successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Admin: Get user's project access
+router.get('/admin/users/:id/projects', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const projectIds = await dbOps.getUserProjectAccess(parseInt(id));
+        res.json({ projectIds });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Admin: Set user's project access
+router.put('/admin/users/:id/projects', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { projectIds } = req.body;
+        await dbOps.setUserProjectAccess(parseInt(id), projectIds || []);
+        res.json({ message: 'Project access updated successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
     }
 });
 
@@ -42,7 +102,13 @@ const createCrud = (entityName, tableName) => {
     // GET All
     router.get(`/${entityName}`, authenticateToken, async (req, res) => {
         try {
-            const data = await dbOps.getAll(tableName);
+            let data;
+            // For projects, filter by user access
+            if (tableName === 'projects') {
+                data = await dbOps.getProjectsByUserAccess(req.user.id, req.user.role);
+            } else {
+                data = await dbOps.getAll(tableName);
+            }
             res.json(data);
         } catch (e) {
             res.status(500).json({ error: e.message });

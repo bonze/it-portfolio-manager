@@ -16,7 +16,7 @@ const Login = () => {
             await login(username, password);
             navigate('/');
         } catch (err) {
-            setError('Invalid credentials');
+            setError(err.message || 'Invalid credentials');
         }
     };
 

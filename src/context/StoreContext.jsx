@@ -153,8 +153,13 @@ export const StoreProvider = ({ children }) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-        if (!res.ok) throw new Error('Login failed');
+
         const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || 'Login failed');
+        }
+
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);

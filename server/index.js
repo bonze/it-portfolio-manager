@@ -30,11 +30,10 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// Routes - use different prefix for local vs Vercel
-// Vercel rewrites /api/* to /api/index.js, so we mount at /
-// Local dev needs /api prefix
-const apiPrefix = process.env.VERCEL ? '/' : '/api';
-app.use(apiPrefix, routes);
+// Routes - mount at root for both local and Vercel
+// Vercel rewrites /api/* to /api, so the request path will be like /projects, /goals, etc.
+// Local dev uses /api prefix in vite proxy
+app.use('/', routes);
 
 // Start server for local development
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {

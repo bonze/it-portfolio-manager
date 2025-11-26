@@ -1,5 +1,4 @@
 // Database abstraction layer - uses SQLite locally, Supabase on Vercel
-import initSqlJs from 'sql.js';
 import { supabase } from './supabase.js';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
@@ -15,6 +14,7 @@ export async function initializeDatabase() {
         await seedUsersSupabase();
     } else {
         console.log('Using SQLite (Local environment)');
+        const initSqlJs = (await import('sql.js')).default;
         const SQL = await initSqlJs();
 
         // Load existing database or create new one

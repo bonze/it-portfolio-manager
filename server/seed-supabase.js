@@ -32,16 +32,9 @@ async function seedUsers() {
         console.log('Existing users:', existingUsers);
 
         if (existingUsers && existingUsers.length > 0) {
-            console.log('Users already exist. Deleting all...');
-            const { error: deleteError } = await supabase
-                .from('users')
-                .delete()
-                .neq('id', 0); // Delete all
-
-            if (deleteError) {
-                console.error('Error deleting users:', deleteError);
-                return;
-            }
+            console.log('Users already exist. Skipping seed...');
+            console.log('If you want to reset users, delete them manually in Supabase dashboard first.');
+            return;
         }
 
         console.log('Hashing passwords...');
@@ -53,9 +46,9 @@ async function seedUsers() {
         const { data, error } = await supabase
             .from('users')
             .insert([
-                { username: 'admin', password: adminPass, role: 'admin' },
-                { username: 'operator', password: opPass, role: 'operator' },
-                { username: 'user', password: userPass, role: 'user' }
+                { username: 'admin', password: adminPass, role: 'admin', isActive: true },
+                { username: 'operator', password: opPass, role: 'operator', isActive: true },
+                { username: 'user', password: userPass, role: 'user', isActive: true }
             ])
             .select();
 
@@ -63,6 +56,10 @@ async function seedUsers() {
             console.error('Error inserting users:', error);
         } else {
             console.log('✅ Successfully seeded users:', data);
+            console.log('\nDefault credentials:');
+            console.log('  Admin: admin / admin123');
+            console.log('  Operator: operator / op123');
+            console.log('  User: user / user123');
         }
 
     } catch (e) {

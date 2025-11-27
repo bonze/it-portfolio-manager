@@ -181,7 +181,43 @@ export const dbOps = {
             }
             return null;
         }
-    }, //this comment to update
+    },
+
+    // Create new user
+    async createUser(username, hashedPassword, role, isActive = false) {
+        if (IS_VERCEL) {
+            await supabase.from('users').insert({
+                username,
+                password: hashedPassword,
+                role,
+                isActive
+            });
+        } else {
+            db.run('INSERT INTO users (username, password, role, isActive) VALUES (?, ?, ?, ?)',
+                [username, hashedPassword, role, isActive ? 1 : 0]);
+            saveDatabase();
+        }
+    },
+
+    // Get all items from a table
+    async getAll(tableName) {
+        if (IS_VERCEL) {
+            const { data } = await supabase.from(tableName).select('*');
+            return (data || []).map(item => ({ ...item.data, id: item.id }));
+        } else {
+            const result = db.exec(`SELECT * FROM ${tableName}`);
+            if (result.length === 0) return [];
+
+            const items = [];
+            result[0].values.forEach(row => {
+                const item = {};
+                result[0].columns.forEach((col, idx) => { item[col] = row[idx]; });
+                items.push({ ...JSON.parse(item.data), id: item.id });
+            });
+            return items;
+        }
+    },
+
     // Insert item
     async insert(tableName, item) {
         if (IS_VERCEL) {

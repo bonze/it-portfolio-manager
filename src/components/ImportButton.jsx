@@ -38,6 +38,27 @@ const ImportButton = () => {
                 for (const p of projectsData) {
                     const id = uuidv4();
                     projectMap[p.Name] = id;
+
+                    // Parse detailed budget
+                    const budget = {
+                        plan: parseFloat(p['Budget Plan']) || parseFloat(p.Budget) || 0,
+                        actual: parseFloat(p['Budget Actual']) || 0,
+                        additional: parseFloat(p['Budget Additional']) || 0
+                    };
+
+                    // Parse vendor info
+                    const vendor = {
+                        name: p['Vendor Name'] || '',
+                        contact: p['Vendor Contact'] || '',
+                        contractValue: parseFloat(p['Vendor Value']) || 0
+                    };
+
+                    // Parse resources
+                    const resources = {
+                        planManDays: parseFloat(p['Man Days Plan']) || 0,
+                        actualManDays: parseFloat(p['Man Days Actual']) || 0
+                    };
+
                     await apiDispatch({
                         type: 'ADD_PROJECT',
                         payload: {
@@ -45,9 +66,14 @@ const ImportButton = () => {
                             name: p.Name,
                             description: p.Description,
                             owner: p.Owner,
+                            pm: p.PM || '',
                             status: p.Status || 'Planning',
                             businessUnit: p.BusinessUnit,
-                            budget: p.Budget || 0
+                            budget,
+                            vendor,
+                            resources,
+                            kpis: [], // Initialize empty KPIs
+                            risks: [] // Initialize empty Risks
                         }
                     });
                 }

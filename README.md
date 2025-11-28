@@ -13,7 +13,18 @@ A comprehensive web application for managing IT project portfolios with hierarch
 - **Budget & KPI Management**: Track budgets, variances, and key performance indicators
 - **Baseline & Change Management**: Version control for project baselines with approval workflow
 - **User Management**: Role-based access control (Admin, Operator, User)
-- **Excel Import/Export**: Import/export projects from Excel templates
+
+## 📥 Import Data
+
+Use the provided Excel templates to import your project data:
+- **Template:** `project_template_v2.xlsx` (Empty template with all columns)
+- **Sample Data:** `sample_data_v2.xlsx` (Example data to test analytics)
+
+### Supported Data Columns (Projects Sheet):
+- **Basic:** Name, Description, Owner, BusinessUnit, Status
+- **Financial:** Budget Plan, Budget Actual, Budget Additional
+- **Vendor:** Vendor Name, Vendor Contact, Vendor Value
+- **Resources:** Man Days Plan, Man Days Actual
 - **Analytics Dashboard**: Visual insights with charts and metrics
 - **Real-time Updates**: Instant UI updates with React state management
 - **Responsive Design**: Works seamlessly on desktop and mobile devices

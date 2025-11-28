@@ -9,6 +9,53 @@ const __dirname = path.dirname(__filename);
 const createWorkbook = async (isSample = false) => {
     const workbook = new ExcelJS.Workbook();
 
+    // 0. Instructions Sheet
+    const instructionsSheet = workbook.addWorksheet('Instructions');
+    instructionsSheet.columns = [
+        { header: 'Sheet', key: 'sheet', width: 15 },
+        { header: 'Column Name', key: 'col', width: 25 },
+        { header: 'Description', key: 'desc', width: 50 },
+        { header: 'Example / Format', key: 'example', width: 30 }
+    ];
+
+    instructionsSheet.addRows([
+        // Projects
+        { sheet: 'Projects', col: 'Name', desc: 'Name of the project', example: 'Digital Transformation 2025' },
+        { sheet: 'Projects', col: 'Description', desc: 'Brief description of the project', example: 'Overhaul of internal IT systems' },
+        { sheet: 'Projects', col: 'BusinessUnit', desc: 'Department or Unit owning the project', example: 'IT Department' },
+        { sheet: 'Projects', col: 'Owner', desc: 'Person responsible for the project success', example: 'CIO Office' },
+        { sheet: 'Projects', col: 'PM', desc: 'Project Manager assigned', example: 'John Doe' },
+        { sheet: 'Projects', col: 'Status', desc: 'Current status (Planning, In Progress, Completed, At Risk)', example: 'In Progress' },
+        { sheet: 'Projects', col: 'Budget Plan', desc: 'Planned budget amount', example: '1000000 (Number)' },
+        { sheet: 'Projects', col: 'Budget Actual', desc: 'Actual amount spent so far', example: '850000 (Number)' },
+        { sheet: 'Projects', col: 'Budget Additional', desc: 'Any additional budget approved', example: '50000 (Number)' },
+        { sheet: 'Projects', col: 'Vendor Name', desc: 'Name of the primary vendor/contractor', example: 'TechCorp Solutions' },
+        { sheet: 'Projects', col: 'Vendor Contact', desc: 'Contact info for the vendor', example: 'contact@techcorp.com' },
+        { sheet: 'Projects', col: 'Vendor Value', desc: 'Total contract value with the vendor', example: '900000 (Number)' },
+        { sheet: 'Projects', col: 'Man Days Plan', desc: 'Planned effort in man-days', example: '500 (Number)' },
+        { sheet: 'Projects', col: 'Man Days Actual', desc: 'Actual effort spent in man-days', example: '420 (Number)' },
+
+        // Goals
+        { sheet: 'Goals', col: 'Project Name', desc: 'Must match exactly a Name in Projects sheet', example: 'Digital Transformation 2025' },
+        { sheet: 'Goals', col: 'Description', desc: 'Description of the strategic goal', example: 'Modernize Infrastructure' },
+        { sheet: 'Goals', col: 'Owner', desc: 'Owner of this specific goal', example: 'Infra Team' },
+        { sheet: 'Goals', col: 'Budget', desc: 'Budget allocated to this goal', example: '400000' },
+
+        // Scopes
+        { sheet: 'Scopes', col: 'Goal Description', desc: 'Must match exactly a Description in Goals sheet', example: 'Modernize Infrastructure' },
+        { sheet: 'Scopes', col: 'Description', desc: 'Specific scope of work', example: 'Server Migration' },
+        { sheet: 'Scopes', col: 'Timeline', desc: 'Expected timeline', example: 'Q1 2025' },
+
+        // Deliverables
+        { sheet: 'Deliverables', col: 'Scope Description(s)', desc: 'Match Scope Description. Comma separated for multiple.', example: 'Server Migration' },
+        { sheet: 'Deliverables', col: 'Description', desc: 'Tangible deliverable item', example: 'Setup AWS Account' },
+        { sheet: 'Deliverables', col: 'Assignee', desc: 'Person assigned to do the work', example: 'Alice' },
+        { sheet: 'Deliverables', col: 'Status', desc: 'Completion percentage (0-100)', example: '100' }
+    ]);
+
+    // Style the header
+    instructionsSheet.getRow(1).font = { bold: true };
+
     // 1. Projects Sheet
     const projectsSheet = workbook.addWorksheet('Projects');
     projectsSheet.columns = [

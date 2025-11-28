@@ -114,16 +114,23 @@ async function seedUsersSQLite() {
     const userCount = result.length > 0 ? result[0].values[0][0] : 0;
 
     if (userCount === 0) {
-        const adminPass = await bcrypt.hash('admin123', 10);
-        const opPass = await bcrypt.hash('op123', 10);
-        const userPass = await bcrypt.hash('user123', 10);
+        // Only seed default users if environment variable is set (for local development)
+        const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD;
 
-        db.run('INSERT INTO users (username, password, role, isActive) VALUES (?, ?, ?, ?)', ['admin', adminPass, 'admin', 1]);
-        db.run('INSERT INTO users (username, password, role, isActive) VALUES (?, ?, ?, ?)', ['operator', opPass, 'operator', 1]);
-        db.run('INSERT INTO users (username, password, role, isActive) VALUES (?, ?, ?, ?)', ['user', userPass, 'user', 1]);
+        if (defaultPassword) {
+            const adminPass = await bcrypt.hash(defaultPassword, 10);
+            const opPass = await bcrypt.hash(defaultPassword, 10);
+            const userPass = await bcrypt.hash(defaultPassword, 10);
 
-        saveDatabase();
-        console.log('Seeded default users (SQLite)');
+            db.run('INSERT INTO users (username, password, role, isActive) VALUES (?, ?, ?, ?)', ['admin', adminPass, 'admin', 1]);
+            db.run('INSERT INTO users (username, password, role, isActive) VALUES (?, ?, ?, ?)', ['operator', opPass, 'operator', 1]);
+            db.run('INSERT INTO users (username, password, role, isActive) VALUES (?, ?, ?, ?)', ['user', userPass, 'user', 1]);
+
+            saveDatabase();
+            console.log('Seeded default users (SQLite) with password from environment');
+        } else {
+            console.log('Skipping user seeding - DEFAULT_ADMIN_PASSWORD not set');
+        }
     } else {
         // Migration: Add isActive column if it doesn't exist and set existing users to active
         try {
@@ -143,16 +150,23 @@ async function seedUsersSupabase() {
         const { data: existingUsers } = await supabase.from('users').select('id');
 
         if (!existingUsers || existingUsers.length === 0) {
-            const adminPass = await bcrypt.hash('admin123', 10);
-            const opPass = await bcrypt.hash('op123', 10);
-            const userPass = await bcrypt.hash('user123', 10);
+            // Only seed default users if environment variable is set (for local development)
+            const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD;
 
-            await supabase.from('users').insert([
-                { username: 'admin', password: adminPass, role: 'admin', isActive: true },
-                { username: 'operator', password: opPass, role: 'operator', isActive: true },
-                { username: 'user', password: userPass, role: 'user', isActive: true }
-            ]);
-            console.log('Seeded default users (Supabase)');
+            if (defaultPassword) {
+                const adminPass = await bcrypt.hash(defaultPassword, 10);
+                const opPass = await bcrypt.hash(defaultPassword, 10);
+                const userPass = await bcrypt.hash(defaultPassword, 10);
+
+                await supabase.from('users').insert([
+                    { username: 'admin', password: adminPass, role: 'admin', isActive: true },
+                    { username: 'operator', password: opPass, role: 'operator', isActive: true },
+                    { username: 'user', password: userPass, role: 'user', isActive: true }
+                ]);
+                console.log('Seeded default users (Supabase) with password from environment');
+            } else {
+                console.log('Skipping user seeding - DEFAULT_ADMIN_PASSWORD not set');
+            }
         } else {
             // Migration: Set existing users to active if they don't have isActive field
             await supabase.from('users').update({ isActive: true }).is('isActive', null);

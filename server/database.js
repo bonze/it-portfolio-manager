@@ -24,16 +24,21 @@ export async function initializeDatabase() {
     // Seed Users if empty
     const userCount = await db.get('SELECT count(*) as count FROM users');
     if (userCount.count === 0) {
-        const hashedPassword = await bcrypt.hash('password', 10); // Default password for all for simplicity in demo
-        // In real app, use different passwords
-        const adminPass = await bcrypt.hash('admin123', 10);
-        const opPass = await bcrypt.hash('op123', 10);
-        const userPass = await bcrypt.hash('user123', 10);
+        // Only seed if DEFAULT_ADMIN_PASSWORD is set (for local development)
+        const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD;
 
-        await db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['admin', adminPass, 'admin']);
-        await db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['operator', opPass, 'operator']);
-        await db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['user', userPass, 'user']);
-        console.log('Seeded default users');
+        if (defaultPassword) {
+            const adminPass = await bcrypt.hash(defaultPassword, 10);
+            const opPass = await bcrypt.hash(defaultPassword, 10);
+            const userPass = await bcrypt.hash(defaultPassword, 10);
+
+            await db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['admin', adminPass, 'admin']);
+            await db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['operator', opPass, 'operator']);
+            await db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['user', userPass, 'user']);
+            console.log('Seeded default users with password from environment');
+        } else {
+            console.log('Skipping user seeding - DEFAULT_ADMIN_PASSWORD not set');
+        }
     }
 
     // Create Data Tables (Storing JSON blobs for simplicity given the hierarchical structure and rapid prototyping, 

@@ -1,10 +1,11 @@
 import React from 'react';
 
-const MetricCard = ({ label, value, icon: Icon, color = 'accent' }) => {
+const MetricCard = ({ label, value, icon: Icon, color = 'accent', subtitle }) => {
     const colorClasses = {
         accent: 'text-accent-color',
         success: 'text-success-color',
         warning: 'text-warning-color',
+        error: 'text-error-color',
         primary: 'text-text-primary'
     };
 
@@ -17,6 +18,11 @@ const MetricCard = ({ label, value, icon: Icon, color = 'accent' }) => {
             <div className={`text-3xl font-bold ${colorClasses[color]}`}>
                 {value}
             </div>
+            {subtitle && (
+                <div className="text-xs text-muted mt-1">
+                    {subtitle}
+                </div>
+            )}
         </div>
     );
 };

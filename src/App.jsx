@@ -47,58 +47,122 @@ const MainLayout = () => {
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary">
       {/* Navigation Bar */}
-      <nav className="bg-bg-card border-b border-border-color">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex gap-4">
-            <button
-              onClick={() => setActiveView('projects')}
-              className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${activeView === 'projects'
-                ? 'bg-accent-color text-white'
-                : 'text-muted hover:text-text-primary hover:bg-bg-primary'
-                }`}
-            >
-              <FaProjectDiagram />
-              <span>Projects</span>
-            </button>
-            <button
-              onClick={() => setActiveView('analytics')}
-              className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${activeView === 'analytics'
-                ? 'bg-accent-color text-white'
-                : 'text-muted hover:text-text-primary hover:bg-bg-primary'
-                }`}
-            >
-              <FaChartBar />
-              <span>Analytics</span>
-            </button>
-            {user?.role === 'admin' && (
+      <nav className="bg-bg-card border-b border-border-color sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3 md:px-6 md:py-4">
+          {/* Mobile/Tablet: Stacked layout */}
+          <div className="flex flex-col gap-3 md:hidden">
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-muted">
+                <strong className="text-text-primary">{user?.username}</strong> ({user?.role})
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExport}
+                  className="btn btn-icon-only bg-success-color text-white hover:bg-green-700"
+                  title="Export Excel"
+                >
+                  <FaFileDownload />
+                </button>
+                <button
+                  onClick={logout}
+                  className="btn btn-icon-only bg-error-color/10 text-error-color hover:bg-error-color/20"
+                  title="Logout"
+                >
+                  <FaSignOutAlt />
+                </button>
+              </div>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
               <button
-                onClick={() => setActiveView('admin')}
-                className={`flex items-center gap-2 px-4 py-2 rounded transition-all ${activeView === 'admin'
+                onClick={() => setActiveView('projects')}
+                className={`btn ${activeView === 'projects'
+                  ? 'bg-accent-color text-white'
+                  : 'bg-bg-secondary text-muted hover:text-text-primary hover:bg-bg-primary'
+                  }`}
+              >
+                <FaProjectDiagram />
+                <span>Projects</span>
+              </button>
+              <button
+                onClick={() => setActiveView('analytics')}
+                className={`btn ${activeView === 'analytics'
+                  ? 'bg-accent-color text-white'
+                  : 'bg-bg-secondary text-muted hover:text-text-primary hover:bg-bg-primary'
+                  }`}
+              >
+                <FaChartBar />
+                <span>Analytics</span>
+              </button>
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => setActiveView('admin')}
+                  className={`btn ${activeView === 'admin'
+                    ? 'bg-accent-color text-white'
+                    : 'bg-bg-secondary text-muted hover:text-text-primary hover:bg-bg-primary'
+                    }`}
+                >
+                  <FaUserCog />
+                  <span>Admin</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop: Single row layout */}
+          <div className="hidden md:flex justify-between items-center">
+            <div className="flex gap-3 lg:gap-4">
+              <button
+                onClick={() => setActiveView('projects')}
+                className={`btn transition-all ${activeView === 'projects'
                   ? 'bg-accent-color text-white'
                   : 'text-muted hover:text-text-primary hover:bg-bg-primary'
                   }`}
               >
-                <FaUserCog />
-                <span>Admin</span>
+                <FaProjectDiagram />
+                <span>Projects</span>
               </button>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted">Logged in as: <strong>{user?.username}</strong> ({user?.role})</span>
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition-all"
-            >
-              <FaFileDownload />
-              <span>Export Excel</span>
-            </button>
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 rounded bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"
-            >
-              <FaSignOutAlt />
-              <span>Logout</span>
-            </button>
+              <button
+                onClick={() => setActiveView('analytics')}
+                className={`btn transition-all ${activeView === 'analytics'
+                  ? 'bg-accent-color text-white'
+                  : 'text-muted hover:text-text-primary hover:bg-bg-primary'
+                  }`}
+              >
+                <FaChartBar />
+                <span>Analytics</span>
+              </button>
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => setActiveView('admin')}
+                  className={`btn transition-all ${activeView === 'admin'
+                    ? 'bg-accent-color text-white'
+                    : 'text-muted hover:text-text-primary hover:bg-bg-primary'
+                    }`}
+                >
+                  <FaUserCog />
+                  <span>Admin</span>
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3 lg:gap-4">
+              <span className="text-sm text-muted hidden lg:inline">
+                Logged in as: <strong className="text-text-primary">{user?.username}</strong> ({user?.role})
+              </span>
+              <button
+                onClick={handleExport}
+                className="btn bg-success-color text-white hover:bg-green-700"
+              >
+                <FaFileDownload />
+                <span className="hidden lg:inline">Export Excel</span>
+              </button>
+              <button
+                onClick={logout}
+                className="btn bg-error-color/10 text-error-color hover:bg-error-color/20"
+              >
+                <FaSignOutAlt />
+                <span className="hidden lg:inline">Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </nav>

@@ -163,9 +163,10 @@ const ImportButton = () => {
             />
             <button
                 onClick={() => fileInputRef.current.click()}
-                className="btn btn-outline flex items-center gap-2"
+                className="btn btn-outline w-full md:w-auto justify-center"
             >
-                <FaFileUpload /> Import Excel
+                <FaFileUpload />
+                <span className="btn-text-desktop">Import Excel</span>
             </button>
         </>
     );

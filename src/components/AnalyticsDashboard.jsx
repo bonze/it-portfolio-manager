@@ -82,11 +82,11 @@ const AnalyticsDashboard = () => {
     ];
 
     return (
-        <div className="max-w-full mx-auto p-6">
-            <h1 className="text-3xl font-bold text-text-primary mb-6">Analytics Dashboard</h1>
+        <div className="w-full px-4 py-6 md:px-6 lg:px-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-6">Analytics Dashboard</h1>
 
             {/* Tab Navigation */}
-            <div className="flex gap-2 mb-6 overflow-x-auto">
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
                 {tabs.map(tab => {
                     const Icon = tab.icon;
                     return (
@@ -94,8 +94,8 @@ const AnalyticsDashboard = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === tab.id
-                                    ? 'bg-accent-color text-white'
-                                    : 'bg-bg-secondary text-text-primary hover:bg-bg-primary'
+                                ? 'bg-accent-color text-white'
+                                : 'bg-bg-secondary text-text-primary hover:bg-bg-primary'
                                 }`}
                         >
                             <Icon />
@@ -109,8 +109,8 @@ const AnalyticsDashboard = () => {
             {activeTab === 'overview' && (
                 <div>
                     {/* Executive Summary Cards */}
-                    <h2 className="text-2xl font-bold text-text-primary mb-4">Executive Summary</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+                    <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4">Executive Summary</h2>
+                    <div className="horizontal-scroll grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4 gap-4 mb-8">
                         <MetricCard
                             label="Portfolio Health Score"
                             value={`${healthScore}/100`}
@@ -139,7 +139,7 @@ const AnalyticsDashboard = () => {
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+                    <div className="horizontal-scroll grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4 gap-4 mb-8">
                         <MetricCard
                             label="Cost Variance"
                             value={formatCurrency(Math.abs(costVariance.variance))}
@@ -169,8 +169,8 @@ const AnalyticsDashboard = () => {
                     </div>
 
                     {/* Status & Distribution Charts */}
-                    <h2 className="text-2xl font-bold text-text-primary mb-4 mt-8">Portfolio Distribution</h2>
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                    <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4 mt-8">Portfolio Distribution</h2>
+                    <div className="grid grid-cols-1 grid-cols-lg-2 gap-4 md:gap-6 mb-6">
                         {statusDist.length > 0 && (
                             <PieChart
                                 data={statusDist}
@@ -185,7 +185,7 @@ const AnalyticsDashboard = () => {
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 grid-cols-lg-2 gap-4 md:gap-6 mb-6">
                         {projectsByUnit.length > 0 && (
                             <BarChart
                                 data={projectsByUnit}
@@ -205,10 +205,10 @@ const AnalyticsDashboard = () => {
             {/* FINANCIAL TAB */}
             {activeTab === 'financial' && (
                 <div>
-                    <h2 className="text-2xl font-bold text-text-primary mb-4">Financial Performance</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4">Financial Performance</h2>
 
                     {/* Financial Summary Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+                    <div className="horizontal-scroll grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4 gap-4 mb-8">
                         <MetricCard
                             label="Total Planned Budget"
                             value={formatCurrency(portfolioMetrics.totalBudget)}
@@ -236,7 +236,7 @@ const AnalyticsDashboard = () => {
                     </div>
 
                     {/* Budget Charts */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 grid-cols-lg-2 gap-4 md:gap-6 mb-6">
                         {budgetByProject.length > 0 && (
                             <BarChart
                                 data={budgetByProject.map(p => ({
@@ -304,10 +304,10 @@ const AnalyticsDashboard = () => {
             {/* RESOURCES TAB */}
             {activeTab === 'resources' && (
                 <div>
-                    <h2 className="text-2xl font-bold text-text-primary mb-4">Resource Management</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4">Resource Management</h2>
 
                     {/* Resource Summary */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+                    <div className="horizontal-scroll grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3 gap-4 mb-8">
                         <MetricCard
                             label="Resource Utilization"
                             value={`${resourceUtilization}%`}
@@ -329,7 +329,7 @@ const AnalyticsDashboard = () => {
                     </div>
 
                     {/* Resource Charts */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 grid-cols-lg-2 gap-4 md:gap-6 mb-6">
                         {resourceAllocation.length > 0 && (
                             <BarChart
                                 data={resourceAllocation.map(r => ({
@@ -425,10 +425,10 @@ const AnalyticsDashboard = () => {
             {/* RISKS TAB */}
             {activeTab === 'risks' && (
                 <div>
-                    <h2 className="text-2xl font-bold text-text-primary mb-4">Risk & Issues Management</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4">Risk & Issues Management</h2>
 
                     {/* Risk Summary */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+                    <div className="horizontal-scroll grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4 gap-4 mb-8">
                         <MetricCard
                             label="Total At-Risk Projects"
                             value={atRiskProjects.length}
@@ -462,13 +462,13 @@ const AnalyticsDashboard = () => {
                                 <FaExclamationTriangle className="text-warning-color" />
                                 <h3 className="text-lg font-semibold">At-Risk Projects</h3>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3 gap-3">
                                 {atRiskProjects.map((project, idx) => (
                                     <div
                                         key={idx}
                                         className={`p-3 bg-bg-primary rounded border ${project.riskLevel === 'High' ? 'border-error-color' :
-                                                project.riskLevel === 'Medium' ? 'border-warning-color' :
-                                                    'border-border-color'
+                                            project.riskLevel === 'Medium' ? 'border-warning-color' :
+                                                'border-border-color'
                                             }`}
                                     >
                                         <div className="text-text-primary font-semibold mb-1">{project.name}</div>
@@ -479,8 +479,8 @@ const AnalyticsDashboard = () => {
                                             <div className="text-sm text-error-color mt-1">⚠️ Over Budget</div>
                                         )}
                                         <div className={`text-sm mt-1 font-semibold ${project.riskLevel === 'High' ? 'text-error-color' :
-                                                project.riskLevel === 'Medium' ? 'text-warning-color' :
-                                                    'text-success-color'
+                                            project.riskLevel === 'Medium' ? 'text-warning-color' :
+                                                'text-success-color'
                                             }`}>
                                             Risk: {project.riskLevel}
                                         </div>
@@ -551,16 +551,16 @@ const AnalyticsDashboard = () => {
                                                 <td className="p-2">{p.name}</td>
                                                 <td className="text-center p-2">
                                                     <span className={`px-2 py-1 rounded text-xs ${p.probability === 'High' ? 'bg-error-color text-white' :
-                                                            p.probability === 'Medium' ? 'bg-warning-color text-white' :
-                                                                'bg-success-color text-white'
+                                                        p.probability === 'Medium' ? 'bg-warning-color text-white' :
+                                                            'bg-success-color text-white'
                                                         }`}>
                                                         {p.probability}
                                                     </span>
                                                 </td>
                                                 <td className="text-center p-2">
                                                     <span className={`px-2 py-1 rounded text-xs ${p.impact === 'High' ? 'bg-error-color text-white' :
-                                                            p.impact === 'Medium' ? 'bg-warning-color text-white' :
-                                                                'bg-success-color text-white'
+                                                        p.impact === 'Medium' ? 'bg-warning-color text-white' :
+                                                            'bg-success-color text-white'
                                                         }`}>
                                                         {p.impact}
                                                     </span>
@@ -569,8 +569,8 @@ const AnalyticsDashboard = () => {
                                                 <td className="text-right p-2">{formatCurrency(p.budget)}</td>
                                                 <td className="text-center p-2">
                                                     <span className={`font-bold ${p.riskScore >= 6 ? 'text-error-color' :
-                                                            p.riskScore >= 4 ? 'text-warning-color' :
-                                                                'text-success-color'
+                                                        p.riskScore >= 4 ? 'text-warning-color' :
+                                                            'text-success-color'
                                                         }`}>
                                                         {p.riskScore}
                                                     </span>
@@ -588,10 +588,10 @@ const AnalyticsDashboard = () => {
             {/* PERFORMANCE TAB */}
             {activeTab === 'performance' && (
                 <div>
-                    <h2 className="text-2xl font-bold text-text-primary mb-4">Performance & KPIs</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4">Performance & KPIs</h2>
 
                     {/* Performance Summary */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+                    <div className="horizontal-scroll grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4 gap-4 mb-8">
                         <MetricCard
                             label="KPI Achievement Rate"
                             value={`${kpiAchievement.rate}%`}
@@ -621,7 +621,7 @@ const AnalyticsDashboard = () => {
                     </div>
 
                     {/* Performance Trends */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 grid-cols-lg-2 gap-4 md:gap-6 mb-6">
                         {completionTrend.length > 0 && (
                             <BarChart
                                 data={completionTrend.map(t => ({
@@ -670,9 +670,9 @@ const AnalyticsDashboard = () => {
                                                 <td className="p-2">{p.name}</td>
                                                 <td className="text-center p-2">
                                                     <span className={`px-2 py-1 rounded text-xs ${p.status === 'Completed' ? 'bg-success-color text-white' :
-                                                            p.status === 'In Progress' ? 'bg-accent-color text-white' :
-                                                                p.status === 'Planning' ? 'bg-primary-color text-white' :
-                                                                    'bg-warning-color text-white'
+                                                        p.status === 'In Progress' ? 'bg-accent-color text-white' :
+                                                            p.status === 'Planning' ? 'bg-primary-color text-white' :
+                                                                'bg-warning-color text-white'
                                                         }`}>
                                                         {p.status}
                                                     </span>
@@ -686,8 +686,8 @@ const AnalyticsDashboard = () => {
                                                 </td>
                                                 <td className="text-center p-2">
                                                     <span className={`font-semibold ${health === 'Good' ? 'text-success-color' :
-                                                            health === 'Fair' ? 'text-warning-color' :
-                                                                'text-error-color'
+                                                        health === 'Fair' ? 'text-warning-color' :
+                                                            'text-error-color'
                                                         }`}>
                                                         {health}
                                                     </span>

@@ -27,33 +27,149 @@ const Dashboard = () => {
         });
     };
 
+    // Calculate quick stats for sidebar
+    const totalProjects = state.projects.length;
+    const activeProjects = state.projects.filter(p => p.status === 'In Progress').length;
+    const completedProjects = state.projects.filter(p => p.status === 'Completed').length;
+    const totalBudget = state.projects.reduce((sum, p) => {
+        const budget = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
+        return sum + budget;
+    }, 0);
+    const avgCompletion = totalProjects > 0
+        ? Math.round(state.projects.reduce((sum, p) => sum + (p.completion || 0), 0) / totalProjects)
+        : 0;
+
     return (
-        <div className="max-w-full mx-auto p-6">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-text-primary">IT Portfolio Manager</h1>
-                <div className="flex gap-2">
+        <div className="w-full px-4 py-6 md:px-6 lg:px-8">
+            {/* Mobile Header */}
+            <div className="mb-6">
+                <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-4">IT Portfolio Manager</h1>
+
+                {/* Mobile Actions - Full width on mobile, inline on desktop */}
+                <div className="flex flex-col sm:flex-row gap-3 hidden-desktop">
                     <ImportButton />
-                    <button onClick={handleReset} className="btn btn-outline text-warning-color border-warning-color hover:bg-warning-color hover:text-white flex items-center gap-2">
-                        <FaTrash /> Reset Data
+                    <button
+                        onClick={handleReset}
+                        className="btn btn-outline text-warning-color border-warning-color hover:bg-warning-color hover:text-white"
+                    >
+                        <FaTrash />
+                        <span className="btn-text-desktop">Reset Data</span>
+                    </button>
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="btn btn-primary"
+                    >
+                        <FaPlus />
+                        <span className="btn-text-desktop">Add New Project</span>
                     </button>
                 </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-                {state.projects.length === 0 ? (
-                    <div className="card text-muted text-center py-8">
-                        No projects found. Add one below or import from Excel.
+            {/* Desktop: Two-column layout, Mobile/Tablet: Single column */}
+            <div className="desktop-two-col">
+                {/* Main Content Area */}
+                <div className="main-content">
+                    <div className="flex flex-col gap-4">
+                        {state.projects.length === 0 ? (
+                            <div className="card text-muted text-center py-8">
+                                No projects found. Add one below or import from Excel.
+                            </div>
+                        ) : (
+                            state.projects.map((project) => (
+                                <ProjectItem key={project.id} project={project} />
+                            ))
+                        )}
                     </div>
-                ) : (
-                    state.projects.map((project) => (
-                        <ProjectItem key={project.id} project={project} />
-                    ))
-                )}
+                </div>
 
-                <div className="flex justify-center p-4">
-                    <button onClick={() => setIsAddModalOpen(true)} className="btn btn-primary flex items-center gap-2">
-                        <FaPlus /> Add New Project
-                    </button>
+                {/* Sidebar - Only visible on desktop */}
+                <div className="sidebar visible-desktop">
+                    <div className="flex flex-col gap-4">
+                        {/* Quick Stats */}
+                        <div className="card">
+                            <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-bg-primary p-3 rounded-lg">
+                                    <div className="text-2xl font-bold text-accent-color">{totalProjects}</div>
+                                    <div className="text-xs text-muted">Total Projects</div>
+                                </div>
+                                <div className="bg-bg-primary p-3 rounded-lg">
+                                    <div className="text-2xl font-bold text-success-color">{activeProjects}</div>
+                                    <div className="text-xs text-muted">In Progress</div>
+                                </div>
+                                <div className="bg-bg-primary p-3 rounded-lg">
+                                    <div className="text-2xl font-bold text-primary-color">{completedProjects}</div>
+                                    <div className="text-xs text-muted">Completed</div>
+                                </div>
+                                <div className="bg-bg-primary p-3 rounded-lg">
+                                    <div className="text-2xl font-bold text-warning-color">{avgCompletion}%</div>
+                                    <div className="text-xs text-muted">Avg Complete</div>
+                                </div>
+                            </div>
+                            <div className="mt-4 bg-bg-primary p-3 rounded-lg">
+                                <div className="text-sm text-muted mb-1">Total Budget</div>
+                                <div className="text-xl font-bold text-success-color">
+                                    ${totalBudget.toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="card">
+                            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="btn btn-primary w-full justify-center"
+                                >
+                                    <FaPlus /> Add New Project
+                                </button>
+                                <ImportButton />
+                                <button
+                                    onClick={handleReset}
+                                    className="btn btn-outline text-warning-color border-warning-color hover:bg-warning-color hover:text-white w-full justify-center"
+                                >
+                                    <FaTrash /> Reset Data
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Status Distribution */}
+                        {totalProjects > 0 && (
+                            <div className="card">
+                                <h3 className="text-lg font-semibold mb-4">Status Overview</h3>
+                                <div className="space-y-3">
+                                    {['Planning', 'In Progress', 'Completed', 'On Hold'].map(status => {
+                                        const count = state.projects.filter(p => p.status === status).length;
+                                        const percentage = totalProjects > 0 ? Math.round((count / totalProjects) * 100) : 0;
+                                        if (count === 0) return null;
+
+                                        const statusColors = {
+                                            'Planning': 'bg-primary-color',
+                                            'In Progress': 'bg-accent-color',
+                                            'Completed': 'bg-success-color',
+                                            'On Hold': 'bg-warning-color'
+                                        };
+
+                                        return (
+                                            <div key={status}>
+                                                <div className="flex justify-between text-sm mb-1">
+                                                    <span className="text-muted">{status}</span>
+                                                    <span className="text-text-primary font-medium">{count} ({percentage}%)</span>
+                                                </div>
+                                                <div className="progress-container">
+                                                    <div
+                                                        className={`h-full ${statusColors[status]} transition-all`}
+                                                        style={{ width: `${percentage}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 

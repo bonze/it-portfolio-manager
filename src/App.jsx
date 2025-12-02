@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { StoreProvider, useStore } from './context/StoreContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Dashboard from './components/Dashboard';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import Login from './components/Login';
 import Register from './components/Register';
 import AdminPanel from './components/AdminPanel';
-import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt, FaUserCog } from 'react-icons/fa';
+import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt, FaUserCog, FaMoon, FaSun } from 'react-icons/fa';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
 
@@ -22,6 +23,7 @@ const ProtectedRoute = ({ children }) => {
 const MainLayout = () => {
   const [activeView, setActiveView] = useState('projects');
   const { user, logout } = useStore();
+  const { theme, toggleTheme, isDark } = useTheme();
 
   const handleExport = async () => {
     try {
@@ -56,6 +58,13 @@ const MainLayout = () => {
                 <strong className="text-text-primary">{user?.username}</strong> ({user?.role})
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleTheme}
+                  className="btn btn-icon-only bg-bg-secondary hover:bg-bg-primary"
+                  title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  {isDark ? <FaSun className="text-warning-color" /> : <FaMoon className="text-primary-color" />}
+                </button>
                 <button
                   onClick={handleExport}
                   className="btn btn-icon-only bg-success-color text-white hover:bg-green-700"
@@ -149,6 +158,14 @@ const MainLayout = () => {
                 Logged in as: <strong className="text-text-primary">{user?.username}</strong> ({user?.role})
               </span>
               <button
+                onClick={toggleTheme}
+                className="btn bg-bg-secondary hover:bg-bg-primary"
+                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDark ? <FaSun className="text-warning-color" /> : <FaMoon className="text-primary-color" />}
+                <span className="hidden lg:inline">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+              </button>
+              <button
                 onClick={handleExport}
                 className="btn bg-success-color text-white hover:bg-green-700"
               >
@@ -177,17 +194,19 @@ const MainLayout = () => {
 
 function App() {
   return (
-    <StoreProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        } />
-      </Routes>
-    </StoreProvider>
+    <ThemeProvider>
+      <StoreProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </StoreProvider>
+    </ThemeProvider>
   );
 }
 

@@ -62,8 +62,8 @@ const EditModal = ({ isOpen, onClose, onSave, entity, type }) => {
 
     return (
         <>
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                <div className="bg-bg-card p-6 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto border border-border-color">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+                <div className="bg-bg-card p-6 rounded-lg shadow-lg border border-border-color" style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold capitalize flex items-center gap-2">
                             Edit {type}
@@ -163,8 +163,8 @@ const EditModal = ({ isOpen, onClose, onSave, entity, type }) => {
                                     <span className="font-semibold">${((budget.plan || 0) + (budget.additional || 0)).toLocaleString()}</span>
                                     <span className="ml-3 text-muted">Variance: </span>
                                     <span className={`font-semibold ${(budget.actual || 0) > ((budget.plan || 0) + (budget.additional || 0))
-                                            ? 'text-red-500'
-                                            : 'text-green-500'
+                                        ? 'text-red-500'
+                                        : 'text-green-500'
                                         }`}>
                                         ${(((budget.plan || 0) + (budget.additional || 0)) - (budget.actual || 0)).toLocaleString()}
                                     </span>

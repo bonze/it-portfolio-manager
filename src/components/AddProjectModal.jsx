@@ -87,8 +87,8 @@ const AddProjectModal = ({ isOpen, onClose, onSave }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-bg-card p-6 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto border border-border-color">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-bg-card p-6 rounded-lg shadow-lg border border-border-color" style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Add New Project</h3>
                     <button onClick={onClose} className="text-muted hover:text-text-primary">

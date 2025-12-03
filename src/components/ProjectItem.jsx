@@ -57,42 +57,65 @@ const ProjectItem = ({ project }) => {
     return (
         <>
             <div className="card mb-4">
-                <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => setExpanded(!expanded)}>
-                        {expanded ? <FaChevronDown /> : <FaChevronRight />}
-                        <FaFolder className="text-accent-color" />
-                        <h3 className="text-lg">{project.name}</h3>
-                        {project.businessUnit && <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color">{project.businessUnit}</span>}
-                        {project.pm && <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color">PM: {project.pm}</span>}
+                {/* Mobile: Stacked layout, Desktop: Inline layout */}
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 mb-2">
+                    {/* Left side: Expand button + Title + Badges */}
+                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                        <button
+                            onClick={() => setExpanded(!expanded)}
+                            className="flex-shrink-0 mt-1"
+                        >
+                            {expanded ? <FaChevronDown /> : <FaChevronRight />}
+                        </button>
+                        <FaFolder className="text-accent-color flex-shrink-0 mt-1" />
 
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium border border-blue-200">
-                            Baseline: v{project.baseline || 0}
-                        </span>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-base md:text-lg font-semibold break-words">{project.name}</h3>
 
-                        {hasPendingChanges && (
-                            <span className="text-xs bg-yellow-500 text-white px-2 py-0.5 rounded flex items-center gap-1">
-                                <FaExclamationCircle size={10} /> Pending
-                            </span>
-                        )}
+                            {/* Badges - wrap on mobile */}
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {project.businessUnit && (
+                                    <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color whitespace-nowrap">
+                                        {project.businessUnit}
+                                    </span>
+                                )}
+                                {project.pm && (
+                                    <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color whitespace-nowrap">
+                                        PM: {project.pm}
+                                    </span>
+                                )}
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium border border-blue-200 whitespace-nowrap">
+                                    Baseline: v{project.baseline || 0}
+                                </span>
+                                {hasPendingChanges && (
+                                    <span className="text-xs bg-yellow-500 text-white px-2 py-0.5 rounded flex items-center gap-1 whitespace-nowrap">
+                                        <FaExclamationCircle size={10} /> Pending
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3">
+
+                    {/* Right side: Action buttons + Progress - Stack on mobile, inline on desktop */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
                         {isAdmin && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setIsBaselineModalOpen(true); }}
-                                className="text-muted hover:text-blue-600 text-sm flex items-center gap-1"
+                                className="text-muted hover:text-blue-600 text-sm flex items-center gap-1 p-2"
                                 title="Manage Baseline"
                             >
                                 <FaHistory />
+                                <span className="hidden lg:inline text-xs">Baseline</span>
                             </button>
                         )}
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                            className="text-muted hover:text-accent text-sm"
+                            className="text-muted hover:text-accent text-sm p-2"
                             title="Edit Project"
                         >
                             <FaEdit />
                         </button>
-                        <div className="text-right" style={{ width: '150px' }}>
+                        <div className="w-32 md:w-40">
                             <ProgressBar percentage={completion} />
                         </div>
                     </div>

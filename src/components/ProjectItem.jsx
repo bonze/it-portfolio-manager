@@ -115,7 +115,7 @@ const ProjectItem = ({ project }) => {
                         >
                             <FaEdit />
                         </button>
-                        <div className="w-32 md:w-40">
+                        <div className="w-32 md:w-45">
                             <ProgressBar percentage={completion} />
                         </div>
                     </div>

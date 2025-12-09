@@ -137,6 +137,155 @@ router.put('/admin/users/:id/projects', authenticateToken, authorizeRole(['admin
     }
 });
 
+// =====================================================
+// INVESTMENT CATEGORIES ROUTES
+// =====================================================
+
+// Get all categories
+router.get('/categories', authenticateToken, async (req, res) => {
+    try {
+        const categories = await dbOps.getAllCategories();
+        res.json(categories);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Create category (admin only)
+router.post('/categories', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        await dbOps.createCategory(req.body);
+        res.status(201).json({ message: 'Category created successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update category (admin only)
+router.put('/categories/:id', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        await dbOps.updateCategory(id, req.body);
+        res.json({ message: 'Category updated successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete category (admin only)
+router.delete('/categories/:id', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        await dbOps.deleteCategory(id);
+        res.json({ message: 'Category deleted successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// =====================================================
+// VENDOR EVALUATIONS ROUTES
+// =====================================================
+
+// Get all vendor evaluations
+router.get('/vendor-evaluations', authenticateToken, async (req, res) => {
+    try {
+        const evaluations = await dbOps.getAllVendorEvaluations();
+        res.json(evaluations);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get vendor evaluations by vendor name
+router.get('/vendor-evaluations/vendor/:vendorName', authenticateToken, async (req, res) => {
+    try {
+        const { vendorName } = req.params;
+        const evaluations = await dbOps.getVendorEvaluationsByVendor(vendorName);
+        res.json(evaluations);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Create vendor evaluation
+router.post('/vendor-evaluations', authenticateToken, async (req, res) => {
+    try {
+        const evaluation = {
+            ...req.body,
+            evaluatedBy: req.user.username
+        };
+        await dbOps.createVendorEvaluation(evaluation);
+        res.status(201).json({ message: 'Vendor evaluation created successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update vendor evaluation
+router.put('/vendor-evaluations/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        await dbOps.updateVendorEvaluation(parseInt(id), req.body);
+        res.json({ message: 'Vendor evaluation updated successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete vendor evaluation
+router.delete('/vendor-evaluations/:id', authenticateToken, authorizeRole(['admin', 'operator']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        await dbOps.deleteVendorEvaluation(parseInt(id));
+        res.json({ message: 'Vendor evaluation deleted successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// =====================================================
+// AUDIT LOGS ROUTES
+// =====================================================
+
+// Get audit logs (admin only)
+router.get('/audit-logs', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const filters = {
+            entityType: req.query.entityType,
+            entityId: req.query.entityId,
+            userId: req.query.userId ? parseInt(req.query.userId) : undefined,
+            limit: req.query.limit ? parseInt(req.query.limit) : 100
+        };
+        const logs = await dbOps.getAuditLogs(filters);
+        res.json(logs);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get audit logs for specific entity
+router.get('/audit-logs/entity/:entityType/:entityId', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { entityType, entityId } = req.params;
+        const logs = await dbOps.getAuditLogs({ entityType, entityId });
+        res.json(logs);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Helper for CRUD
 const createCrud = (entityName, tableName) => {
     // GET All

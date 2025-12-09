@@ -3,12 +3,15 @@ import { useStore } from '../context/StoreContext';
 import ProjectItem from './ProjectItem';
 import ImportButton from './ImportButton';
 import AddProjectModal from './AddProjectModal';
+import YearFilter from './YearFilter';
 import { v4 as uuidv4 } from 'uuid';
 import { FaTrash, FaPlus } from 'react-icons/fa';
 
 const Dashboard = () => {
     const { state, dispatch } = useStore();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const currentYear = new Date().getFullYear();
+    const [selectedYears, setSelectedYears] = useState([currentYear]);
 
     const handleReset = () => {
         if (window.confirm('Are you sure you want to reset all data?')) {
@@ -27,23 +30,32 @@ const Dashboard = () => {
         });
     };
 
+    // Filter projects by selected years
+    const filteredProjects = state.projects.filter(project => {
+        const projectYear = project.year || currentYear;
+        return selectedYears.includes(projectYear);
+    });
+
     // Calculate quick stats for sidebar
-    const totalProjects = state.projects.length;
-    const activeProjects = state.projects.filter(p => p.status === 'In Progress').length;
-    const completedProjects = state.projects.filter(p => p.status === 'Completed').length;
-    const totalBudget = state.projects.reduce((sum, p) => {
+    const totalProjects = filteredProjects.length;
+    const activeProjects = filteredProjects.filter(p => p.status === 'In Progress').length;
+    const completedProjects = filteredProjects.filter(p => p.status === 'Completed').length;
+    const totalBudget = filteredProjects.reduce((sum, p) => {
         const budget = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
         return sum + budget;
     }, 0);
     const avgCompletion = totalProjects > 0
-        ? Math.round(state.projects.reduce((sum, p) => sum + (p.completion || 0), 0) / totalProjects)
+        ? Math.round(filteredProjects.reduce((sum, p) => sum + (p.completion || 0), 0) / totalProjects)
         : 0;
 
     return (
         <div className="w-full px-4 py-6 md:px-6 lg:px-8">
             {/* Mobile Header */}
             <div className="mb-6">
-                <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-4">IT Portfolio Manager</h1>
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-2xl md:text-3xl font-bold text-text-primary">IT Portfolio Manager</h1>
+                    <YearFilter selectedYears={selectedYears} onChange={setSelectedYears} />
+                </div>
 
                 {/* Mobile Actions - Full width on mobile, inline on desktop */}
                 <div className="flex flex-col sm:flex-row gap-3 hidden-desktop">
@@ -70,12 +82,15 @@ const Dashboard = () => {
                 {/* Main Content Area */}
                 <div className="main-content">
                     <div className="flex flex-col gap-4">
-                        {state.projects.length === 0 ? (
+                        {filteredProjects.length === 0 ? (
                             <div className="card text-muted text-center py-8">
-                                No projects found. Add one below or import from Excel.
+                                {state.projects.length === 0
+                                    ? 'No projects found. Add one below or import from Excel.'
+                                    : `No projects found for ${selectedYears.length === 1 ? selectedYears[0] : 'selected years'}.`
+                                }
                             </div>
                         ) : (
-                            state.projects.map((project) => (
+                            filteredProjects.map((project) => (
                                 <ProjectItem key={project.id} project={project} />
                             ))
                         )}
@@ -140,7 +155,7 @@ const Dashboard = () => {
                                 <h3 className="text-lg font-semibold mb-4">Status Overview</h3>
                                 <div className="space-y-3">
                                     {['Planning', 'In Progress', 'Completed', 'On Hold'].map(status => {
-                                        const count = state.projects.filter(p => p.status === status).length;
+                                        const count = filteredProjects.filter(p => p.status === status).length;
                                         const percentage = totalProjects > 0 ? Math.round((count / totalProjects) * 100) : 0;
                                         if (count === 0) return null;
 

@@ -105,6 +105,67 @@ function createSQLiteTables() {
         );
     `);
 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS investment_categories (
+            id TEXT PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            description TEXT,
+            priorityWeight INTEGER DEFAULT 1,
+            strategicImportance INTEGER DEFAULT 1,
+            color TEXT DEFAULT '#6366f1',
+            createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS vendor_evaluations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vendorName TEXT NOT NULL,
+            projectId TEXT,
+            qualityScore INTEGER,
+            timelinessScore INTEGER,
+            communicationScore INTEGER,
+            costEffectivenessScore INTEGER,
+            overallRating REAL,
+            comments TEXT,
+            evaluatedBy TEXT,
+            evaluatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(projectId) REFERENCES projects(id) ON DELETE CASCADE
+        );
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entityType TEXT NOT NULL,
+            entityId TEXT NOT NULL,
+            action TEXT NOT NULL,
+            changes TEXT,
+            userId INTEGER,
+            username TEXT,
+            timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(userId) REFERENCES users(id)
+        );
+    `);
+
+    // Seed default investment categories
+    const categories = [
+        ['digital-transformation', 'Digital Transformation', 'Projects focused on digital innovation and business transformation', 10, 10, '#8b5cf6'],
+        ['infrastructure', 'Infrastructure', 'IT infrastructure, networking, and hardware projects', 7, 8, '#3b82f6'],
+        ['security', 'Security', 'Cybersecurity and information security initiatives', 9, 9, '#ef4444'],
+        ['applications', 'Applications', 'Business application development and enhancement', 6, 7, '#10b981'],
+        ['maintenance', 'Maintenance', 'System maintenance and support activities', 3, 4, '#6b7280'],
+        ['uncategorized', 'Uncategorized', 'Projects not yet categorized', 1, 1, '#9ca3af']
+    ];
+
+    categories.forEach(([id, name, description, priorityWeight, strategicImportance, color]) => {
+        db.run(`
+            INSERT OR IGNORE INTO investment_categories (id, name, description, priorityWeight, strategicImportance, color)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [id, name, description, priorityWeight, strategicImportance, color]);
+    });
+
     saveDatabase();
 }
 
@@ -506,6 +567,256 @@ export const dbOps = {
         } else {
             db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
             saveDatabase();
+        }
+    },
+
+    // =====================================================
+    // INVESTMENT CATEGORIES OPERATIONS
+    // =====================================================
+
+    async getAllCategories() {
+        if (IS_VERCEL) {
+            const { data } = await supabase.from('investment_categories').select('*').order('priorityWeight', { ascending: false });
+            return data || [];
+        } else {
+            const result = db.exec('SELECT * FROM investment_categories ORDER BY priorityWeight DESC');
+            if (result.length === 0) return [];
+
+            const categories = [];
+            result[0].values.forEach(row => {
+                categories.push({
+                    id: row[0],
+                    name: row[1],
+                    description: row[2],
+                    priorityWeight: row[3],
+                    strategicImportance: row[4],
+                    color: row[5],
+                    createdAt: row[6],
+                    updatedAt: row[7]
+                });
+            });
+            return categories;
+        }
+    },
+
+    async createCategory(category) {
+        if (IS_VERCEL) {
+            await supabase.from('investment_categories').insert(category);
+        } else {
+            db.run(`
+                INSERT INTO investment_categories (id, name, description, priorityWeight, strategicImportance, color)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [category.id, category.name, category.description, category.priorityWeight, category.strategicImportance, category.color]);
+            saveDatabase();
+        }
+    },
+
+    async updateCategory(id, category) {
+        if (IS_VERCEL) {
+            await supabase.from('investment_categories').update({ ...category, updatedAt: new Date().toISOString() }).eq('id', id);
+        } else {
+            db.run(`
+                UPDATE investment_categories 
+                SET name = ?, description = ?, priorityWeight = ?, strategicImportance = ?, color = ?, updatedAt = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `, [category.name, category.description, category.priorityWeight, category.strategicImportance, category.color, id]);
+            saveDatabase();
+        }
+    },
+
+    async deleteCategory(id) {
+        if (IS_VERCEL) {
+            await supabase.from('investment_categories').delete().eq('id', id);
+        } else {
+            db.run('DELETE FROM investment_categories WHERE id = ?', [id]);
+            saveDatabase();
+        }
+    },
+
+    // =====================================================
+    // VENDOR EVALUATIONS OPERATIONS
+    // =====================================================
+
+    async getAllVendorEvaluations() {
+        if (IS_VERCEL) {
+            const { data } = await supabase.from('vendor_evaluations').select('*').order('evaluatedAt', { ascending: false });
+            return data || [];
+        } else {
+            const result = db.exec('SELECT * FROM vendor_evaluations ORDER BY evaluatedAt DESC');
+            if (result.length === 0) return [];
+
+            const evaluations = [];
+            result[0].values.forEach(row => {
+                evaluations.push({
+                    id: row[0],
+                    vendorName: row[1],
+                    projectId: row[2],
+                    qualityScore: row[3],
+                    timelinessScore: row[4],
+                    communicationScore: row[5],
+                    costEffectivenessScore: row[6],
+                    overallRating: row[7],
+                    comments: row[8],
+                    evaluatedBy: row[9],
+                    evaluatedAt: row[10]
+                });
+            });
+            return evaluations;
+        }
+    },
+
+    async getVendorEvaluationsByVendor(vendorName) {
+        if (IS_VERCEL) {
+            const { data } = await supabase.from('vendor_evaluations').select('*').eq('vendorName', vendorName).order('evaluatedAt', { ascending: false });
+            return data || [];
+        } else {
+            const result = db.exec('SELECT * FROM vendor_evaluations WHERE vendorName = ? ORDER BY evaluatedAt DESC', [vendorName]);
+            if (result.length === 0) return [];
+
+            const evaluations = [];
+            result[0].values.forEach(row => {
+                evaluations.push({
+                    id: row[0],
+                    vendorName: row[1],
+                    projectId: row[2],
+                    qualityScore: row[3],
+                    timelinessScore: row[4],
+                    communicationScore: row[5],
+                    costEffectivenessScore: row[6],
+                    overallRating: row[7],
+                    comments: row[8],
+                    evaluatedBy: row[9],
+                    evaluatedAt: row[10]
+                });
+            });
+            return evaluations;
+        }
+    },
+
+    async createVendorEvaluation(evaluation) {
+        const overallRating = (
+            (evaluation.qualityScore + evaluation.timelinessScore +
+                evaluation.communicationScore + evaluation.costEffectivenessScore) / 4
+        ).toFixed(2);
+
+        if (IS_VERCEL) {
+            await supabase.from('vendor_evaluations').insert({ ...evaluation, overallRating });
+        } else {
+            db.run(`
+                INSERT INTO vendor_evaluations 
+                (vendorName, projectId, qualityScore, timelinessScore, communicationScore, costEffectivenessScore, overallRating, comments, evaluatedBy)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [evaluation.vendorName, evaluation.projectId, evaluation.qualityScore, evaluation.timelinessScore,
+            evaluation.communicationScore, evaluation.costEffectivenessScore, overallRating,
+            evaluation.comments, evaluation.evaluatedBy]);
+            saveDatabase();
+        }
+    },
+
+    async updateVendorEvaluation(id, evaluation) {
+        const overallRating = (
+            (evaluation.qualityScore + evaluation.timelinessScore +
+                evaluation.communicationScore + evaluation.costEffectivenessScore) / 4
+        ).toFixed(2);
+
+        if (IS_VERCEL) {
+            await supabase.from('vendor_evaluations').update({ ...evaluation, overallRating }).eq('id', id);
+        } else {
+            db.run(`
+                UPDATE vendor_evaluations 
+                SET vendorName = ?, projectId = ?, qualityScore = ?, timelinessScore = ?, 
+                    communicationScore = ?, costEffectivenessScore = ?, overallRating = ?, comments = ?, evaluatedBy = ?
+                WHERE id = ?
+            `, [evaluation.vendorName, evaluation.projectId, evaluation.qualityScore, evaluation.timelinessScore,
+            evaluation.communicationScore, evaluation.costEffectivenessScore, overallRating,
+            evaluation.comments, evaluation.evaluatedBy, id]);
+            saveDatabase();
+        }
+    },
+
+    async deleteVendorEvaluation(id) {
+        if (IS_VERCEL) {
+            await supabase.from('vendor_evaluations').delete().eq('id', id);
+        } else {
+            db.run('DELETE FROM vendor_evaluations WHERE id = ?', [id]);
+            saveDatabase();
+        }
+    },
+
+    // =====================================================
+    // AUDIT LOG OPERATIONS
+    // =====================================================
+
+    async createAuditLog(entityType, entityId, action, changes, userId, username) {
+        const changesJson = typeof changes === 'string' ? changes : JSON.stringify(changes);
+
+        if (IS_VERCEL) {
+            await supabase.from('audit_logs').insert({
+                entityType,
+                entityId,
+                action,
+                changes: changes,
+                userId,
+                username
+            });
+        } else {
+            db.run(`
+                INSERT INTO audit_logs (entityType, entityId, action, changes, userId, username)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [entityType, entityId, action, changesJson, userId, username]);
+            saveDatabase();
+        }
+    },
+
+    async getAuditLogs(filters = {}) {
+        if (IS_VERCEL) {
+            let query = supabase.from('audit_logs').select('*');
+
+            if (filters.entityType) query = query.eq('entityType', filters.entityType);
+            if (filters.entityId) query = query.eq('entityId', filters.entityId);
+            if (filters.userId) query = query.eq('userId', filters.userId);
+
+            query = query.order('timestamp', { ascending: false }).limit(filters.limit || 100);
+
+            const { data } = await query;
+            return data || [];
+        } else {
+            let sql = 'SELECT * FROM audit_logs WHERE 1=1';
+            const params = [];
+
+            if (filters.entityType) {
+                sql += ' AND entityType = ?';
+                params.push(filters.entityType);
+            }
+            if (filters.entityId) {
+                sql += ' AND entityId = ?';
+                params.push(filters.entityId);
+            }
+            if (filters.userId) {
+                sql += ' AND userId = ?';
+                params.push(filters.userId);
+            }
+
+            sql += ' ORDER BY timestamp DESC LIMIT ?';
+            params.push(filters.limit || 100);
+
+            const result = db.exec(sql, params);
+            if (result.length === 0) return [];
+
+            const logs = [];
+            result[0].values.forEach(row => {
+                logs.push({
+                    id: row[0],
+                    entityType: row[1],
+                    entityId: row[2],
+                    action: row[3],
+                    changes: row[4] ? JSON.parse(row[4]) : null,
+                    userId: row[5],
+                    username: row[6],
+                    timestamp: row[7]
+                });
+            });
+            return logs;
         }
     }
 };

@@ -7,7 +7,10 @@
 // ============================================================================
 
 export const calculatePortfolioMetrics = (projects, goals, scopes, deliverables) => {
-    const totalBudgetPlan = projects.reduce((sum, p) => sum + ((p.budget?.plan || p.budget) || 0), 0);
+    const totalBudgetPlan = projects.reduce((sum, p) => {
+        const budget = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
+        return sum + budget;
+    }, 0);
     const totalBudgetActual = projects.reduce((sum, p) => sum + (p.budget?.actual || 0), 0);
 
     return {

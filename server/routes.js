@@ -305,10 +305,21 @@ const createCrud = (entityName, tableName) => {
     });
 
     // POST (Create)
-    router.post(`/${entityName}`, authenticateToken, authorizeRole(['admin', 'operator']), async (req, res) => {
+    router.post(`/${entityName}`, authenticateToken, async (req, res) => {
         const item = req.body;
         try {
             await dbOps.insert(tableName, item);
+
+            // Auto-grant access to creator for projects
+            if (tableName === 'projects' && req.user && req.user.id) {
+                try {
+                    await dbOps.addUserProjectAccess(req.user.id, item.id);
+                } catch (accessError) {
+                    console.error('Failed to grant project access:', accessError);
+                    // Don't fail the request if access grant fails
+                }
+            }
+
             res.status(201).json(item);
         } catch (e) {
             console.error(e);

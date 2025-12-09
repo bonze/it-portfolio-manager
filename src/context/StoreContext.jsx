@@ -135,7 +135,7 @@ const reducer = (state, action) => {
         }
 
         case 'RESET_DATA':
-            return seedData;
+            return initialState;
         default:
             return state;
     }

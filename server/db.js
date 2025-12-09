@@ -389,6 +389,37 @@ export const dbOps = {
         }
     },
 
+    // Add user access to a single project
+    async addUserProjectAccess(userId, projectId) {
+        if (IS_VERCEL) {
+            // Check if access already exists
+            const { data: existing } = await supabase
+                .from('user_project_access')
+                .select('id')
+                .eq('userId', userId)
+                .eq('projectId', projectId)
+                ;//.single();
+
+            if (!existing || existing.length == 0) {
+                await supabase.from('user_project_access').insert({ userId, projectId });
+            }
+        } else {
+            // Check if access already exists
+            const checkResult = db.exec(
+                'SELECT id FROM user_project_access WHERE userId = ? AND projectId = ?',
+                [userId, projectId]
+            );
+
+            if (checkResult.length === 0 || checkResult[0].values.length === 0) {
+                db.run(
+                    'INSERT INTO user_project_access (userId, projectId) VALUES (?, ?)',
+                    [userId, projectId]
+                );
+                saveDatabase();
+            }
+        }
+    },
+
     // Set user's project access (replaces all existing access)
     async setUserProjectAccess(userId, projectIds) {
         if (IS_VERCEL) {

@@ -6,7 +6,8 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import Login from './components/Login';
 import Register from './components/Register';
 import AdminPanel from './components/AdminPanel';
-import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt, FaUserCog, FaMoon, FaSun } from 'react-icons/fa';
+import ChangePasswordModal from './components/ChangePasswordModal';
+import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt, FaUserCog, FaMoon, FaSun, FaKey } from 'react-icons/fa';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
 
@@ -22,6 +23,7 @@ const ProtectedRoute = ({ children }) => {
 
 const MainLayout = () => {
   const [activeView, setActiveView] = useState('projects');
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const { user, logout } = useStore();
   const { theme, toggleTheme, isDark } = useTheme();
 
@@ -64,6 +66,13 @@ const MainLayout = () => {
                   title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 >
                   {isDark ? <FaSun className="text-warning-color" /> : <FaMoon className="text-primary-color" />}
+                </button>
+                <button
+                  onClick={() => setShowChangePassword(true)}
+                  className="btn btn-icon-only bg-bg-secondary hover:bg-bg-primary"
+                  title="Change Password"
+                >
+                  <FaKey className="text-accent-color" />
                 </button>
                 <button
                   onClick={handleExport}
@@ -166,6 +175,13 @@ const MainLayout = () => {
                 <span className="hidden lg:inline">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
               </button>
               <button
+                onClick={() => setShowChangePassword(true)}
+                className="btn bg-bg-secondary hover:bg-bg-primary"
+              >
+                <FaKey className="text-accent-color" />
+                <span className="hidden lg:inline">Change Password</span>
+              </button>
+              <button
                 onClick={handleExport}
                 className="btn bg-success-color text-white hover:bg-green-700"
               >
@@ -188,6 +204,16 @@ const MainLayout = () => {
       {activeView === 'projects' && <Dashboard />}
       {activeView === 'analytics' && <AnalyticsDashboard />}
       {activeView === 'admin' && <AdminPanel />}
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onSuccess={() => {
+          // Optionally logout user after password change
+          // logout();
+        }}
+      />
     </div>
   );
 };

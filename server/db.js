@@ -497,6 +497,16 @@ export const dbOps = {
             });
             return items;
         }
+    },
+
+    // Update user password
+    async updateUserPassword(userId, hashedPassword) {
+        if (IS_VERCEL) {
+            await supabase.from('users').update({ password: hashedPassword }).eq('id', userId);
+        } else {
+            db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+            saveDatabase();
+        }
     }
 };
 

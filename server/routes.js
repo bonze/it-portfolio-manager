@@ -37,6 +37,46 @@ router.post('/register', async (req, res) => {
     }
 });
 
+// Change Password
+router.put('/change-password', authenticateToken, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    try {
+        // Get user from database
+        const user = await dbOps.getUserByUsername(req.user.username);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify current password
+        const bcrypt = await import('bcryptjs');
+        const isValidPassword = await bcrypt.default.compare(currentPassword, user.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        // Validate new password strength
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({
+                message: 'Password must be at least 8 characters and contain uppercase, lowercase, number, and special character'
+            });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.default.hash(newPassword, 10);
+
+        // Update password in database
+        await dbOps.updateUserPassword(userId, hashedPassword);
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Failed to change password' });
+    }
+});
+
 // Admin: Get all users
 router.get('/admin/users', authenticateToken, authorizeRole(['admin']), async (req, res) => {
     try {

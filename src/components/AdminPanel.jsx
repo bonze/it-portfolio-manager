@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaSave } from 'react-icons/fa';
 import '../styles/AdminPanel.css';
 
 const AdminPanel = () => {
@@ -9,6 +10,11 @@ const AdminPanel = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // User Modal State
+    const [showUserModal, setShowUserModal] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+    const [userFormData, setUserFormData] = useState({ username: '', password: '', role: 'user' });
 
     const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -98,6 +104,8 @@ const AdminPanel = () => {
     const handleManageProjects = async (user) => {
         setSelectedUser(user);
         setError('');
+        setSuccess('');
+        setUserProjects([]);
 
         try {
             const token = localStorage.getItem('token');
@@ -152,6 +160,85 @@ const AdminPanel = () => {
         });
     };
 
+    // New User Management Functions
+    const handleAddUser = () => {
+        setEditingUser(null);
+        setUserFormData({ username: '', password: '', role: 'user' });
+        setShowUserModal(true);
+        setError('');
+        setSuccess('');
+    };
+
+    const handleEditUser = (user) => {
+        setEditingUser(user);
+        setUserFormData({ username: user.username, password: '', role: user.role });
+        setShowUserModal(true);
+        setError('');
+        setSuccess('');
+    };
+
+    const handleDeleteUser = async (userId) => {
+        if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+
+        setLoading(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to delete user');
+            setSuccess('User deleted successfully');
+            fetchUsers();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSaveUser = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        try {
+            const token = localStorage.getItem('token');
+            const url = editingUser
+                ? `${API_URL}/admin/users/${editingUser.id}`
+                : `${API_URL}/admin/users`;
+            const method = editingUser ? 'PUT' : 'POST';
+
+            const body = { ...userFormData };
+            if (editingUser && !body.password) delete body.password; // Don't update password if empty in edit mode
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || 'Failed to save user');
+            }
+
+            setSuccess(`User ${editingUser ? 'updated' : 'created'} successfully`);
+            setShowUserModal(false);
+            fetchUsers();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="admin-panel">
             <h1>Admin Panel - User Management</h1>
@@ -160,7 +247,12 @@ const AdminPanel = () => {
             {success && <div className="alert alert-success">{success}</div>}
 
             <div className="users-table-container">
-                <h2>Users</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2>Users</h2>
+                    <button onClick={handleAddUser} className="btn btn-primary flex items-center gap-2">
+                        <FaPlus /> Add User
+                    </button>
+                </div>
                 <table className="users-table">
                     <thead>
                         <tr>
@@ -188,11 +280,19 @@ const AdminPanel = () => {
                                 </td>
                                 <td>
                                     <div className="action-buttons">
+                                        <button
+                                            onClick={() => handleEditUser(user)}
+                                            className="btn btn-icon-only text-accent"
+                                            title="Edit User"
+                                        >
+                                            <FaEdit />
+                                        </button>
+
                                         {!user.isActive ? (
                                             <button
                                                 onClick={() => handleActivate(user.id)}
                                                 disabled={loading}
-                                                className="btn btn-success"
+                                                className="btn btn-success btn-sm"
                                             >
                                                 Activate
                                             </button>
@@ -200,17 +300,25 @@ const AdminPanel = () => {
                                             <button
                                                 onClick={() => handleDeactivate(user.id)}
                                                 disabled={loading}
-                                                className="btn btn-warning"
+                                                className="btn btn-warning btn-sm"
                                             >
                                                 Deactivate
                                             </button>
                                         )}
+
                                         <button
                                             onClick={() => handleManageProjects(user)}
-                                            disabled={loading}
-                                            className="btn btn-primary"
+                                            className="btn btn-outline btn-sm"
                                         >
-                                            Manage Projects
+                                            Projects
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleDeleteUser(user.id)}
+                                            className="btn btn-icon-only text-red-500"
+                                            title="Delete User"
+                                        >
+                                            <FaTrash />
                                         </button>
                                     </div>
                                 </td>
@@ -220,43 +328,90 @@ const AdminPanel = () => {
                 </table>
             </div>
 
+            {/* Project Access Modal */}
             {selectedUser && (
-                <div className="modal-overlay" onClick={() => setSelectedUser(null)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h2>Manage Project Access for {selectedUser.username}</h2>
-                        <p className="modal-description">
-                            Select which projects this user can access:
-                        </p>
-
-                        <div className="projects-list">
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>Manage Access: {selectedUser.username}</h3>
+                        <div className="project-list">
                             {projects.map(project => (
-                                <label key={project.id} className="project-checkbox">
+                                <div key={project.id} className="project-item-select">
                                     <input
                                         type="checkbox"
+                                        id={`proj-${project.id}`}
                                         checked={userProjects.includes(project.id)}
                                         onChange={() => toggleProjectAccess(project.id)}
                                     />
-                                    <span>{project.name}</span>
-                                </label>
+                                    <label htmlFor={`proj-${project.id}`}>
+                                        {project.name}
+                                    </label>
+                                </div>
                             ))}
                         </div>
-
                         <div className="modal-actions">
-                            <button
-                                onClick={handleSaveProjectAccess}
-                                disabled={loading}
-                                className="btn btn-primary"
-                            >
-                                Save
-                            </button>
-                            <button
-                                onClick={() => setSelectedUser(null)}
-                                disabled={loading}
-                                className="btn btn-secondary"
-                            >
-                                Cancel
+                            <button onClick={() => setSelectedUser(null)} className="btn btn-outline">Cancel</button>
+                            <button onClick={handleSaveProjectAccess} disabled={loading} className="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add/Edit User Modal */}
+            {showUserModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: '400px' }}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3>{editingUser ? 'Edit User' : 'Add New User'}</h3>
+                            <button onClick={() => setShowUserModal(false)} className="text-muted hover:text-white">
+                                <FaTimes />
                             </button>
                         </div>
+                        <form onSubmit={handleSaveUser} className="flex flex-col gap-4">
+                            <div>
+                                <label className="block text-sm text-muted mb-1">Username</label>
+                                <input
+                                    type="text"
+                                    value={userFormData.username}
+                                    onChange={e => setUserFormData({ ...userFormData, username: e.target.value })}
+                                    className="w-full bg-bg-primary border border-border-color rounded p-2 text-text-primary"
+                                    required
+                                    disabled={!!editingUser} // Cannot change username
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-muted mb-1">
+                                    {editingUser ? 'New Password (leave blank to keep current)' : 'Password'}
+                                </label>
+                                <input
+                                    type="password"
+                                    value={userFormData.password}
+                                    onChange={e => setUserFormData({ ...userFormData, password: e.target.value })}
+                                    className="w-full bg-bg-primary border border-border-color rounded p-2 text-text-primary"
+                                    required={!editingUser}
+                                    minLength={8}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-muted mb-1">Role</label>
+                                <select
+                                    value={userFormData.role}
+                                    onChange={e => setUserFormData({ ...userFormData, role: e.target.value })}
+                                    className="w-full bg-bg-primary border border-border-color rounded p-2 text-text-primary"
+                                >
+                                    <option value="user">User</option>
+                                    <option value="operator">Operator</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-end gap-2 mt-2">
+                                <button type="button" onClick={() => setShowUserModal(false)} className="btn btn-outline">
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary flex items-center gap-2" disabled={loading}>
+                                    <FaSave /> Save
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

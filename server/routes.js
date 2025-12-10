@@ -88,6 +88,66 @@ router.get('/admin/users', authenticateToken, authorizeRole(['admin']), async (r
     }
 });
 
+// Admin: Create user
+router.post('/admin/users', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { username, password, role } = req.body;
+
+        // Check if username already exists
+        const existingUser = await dbOps.getUserByUsername(username);
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        // Hash password
+        const bcrypt = await import('bcryptjs');
+        const hashedPassword = await bcrypt.default.hash(password, 10);
+
+        // Create user (active by default when created by admin)
+        await dbOps.createUser(username, hashedPassword, role || 'user', true);
+
+        res.status(201).json({ message: 'User created successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Admin: Update user (password, role)
+router.put('/admin/users/:id', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password, role } = req.body;
+        const updates = {};
+
+        if (password) {
+            const bcrypt = await import('bcryptjs');
+            updates.password = await bcrypt.default.hash(password, 10);
+        }
+        if (role) {
+            updates.role = role;
+        }
+
+        await dbOps.updateUser(parseInt(id), updates);
+        res.json({ message: 'User updated successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Admin: Delete user
+router.delete('/admin/users/:id', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        await dbOps.deleteUser(parseInt(id));
+        res.json({ message: 'User deleted successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Admin: Activate user
 router.put('/admin/users/:id/activate', authenticateToken, authorizeRole(['admin']), async (req, res) => {
     try {

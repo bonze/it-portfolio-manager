@@ -377,6 +377,34 @@ export const dbOps = {
         }
     },
 
+    // Update user info (password, role)
+    async updateUser(userId, updates) {
+        if (IS_VERCEL) {
+            await supabase.from('users').update(updates).eq('id', userId);
+        } else {
+            const fields = [];
+            const values = [];
+            if (updates.password) { fields.push('password = ?'); values.push(updates.password); }
+            if (updates.role) { fields.push('role = ?'); values.push(updates.role); }
+
+            if (fields.length > 0) {
+                values.push(userId);
+                db.run(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+                saveDatabase();
+            }
+        }
+    },
+
+    // Delete user
+    async deleteUser(userId) {
+        if (IS_VERCEL) {
+            await supabase.from('users').delete().eq('id', userId);
+        } else {
+            db.run('DELETE FROM users WHERE id = ?', [userId]);
+            saveDatabase();
+        }
+    },
+
     // Get user's project access
     async getUserProjectAccess(userId) {
         if (IS_VERCEL) {

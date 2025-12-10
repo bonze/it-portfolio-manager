@@ -40,7 +40,7 @@ export const calculatePortfolioHealthScore = (projects) => {
         projectScore += (completion / 100) * 40;
 
         // Budget score (30%)
-        const budgetPlan = p.budget?.plan || p.budget || 1;
+        const budgetPlan = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
         const budgetActual = p.budget?.actual || 0;
         const budgetVariance = ((budgetPlan - budgetActual) / budgetPlan) * 100;
         if (budgetVariance >= 0) {
@@ -62,14 +62,20 @@ export const calculatePortfolioHealthScore = (projects) => {
 };
 
 export const getBudgetUtilizationRate = (projects) => {
-    const totalPlan = projects.reduce((sum, p) => sum + ((p.budget?.plan || p.budget) || 0), 0);
+    const totalPlan = projects.reduce((sum, p) => {
+        const budget = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
+        return sum + budget;
+    }, 0);
     const totalActual = projects.reduce((sum, p) => sum + (p.budget?.actual || 0), 0);
 
     return totalPlan > 0 ? Math.round((totalActual / totalPlan) * 100) : 0;
 };
 
 export const getTotalCostVariance = (projects) => {
-    const totalPlan = projects.reduce((sum, p) => sum + ((p.budget?.plan || p.budget) || 0), 0);
+    const totalPlan = projects.reduce((sum, p) => {
+        const budget = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
+        return sum + budget;
+    }, 0);
     const totalActual = projects.reduce((sum, p) => sum + (p.budget?.actual || 0), 0);
 
     return {
@@ -137,7 +143,10 @@ export const getOverBudgetProjects = (projects) => {
 };
 
 export const getCostPerformanceIndex = (projects) => {
-    const totalPlan = projects.reduce((sum, p) => sum + ((p.budget?.plan || p.budget) || 0), 0);
+    const totalPlan = projects.reduce((sum, p) => {
+        const budget = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
+        return sum + budget;
+    }, 0);
     const totalActual = projects.reduce((sum, p) => sum + (p.budget?.actual || 0), 0);
 
     // CPI = Planned Value / Actual Cost

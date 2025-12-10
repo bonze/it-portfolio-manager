@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaTimes, FaSave } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaSave, FaProjectDiagram } from 'react-icons/fa';
 import '../styles/AdminPanel.css';
 
 const AdminPanel = () => {

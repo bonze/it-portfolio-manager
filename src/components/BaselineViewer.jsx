@@ -2,17 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes, FaChevronDown, FaChevronRight, FaArrowLeft, FaEye } from 'react-icons/fa';
 import '../styles/BaselineViewer.css';
 
-const BaselineViewer = ({ entity, onClose, isOpen }) => {
+const BaselineViewer = ({ entity, snapshot, onClose, isOpen = true }) => {
     const [history, setHistory] = useState([]);
-    const [selectedSnapshot, setSelectedSnapshot] = useState(null);
+    const [selectedSnapshot, setSelectedSnapshot] = useState(snapshot || null);
     const [loading, setLoading] = useState(false);
     const [expandedGoals, setExpandedGoals] = useState({});
 
     useEffect(() => {
-        if (isOpen && entity) {
+        if (snapshot) {
+            setSelectedSnapshot(snapshot);
+        }
+    }, [snapshot]);
+
+    useEffect(() => {
+        if (isOpen && entity && !snapshot) {
             fetchHistory();
         }
-    }, [isOpen, entity]);
+    }, [isOpen, entity, snapshot]);
 
     const fetchHistory = async () => {
         try {
@@ -40,6 +46,14 @@ const BaselineViewer = ({ entity, onClose, isOpen }) => {
         return new Date(dateString).toLocaleString();
     };
 
+    const handleBack = () => {
+        if (snapshot) {
+            onClose();
+        } else {
+            setSelectedSnapshot(null);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -50,12 +64,12 @@ const BaselineViewer = ({ entity, onClose, isOpen }) => {
                     <>
                         <div className="viewer-header">
                             <div className="flex items-center gap-3">
-                                <button onClick={() => setSelectedSnapshot(null)} className="text-muted hover:text-white">
+                                <button onClick={handleBack} className="back-btn" title="Back">
                                     <FaArrowLeft />
                                 </button>
                                 <div>
                                     <h2>Baseline v{selectedSnapshot.version}</h2>
-                                    <span className="text-muted text-sm">Created: {formatDate(selectedSnapshot.createdAt)}</span>
+                                    <span className="meta-info">Created: {formatDate(selectedSnapshot.createdAt)}</span>
                                 </div>
                             </div>
                             <button onClick={onClose} className="close-btn"><FaTimes /></button>

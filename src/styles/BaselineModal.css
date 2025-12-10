@@ -1,28 +1,30 @@
 .baseline-modal {
     max-width: 800px;
-    /* Wider for history */
     width: 90%;
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
 
 .current-baseline {
-    background: #f5f5f5;
+    background: var(--bg-secondary);
     padding: 1rem;
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
 }
 
 .current-baseline .label {
     font-weight: 500;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .current-baseline .value {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #2196f3;
+    color: var(--accent-color);
 }
 
 .baseline-content-grid {
@@ -44,19 +46,20 @@
 }
 
 .action-section {
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
     padding: 1rem;
     border-radius: 8px;
+    background: var(--bg-primary);
 }
 
 .action-section h3 {
     margin-top: 0;
     font-size: 1.1rem;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .action-section p {
-    color: #666;
+    color: var(--text-secondary);
     font-size: 0.9rem;
     margin-bottom: 1rem;
 }
@@ -67,7 +70,7 @@
 
 .divider {
     text-align: center;
-    color: #999;
+    color: var(--text-muted);
     font-size: 0.9rem;
     font-weight: 500;
     position: relative;
@@ -80,7 +83,7 @@
     top: 50%;
     width: 45%;
     height: 1px;
-    background: #eee;
+    background: var(--border-color);
 }
 
 .divider::before {
@@ -104,17 +107,22 @@
 
 .input-row input {
     width: 80px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    border-radius: 4px;
 }
 
 .baseline-history-col {
-    border-left: 1px solid #eee;
+    border-left: 1px solid var(--border-color);
     padding-left: 2rem;
 }
 
 .baseline-history-col h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .history-list {
@@ -130,9 +138,9 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem;
-    background: #f9f9f9;
+    background: var(--bg-primary);
     border-radius: 6px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
 }
 
 .history-info {
@@ -142,12 +150,12 @@
 
 .history-ver {
     font-weight: bold;
-    color: #2196f3;
+    color: var(--accent-color);
 }
 
 .history-date {
     font-size: 0.8rem;
-    color: #888;
+    color: var(--text-muted);
 }
 
 .btn-sm {

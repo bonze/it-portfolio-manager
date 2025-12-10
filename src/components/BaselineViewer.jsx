@@ -64,7 +64,7 @@ const BaselineViewer = ({ entity, onClose, isOpen }) => {
                         <div className="viewer-body">
                             <div className="project-summary section">
                                 <h3>Project: {selectedSnapshot.project.name}</h3>
-                                <p>{selectedSnapshot.project.description}</p>
+                                <p className="project-desc">{selectedSnapshot.project.description}</p>
                                 <div className="meta-grid">
                                     <div className="meta-item">
                                         <label>Owner</label>
@@ -76,14 +76,18 @@ const BaselineViewer = ({ entity, onClose, isOpen }) => {
                                     </div>
                                     <div className="meta-item">
                                         <label>Budget</label>
-                                        <span>${(selectedSnapshot.project.budget || 0).toLocaleString()}</span>
+                                        <span>
+                                            ${(typeof selectedSnapshot.project.budget === 'object'
+                                                ? (selectedSnapshot.project.budget.plan || 0)
+                                                : (selectedSnapshot.project.budget || 0)).toLocaleString()}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="goals-section section">
                                 <h3>Goals & Scope</h3>
-                                {selectedSnapshot.goals.length === 0 ? <p>No goals recorded.</p> : (
+                                {selectedSnapshot.goals.length === 0 ? <p className="text-muted">No goals recorded.</p> : (
                                     <div className="goals-list">
                                         {selectedSnapshot.goals.map(goal => (
                                             <div key={goal.id} className="goal-item-viewer">
@@ -109,7 +113,7 @@ const BaselineViewer = ({ entity, onClose, isOpen }) => {
                                                                     ).map(del => (
                                                                         <div key={del.id} className="deliverable-item-viewer">
                                                                             <span>• {del.description}</span>
-                                                                            <span className="status-badge">{del.status}%</span>
+                                                                            <span className={`status-badge status-${del.status >= 100 ? 'completed' : 'pending'}`}>{del.status}%</span>
                                                                         </div>
                                                                     ))}
                                                                 </div>

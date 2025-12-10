@@ -308,9 +308,10 @@ const AdminPanel = () => {
 
                                         <button
                                             onClick={() => handleManageProjects(user)}
-                                            className="btn btn-outline btn-sm"
+                                            className="btn btn-icon-only text-info"
+                                            title="Manage Projects"
                                         >
-                                            Projects
+                                            <FaProjectDiagram />
                                         </button>
 
                                         <button
@@ -332,23 +333,29 @@ const AdminPanel = () => {
             {selectedUser && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h3>Manage Access: {selectedUser.username}</h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3>Manage Access: {selectedUser.username}</h3>
+                            <button onClick={() => setSelectedUser(null)} className="text-muted hover:text-white">
+                                <FaTimes />
+                            </button>
+                        </div>
+                        <p className="text-sm text-muted mb-3">Select projects this user can access:</p>
                         <div className="project-list">
                             {projects.map(project => (
                                 <div key={project.id} className="project-item-select">
-                                    <input
-                                        type="checkbox"
-                                        id={`proj-${project.id}`}
-                                        checked={userProjects.includes(project.id)}
-                                        onChange={() => toggleProjectAccess(project.id)}
-                                    />
-                                    <label htmlFor={`proj-${project.id}`}>
-                                        {project.name}
+                                    <label className="project-checkbox-label flex items-center gap-2 cursor-pointer p-2 hover:bg-bg-secondary rounded">
+                                        <input
+                                            type="checkbox"
+                                            checked={userProjects.includes(project.id)}
+                                            onChange={() => toggleProjectAccess(project.id)}
+                                            className="form-checkbox"
+                                        />
+                                        <span className="project-name">{project.name}</span>
                                     </label>
                                 </div>
                             ))}
                         </div>
-                        <div className="modal-actions">
+                        <div className="modal-actions mt-4 flex justify-end gap-2">
                             <button onClick={() => setSelectedUser(null)} className="btn btn-outline">Cancel</button>
                             <button onClick={handleSaveProjectAccess} disabled={loading} className="btn btn-primary">Save Changes</button>
                         </div>

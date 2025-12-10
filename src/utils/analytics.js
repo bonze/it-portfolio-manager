@@ -42,12 +42,20 @@ export const calculatePortfolioHealthScore = (projects) => {
         // Budget score (30%)
         const budgetPlan = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
         const budgetActual = p.budget?.actual || 0;
-        const budgetVariance = ((budgetPlan - budgetActual) / budgetPlan) * 100;
-        if (budgetVariance >= 0) {
-            projectScore += 30; // Under or on budget
+
+        let budgetScore = 0;
+        if (budgetPlan > 0) {
+            const budgetVariance = ((budgetPlan - budgetActual) / budgetPlan) * 100;
+            if (budgetVariance >= 0) {
+                budgetScore = 30; // Under or on budget
+            } else {
+                budgetScore = Math.max(0, 30 + budgetVariance); // Over budget penalty
+            }
         } else {
-            projectScore += Math.max(0, 30 + budgetVariance); // Over budget penalty
+            // If no budget plan, assume full score if no actual spend, else 0
+            budgetScore = budgetActual === 0 ? 30 : 0;
         }
+        projectScore += budgetScore;
 
         // Status score (30%)
         if (p.status === 'Completed') projectScore += 30;

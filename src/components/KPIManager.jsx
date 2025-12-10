@@ -103,13 +103,13 @@ const KPIManager = ({ entityId, entityType, kpis = [] }) => {
     };
 
     return (
-        <div className="mt-3 border-t border-border-color pt-3">
-            <div className="flex justify-between items-center mb-2">
-                <h4 className="text-sm font-semibold text-text-primary">KPIs</h4>
+        <div className="w-full">
+            <div className="flex justify-end items-center mb-3">
                 {!isAdding && !editingId && (
                     <button
+                        type="button"
                         onClick={() => setIsAdding(true)}
-                        className="text-xs text-accent hover:text-accent-hover flex items-center gap-1"
+                        className="btn btn-outline btn-sm text-xs h-8 gap-1"
                     >
                         <FaPlus size={10} /> Add KPI
                     </button>

@@ -1,5 +1,7 @@
 .viewer-overlay {
     z-index: 1100;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
 }
 
 .viewer-content {

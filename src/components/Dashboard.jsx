@@ -8,10 +8,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { FaTrash, FaPlus } from 'react-icons/fa';
 
 const Dashboard = () => {
-    const { state, dispatch } = useStore();
+    const { state, dispatch, user } = useStore();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const currentYear = new Date().getFullYear();
     const [selectedYears, setSelectedYears] = useState([currentYear]);
+    const [selectedProjectIds, setSelectedProjectIds] = useState([]);
 
     const handleReset = () => {
         if (window.confirm('Are you sure you want to reset all data?')) {
@@ -28,6 +29,24 @@ const Dashboard = () => {
                 status: 'Planning'
             }
         });
+    };
+
+    const toggleSelectProject = (projectId) => {
+        setSelectedProjectIds(prev =>
+            prev.includes(projectId)
+                ? prev.filter(id => id !== projectId)
+                : [...prev, projectId]
+        );
+    };
+
+    const handleDeleteSelected = () => {
+        if (window.confirm(`Are you sure you want to delete ${selectedProjectIds.length} project(s)? This action cannot be undone.`)) {
+            dispatch({
+                type: 'DELETE_PROJECTS',
+                payload: { ids: selectedProjectIds }
+            });
+            setSelectedProjectIds([]);
+        }
     };
 
     // Filter projects by selected years
@@ -48,6 +67,8 @@ const Dashboard = () => {
         ? Math.round(filteredProjects.reduce((sum, p) => sum + (p.completion || 0), 0) / totalProjects)
         : 0;
 
+    const isAdmin = user?.role === 'admin';
+
     return (
         <div className="w-full px-4 py-6 md:px-6 lg:px-8">
             {/* Mobile Header */}
@@ -60,13 +81,23 @@ const Dashboard = () => {
                 {/* Mobile Actions - Full width on mobile, inline on desktop */}
                 <div className="flex flex-col sm:flex-row gap-3 hidden-desktop">
                     <ImportButton />
-                    <button
-                        onClick={handleReset}
-                        className="btn btn-outline text-warning-color border-warning-color hover:bg-warning-color hover:text-white"
-                    >
-                        <FaTrash />
-                        <span className="btn-text-desktop">Reset Data</span>
-                    </button>
+                    {isAdmin && selectedProjectIds.length > 0 && (
+                        <button
+                            onClick={handleDeleteSelected}
+                            className="btn btn-outline text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                        >
+                            <FaTrash /> Delete Selected ({selectedProjectIds.length})
+                        </button>
+                    )}
+                    {isAdmin && (
+                        <button
+                            onClick={handleReset}
+                            className="btn btn-outline text-warning-color border-warning-color hover:bg-warning-color hover:text-white"
+                        >
+                            <FaTrash />
+                            <span className="btn-text-desktop">Reset Data</span>
+                        </button>
+                    )}
                     <button
                         onClick={() => setIsAddModalOpen(true)}
                         className="btn btn-primary"
@@ -81,6 +112,18 @@ const Dashboard = () => {
             <div className="desktop-two-col">
                 {/* Main Content Area */}
                 <div className="main-content">
+                    {isAdmin && filteredProjects.length > 0 && (
+                        <div className="mb-2 flex justify-end visible-desktop">
+                            {selectedProjectIds.length > 0 && (
+                                <button
+                                    onClick={handleDeleteSelected}
+                                    className="btn btn-outline btn-sm text-red-500 border-red-500 hover:bg-red-500 hover:text-white gap-2"
+                                >
+                                    <FaTrash size={12} /> Delete Selected ({selectedProjectIds.length})
+                                </button>
+                            )}
+                        </div>
+                    )}
                     <div className="flex flex-col gap-4">
                         {filteredProjects.length === 0 ? (
                             <div className="card text-muted text-center py-8">
@@ -91,7 +134,13 @@ const Dashboard = () => {
                             </div>
                         ) : (
                             filteredProjects.map((project) => (
-                                <ProjectItem key={project.id} project={project} />
+                                <ProjectItem
+                                    key={project.id}
+                                    project={project}
+                                    showCheckbox={isAdmin}
+                                    isSelected={selectedProjectIds.includes(project.id)}
+                                    onToggleSelect={toggleSelectProject}
+                                />
                             ))
                         )}
                     </div>

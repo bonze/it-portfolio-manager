@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import EditModal from './EditModal';
 import BaselineModal from './BaselineModal';
 
-const ProjectItem = ({ project }) => {
+const ProjectItem = ({ project, ...props }) => {
     const { state, calculateCompletion, calculateBudgetVariance, calculateResourceUtilization, dispatch, user } = useStore();
     const [expanded, setExpanded] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
@@ -56,11 +56,19 @@ const ProjectItem = ({ project }) => {
 
     return (
         <>
-            <div className="card mb-4">
+            <div className={`card mb-4 ${props.isSelected ? 'border-accent-color' : ''}`}>
                 {/* Mobile: Stacked layout, Desktop: Inline layout */}
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 mb-2">
                     {/* Left side: Expand button + Title + Badges */}
                     <div className="flex items-start gap-2 flex-1 min-w-0">
+                        {props.showCheckbox && (
+                            <input
+                                type="checkbox"
+                                checked={props.isSelected}
+                                onChange={(e) => { e.stopPropagation(); props.onToggleSelect(project.id); }}
+                                className="mt-1.5 w-4 h-4 rounded border-gray-300 text-accent-color focus:ring-accent-color"
+                            />
+                        )}
                         <button
                             onClick={() => setExpanded(!expanded)}
                             className="flex-shrink-0 mt-1"

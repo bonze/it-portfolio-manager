@@ -74,7 +74,7 @@
     padding: 1.5rem;
     overflow-y: auto;
     display: flex;
-    flex-col: column;
+    flex-direction: column;
     gap: 1.5rem;
 }
 

@@ -17,6 +17,11 @@ const reducer = (state, action) => {
             return action.payload;
         case 'ADD_PROJECT':
             return { ...state, projects: [...state.projects, action.payload] };
+        case 'DELETE_PROJECTS':
+            return {
+                ...state,
+                projects: state.projects.filter(p => !action.payload.ids.includes(p.id))
+            };
         case 'ADD_GOAL':
             return { ...state, goals: [...state.goals, action.payload] };
         case 'ADD_SCOPE':
@@ -228,17 +233,15 @@ export const StoreProvider = ({ children }) => {
                 case 'UPDATE_DELIVERABLE':
                     await fetch(`/api/deliverables/${action.payload.id}`, { method: 'PUT', headers, body: JSON.stringify(action.payload) });
                     break;
+                case 'DELETE_PROJECTS':
+                    const { ids } = action.payload;
+                    await Promise.all(ids.map(id =>
+                        fetch(`/api/projects/${id}`, { method: 'DELETE', headers })
+                    ));
+                    break;
+
                 case 'UPDATE_ENTITY':
                     const { type, id, data } = action.payload;
-                    await fetch(`/api/${type}s/${id}`, { method: 'PUT', headers, body: JSON.stringify(data) }); // Assuming data is the full object or partial? API expects full object usually or PATCH. My API is PUT.
-                    // Ideally we should merge with existing state before sending if PUT replaces.
-                    // My API implementation: UPDATE ... SET data = ?
-                    // So we need to send the FULL updated object.
-                    // The reducer does a merge: { ...item, ...data }
-                    // So we should probably do the merge here or in the component before calling dispatch.
-                    // For now, let's assume the payload.data IS the full object or we construct it.
-                    // Actually, looking at EditModal, it passes the updated fields.
-                    // So we need to find the item in state, merge it, then send.
                     const list = type + 's';
                     const item = state[list].find(i => i.id === id);
                     const updatedItem = { ...item, ...data };

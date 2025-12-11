@@ -58,73 +58,81 @@ const ProjectItem = ({ project, ...props }) => {
         <>
             <div className={`card mb-4 ${props.isSelected ? 'border-accent-color' : ''}`}>
                 {/* Mobile: Stacked layout, Desktop: Inline layout */}
-                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 mb-2">
-                    {/* Left side: Expand button + Title + Badges */}
-                    <div className="flex items-start gap-2 flex-1 min-w-0">
-                        {props.showCheckbox && (
+                <div className="flex gap-3 mb-2">
+                    {/* Checkbox Column */}
+                    {props.showCheckbox && (
+                        <div className="flex-shrink-0 pt-1">
                             <input
                                 type="checkbox"
                                 checked={props.isSelected}
                                 onChange={(e) => { e.stopPropagation(); props.onToggleSelect(project.id); }}
-                                className="mt-1.5 w-4 h-4 rounded border-gray-300 text-accent-color focus:ring-accent-color"
+                                className="w-5 h-5 cursor-pointer"
+                                style={{ accentColor: 'var(--accent-color)' }}
                             />
-                        )}
-                        <button
-                            onClick={() => setExpanded(!expanded)}
-                            className="flex-shrink-0 mt-1"
-                        >
-                            {expanded ? <FaChevronDown /> : <FaChevronRight />}
-                        </button>
-                        <FaFolder className="text-accent-color flex-shrink-0 mt-1" />
+                        </div>
+                    )}
 
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-base md:text-lg font-semibold break-words">{project.name}</h3>
+                    {/* Main Header Content */}
+                    <div className="flex-1 min-w-0 flex flex-col md:flex-row md:justify-between md:items-start gap-3">
+                        {/* Left side: Expand button + Title + Badges */}
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                            <button
+                                onClick={() => setExpanded(!expanded)}
+                                className="flex-shrink-0 mt-1 text-muted hover:text-text-primary transition-colors"
+                            >
+                                {expanded ? <FaChevronDown /> : <FaChevronRight />}
+                            </button>
+                            <FaFolder className="text-accent-color flex-shrink-0 mt-1" />
 
-                            {/* Badges - wrap on mobile */}
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {project.businessUnit && (
-                                    <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color whitespace-nowrap">
-                                        {project.businessUnit}
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-base md:text-lg font-semibold break-words">{project.name}</h3>
+
+                                {/* Badges - wrap on mobile */}
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {project.businessUnit && (
+                                        <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color whitespace-nowrap">
+                                            {project.businessUnit}
+                                        </span>
+                                    )}
+                                    {project.pm && (
+                                        <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color whitespace-nowrap">
+                                            PM: {project.pm}
+                                        </span>
+                                    )}
+                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium border border-blue-200 whitespace-nowrap">
+                                        Baseline: v{project.baseline || 0}
                                     </span>
-                                )}
-                                {project.pm && (
-                                    <span className="text-xs bg-bg-card px-2 py-0.5 rounded text-muted border border-border-color whitespace-nowrap">
-                                        PM: {project.pm}
-                                    </span>
-                                )}
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium border border-blue-200 whitespace-nowrap">
-                                    Baseline: v{project.baseline || 0}
-                                </span>
-                                {hasPendingChanges && (
-                                    <span className="text-xs bg-yellow-500 text-white px-2 py-0.5 rounded flex items-center gap-1 whitespace-nowrap">
-                                        <FaExclamationCircle size={10} /> Pending
-                                    </span>
-                                )}
+                                    {hasPendingChanges && (
+                                        <span className="text-xs bg-yellow-500 text-white px-2 py-0.5 rounded flex items-center gap-1 whitespace-nowrap">
+                                            <FaExclamationCircle size={10} /> Pending
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Right side: Action buttons + Progress - Stack on mobile, inline on desktop */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        {isAdmin && (
+                        {/* Right side: Action buttons + Progress - Stack on mobile, inline on desktop */}
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                            {isAdmin && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setIsBaselineModalOpen(true); }}
+                                    className="text-muted hover:text-blue-600 text-sm flex items-center gap-1 p-2"
+                                    title="Manage Baseline"
+                                >
+                                    <FaHistory />
+                                    <span className="hidden lg:inline text-xs">Baseline</span>
+                                </button>
+                            )}
                             <button
-                                onClick={(e) => { e.stopPropagation(); setIsBaselineModalOpen(true); }}
-                                className="text-muted hover:text-blue-600 text-sm flex items-center gap-1 p-2"
-                                title="Manage Baseline"
+                                onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                                className="text-muted hover:text-accent text-sm p-2"
+                                title="Edit Project"
                             >
-                                <FaHistory />
-                                <span className="hidden lg:inline text-xs">Baseline</span>
+                                <FaEdit />
                             </button>
-                        )}
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                            className="text-muted hover:text-accent text-sm p-2"
-                            title="Edit Project"
-                        >
-                            <FaEdit />
-                        </button>
-                        <div className="w-32 md:w-45">
-                            <ProgressBar percentage={completion} />
+                            <div className="w-32 md:w-45">
+                                <ProgressBar percentage={completion} />
+                            </div>
                         </div>
                     </div>
                 </div>

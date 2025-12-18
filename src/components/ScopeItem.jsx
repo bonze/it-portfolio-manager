@@ -12,8 +12,9 @@ const ScopeItem = ({ scope }) => {
 
     const completion = calculateCompletion(scope.id, 'scope');
     const deliverables = state.deliverables.filter(d => {
+        if (d.scopeId) return d.scopeId === scope.id;
         if (d.scopeIds) return d.scopeIds.includes(scope.id);
-        return d.scopeId === scope.id;
+        return false;
     });
 
     const handleAddDeliverable = (description) => {
@@ -21,7 +22,7 @@ const ScopeItem = ({ scope }) => {
             type: 'ADD_DELIVERABLE',
             payload: {
                 id: uuidv4(),
-                scopeIds: [scope.id],
+                scopeId: scope.id,
                 description,
                 assignee: 'Unassigned',
                 owner: 'TBD',

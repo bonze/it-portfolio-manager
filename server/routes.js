@@ -537,7 +537,13 @@ router.get('/export', authenticateToken, async (req, res) => {
 
         deliverables.forEach(d => {
             // Get scope descriptions
-            const scopeIds = d.scopeIds || (d.scopeId ? [d.scopeId] : []);
+            let scopeIds = [];
+            if (d.scopeId) {
+                scopeIds = [d.scopeId];
+            } else if (d.scopeIds && Array.isArray(d.scopeIds)) {
+                scopeIds = d.scopeIds;
+            }
+
             const scopeDescriptions = scopeIds
                 .map(scopeId => {
                     const scope = scopes.find(s => s.id === scopeId);

@@ -202,6 +202,15 @@ async function seedUsersSQLite() {
         } catch (e) {
             // Column might already exist, ignore error
         }
+
+        // Migration: Add scopeId to deliverables if it doesn't exist
+        try {
+            db.run('ALTER TABLE deliverables ADD COLUMN scopeId TEXT');
+            saveDatabase();
+            console.log('Migrated deliverables table: added scopeId column');
+        } catch (e) {
+            // Column likely exists, ignore
+        }
     }
 }
 

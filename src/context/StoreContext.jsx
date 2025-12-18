@@ -279,8 +279,9 @@ export const StoreProvider = ({ children }) => {
     const calculateCompletion = (entityId, type) => {
         if (type === 'scope') {
             const relatedDeliverables = state.deliverables.filter(d => {
+                if (d.scopeId) return d.scopeId === entityId;
                 if (d.scopeIds) return d.scopeIds.includes(entityId);
-                return d.scopeId === entityId;
+                return false;
             });
             if (relatedDeliverables.length === 0) return 0;
             const total = relatedDeliverables.reduce((sum, d) => sum + (d.status || 0), 0);

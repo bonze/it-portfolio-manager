@@ -91,7 +91,7 @@ const ImportButton = () => {
                                 projectId,
                                 description: g.Description,
                                 owner: g.Owner,
-                                budget: g.Budget || 0,
+                                budget: { plan: g.Budget || 0, actual: 0, additional: 0 },
                                 status: 'Planning'
                             }
                         });

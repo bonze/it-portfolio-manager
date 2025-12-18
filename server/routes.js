@@ -464,19 +464,39 @@ router.get('/export', authenticateToken, async (req, res) => {
             { header: 'Name', key: 'name', width: 30 },
             { header: 'Description', key: 'description', width: 50 },
             { header: 'Owner', key: 'owner', width: 20 },
+            { header: 'PM', key: 'pm', width: 20 },
             { header: 'Status', key: 'status', width: 15 },
             { header: 'BusinessUnit', key: 'businessUnit', width: 25 },
-            { header: 'Budget', key: 'budget', width: 15 }
+            { header: 'Budget Plan', key: 'budgetPlan', width: 15 },
+            { header: 'Budget Actual', key: 'budgetActual', width: 15 },
+            { header: 'Budget Additional', key: 'budgetAdditional', width: 15 },
+            { header: 'Vendor Name', key: 'vendorName', width: 20 },
+            { header: 'Vendor Contact', key: 'vendorContact', width: 20 },
+            { header: 'Vendor Value', key: 'vendorValue', width: 15 },
+            { header: 'Man Days Plan', key: 'manDaysPlan', width: 15 },
+            { header: 'Man Days Actual', key: 'manDaysActual', width: 15 }
         ];
 
         projects.forEach(p => {
+            const budget = p.budget || {};
+            const vendor = p.vendor || {};
+            const resources = p.resources || {};
+
             projectsSheet.addRow({
                 name: p.name,
                 description: p.description || '',
                 owner: p.owner || '',
+                pm: p.pm || '',
                 status: p.status || 'Planning',
                 businessUnit: p.businessUnit || '',
-                budget: p.budget || 0
+                budgetPlan: budget.plan || (typeof budget === 'number' ? budget : 0),
+                budgetActual: budget.actual || 0,
+                budgetAdditional: budget.additional || 0,
+                vendorName: vendor.name || '',
+                vendorContact: vendor.contact || '',
+                vendorValue: vendor.contractValue || 0,
+                manDaysPlan: resources.planManDays || 0,
+                manDaysActual: resources.actualManDays || 0
             });
         });
 
@@ -492,11 +512,12 @@ router.get('/export', authenticateToken, async (req, res) => {
         goals.forEach(g => {
             const project = projects.find(p => p.id === g.projectId);
             if (project) {
+                const budget = g.budget || 0;
                 goalsSheet.addRow({
                     projectName: project.name,
                     description: g.description || g.title || '',
                     owner: g.owner || '',
-                    budget: g.budget || 0
+                    budget: typeof budget === 'object' ? (budget.plan || 0) : budget
                 });
             }
         });
@@ -514,11 +535,12 @@ router.get('/export', authenticateToken, async (req, res) => {
         scopes.forEach(s => {
             const goal = goals.find(g => g.id === s.goalId);
             if (goal) {
+                const budget = s.budget || 0;
                 scopesSheet.addRow({
                     goalDescription: goal.description || goal.title || '',
                     description: s.description || s.title || '',
                     owner: s.owner || '',
-                    budget: s.budget || 0,
+                    budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
                     timeline: s.timeline || 'TBD'
                 });
             }
@@ -553,12 +575,13 @@ router.get('/export', authenticateToken, async (req, res) => {
                 .join(', ');
 
             if (scopeDescriptions) {
+                const budget = d.budget || 0;
                 deliverablesSheet.addRow({
                     scopeDescriptions,
                     description: d.description || d.title || '',
                     assignee: d.assignee || 'Unassigned',
                     owner: d.owner || '',
-                    budget: d.budget || 0,
+                    budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
                     status: d.status || 0
                 });
             }

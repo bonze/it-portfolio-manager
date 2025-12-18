@@ -877,6 +877,30 @@ export const dbOps = {
             });
             return logs;
         }
+    },
+
+    // Reset Data (Delete all project data)
+    async resetData() {
+        if (IS_VERCEL) {
+            // Delete in reverse order of dependencies
+            // Using neq('id', 0) or neq('id', '0') as a way to delete all rows since Supabase requires a filter
+            await supabase.from('deliverables').delete().neq('id', '0');
+            await supabase.from('scopes').delete().neq('id', '0');
+            await supabase.from('goals').delete().neq('id', '0');
+            await supabase.from('projects').delete().neq('id', '0');
+            await supabase.from('project_baselines').delete().neq('id', 0);
+            await supabase.from('vendor_evaluations').delete().neq('id', 0);
+            await supabase.from('audit_logs').delete().neq('id', 0);
+        } else {
+            db.run('DELETE FROM deliverables');
+            db.run('DELETE FROM scopes');
+            db.run('DELETE FROM goals');
+            db.run('DELETE FROM projects');
+            db.run('DELETE FROM project_baselines');
+            db.run('DELETE FROM vendor_evaluations');
+            db.run('DELETE FROM audit_logs');
+            saveDatabase();
+        }
     }
 };
 

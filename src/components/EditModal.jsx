@@ -167,6 +167,23 @@ const EditModal = ({ isOpen, onClose, onSave, entity, type }) => {
                                                 className="form-input"
                                             />
                                         </div>
+                                    </div>
+
+                                    <div className="form-grid form-grid-2">
+                                        <div className="form-group">
+                                            <label className="form-label">Status</label>
+                                            <select
+                                                name="status"
+                                                value={formData.status || 'Planning'}
+                                                onChange={handleChange}
+                                                className="form-input"
+                                            >
+                                                <option value="Planning">Planning</option>
+                                                <option value="In Progress">In Progress</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="On Hold">On Hold</option>
+                                            </select>
+                                        </div>
                                         <div className="form-group">
                                             <label className="form-label">Project Manager</label>
                                             <input

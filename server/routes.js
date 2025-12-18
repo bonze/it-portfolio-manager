@@ -581,4 +581,15 @@ router.get('/export', authenticateToken, async (req, res) => {
     }
 });
 
+// Reset Data (Admin only)
+router.post('/reset', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+    try {
+        await dbOps.resetData();
+        res.json({ message: 'All data has been reset' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

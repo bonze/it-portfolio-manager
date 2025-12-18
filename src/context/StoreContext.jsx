@@ -254,6 +254,10 @@ export const StoreProvider = ({ children }) => {
                 // But the reducer has specific cases for ADD_KPI etc.
                 // We need to map those to API calls too.
 
+                case 'RESET_DATA':
+                    await fetch('/api/reset', { method: 'POST', headers });
+                    break;
+
                 case 'ADD_KPI': {
                     const { entityType, entityId, kpi } = action.payload;
                     const list = entityType + 's';

@@ -46,112 +46,83 @@ const COLUMNS = {
     ]
 };
 
-// Sample Data
-const SAMPLE_DATA = {
-    projects: [
-        {
-            name: 'Digital Transformation 2025',
-            description: 'Overhaul of legacy systems and migration to cloud',
-            owner: 'John Doe',
-            pm: 'Alice Smith',
-            status: 'In Progress',
-            businessUnit: 'IT',
-            budgetPlan: 500000,
-            budgetActual: 150000,
+// Generate Dynamic Sample Data
+function generateSampleData() {
+    const projects = [];
+    const goals = [];
+    const scopes = [];
+    const deliverables = [];
+
+    const projectList = [
+        { name: 'Cloud Migration 2025', bu: 'Infrastructure', owner: 'John Doe' },
+        { name: 'AI Customer Support', bu: 'Innovation', owner: 'Alice Smith' },
+        { name: 'Enterprise Security Audit', bu: 'Security', owner: 'Bob Jones' },
+        { name: 'Mobile App Redesign', bu: 'Product', owner: 'Jane Roe' },
+        { name: 'Data Warehouse Revamp', bu: 'Data', owner: 'Mike Data' }
+    ];
+
+    projectList.forEach((p, pIdx) => {
+        // Create Project
+        projects.push({
+            name: p.name,
+            description: `Strategic initiative for ${p.bu}`,
+            owner: p.owner,
+            pm: `PM ${p.owner.split(' ')[0]}`,
+            status: ['Planning', 'In Progress', 'On Hold'][pIdx % 3],
+            businessUnit: p.bu,
+            budgetPlan: 100000 * (pIdx + 1),
+            budgetActual: 20000 * (pIdx + 1),
             budgetAdditional: 0,
-            vendorName: 'TechCorp',
-            vendorContact: 'sales@techcorp.com',
-            vendorValue: 200000,
-            manDaysPlan: 1000,
-            manDaysActual: 250
-        },
-        {
-            name: 'Mobile App Revamp',
-            description: 'Redesign of customer facing mobile application',
-            owner: 'Jane Roe',
-            pm: 'Bob Jones',
-            status: 'Planning',
-            businessUnit: 'Marketing',
-            budgetPlan: 150000,
-            budgetActual: 0,
-            budgetAdditional: 0,
-            vendorName: 'AppStudio',
-            vendorContact: 'contact@appstudio.com',
-            vendorValue: 100000,
-            manDaysPlan: 300,
-            manDaysActual: 0
+            vendorName: `Vendor ${String.fromCharCode(65 + pIdx)}`,
+            vendorContact: `contact@vendor${String.fromCharCode(65 + pIdx)}.com`,
+            vendorValue: 50000 * (pIdx + 1),
+            manDaysPlan: 100 * (pIdx + 1),
+            manDaysActual: 20 * (pIdx + 1)
+        });
+
+        // Create 2-3 Goals per Project
+        const numGoals = 2 + (pIdx % 2); // 2 or 3
+        for (let g = 1; g <= numGoals; g++) {
+            const goalDesc = `${p.name} - Goal ${g}`;
+            goals.push({
+                projectName: p.name,
+                description: goalDesc,
+                owner: p.owner,
+                budget: 30000
+            });
+
+            // Create 2-3 Scopes per Goal
+            const numScopes = 2 + (g % 2); // 2 or 3
+            for (let s = 1; s <= numScopes; s++) {
+                const scopeDesc = `${goalDesc} - Scope ${s}`;
+                scopes.push({
+                    goalDescription: goalDesc,
+                    description: scopeDesc,
+                    owner: `Lead ${s}`,
+                    budget: 10000,
+                    timeline: `Q${s} 2025`
+                });
+
+                // Create 1-3 Deliverables per Scope
+                const numDeliverables = 1 + (s % 3); // 1, 2, or 3
+                for (let d = 1; d <= numDeliverables; d++) {
+                    deliverables.push({
+                        scopeDescriptions: scopeDesc,
+                        description: `${scopeDesc} - Deliverable ${d}`,
+                        assignee: `Dev ${d}`,
+                        owner: `Lead ${s}`,
+                        budget: 5000,
+                        status: (d * 20) % 100
+                    });
+                }
+            }
         }
-    ],
-    goals: [
-        {
-            projectName: 'Digital Transformation 2025',
-            description: 'Migrate Core Database',
-            owner: 'Mike Database',
-            budget: 100000
-        },
-        {
-            projectName: 'Digital Transformation 2025',
-            description: 'Implement New CRM',
-            owner: 'Sarah Sales',
-            budget: 200000
-        },
-        {
-            projectName: 'Mobile App Revamp',
-            description: 'UI/UX Redesign',
-            owner: 'Designer Dan',
-            budget: 50000
-        }
-    ],
-    scopes: [
-        {
-            goalDescription: 'Migrate Core Database',
-            description: 'Schema Design',
-            owner: 'Mike Database',
-            budget: 20000,
-            timeline: 'Q1 2025'
-        },
-        {
-            goalDescription: 'Migrate Core Database',
-            description: 'Data Migration Scripts',
-            owner: 'Dev Dave',
-            budget: 30000,
-            timeline: 'Q2 2025'
-        },
-        {
-            goalDescription: 'Implement New CRM',
-            description: 'Vendor Selection',
-            owner: 'Sarah Sales',
-            budget: 10000,
-            timeline: 'Q1 2025'
-        }
-    ],
-    deliverables: [
-        {
-            scopeDescriptions: 'Schema Design',
-            description: 'ERD Diagram',
-            assignee: 'Architect Ann',
-            owner: 'Mike Database',
-            budget: 5000,
-            status: 100
-        },
-        {
-            scopeDescriptions: 'Schema Design',
-            description: 'Database Setup Scripts',
-            assignee: 'Dev Dave',
-            owner: 'Mike Database',
-            budget: 15000,
-            status: 50
-        },
-        {
-            scopeDescriptions: 'Data Migration Scripts',
-            description: 'ETL Pipeline',
-            assignee: 'Data Don',
-            owner: 'Dev Dave',
-            budget: 30000,
-            status: 0
-        }
-    ]
-};
+    });
+
+    return { projects, goals, scopes, deliverables };
+}
+
+const SAMPLE_DATA = generateSampleData();
 
 async function generateFile(filename, data = null) {
     const workbook = new ExcelJS.Workbook();

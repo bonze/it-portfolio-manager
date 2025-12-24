@@ -381,36 +381,41 @@ export const StoreProvider = ({ children }) => {
 
         const dataSource = customData || state;
 
-        if (type === 'work-package') {
-            const wp = dataSource.workPackages.find(w => w.id === entityId);
-            return wp ? parseStatus(wp.status) : 0;
-        }
-        if (type === 'deliverable') {
-            const relatedWPs = dataSource.workPackages.filter(wp => wp.deliverableId === entityId);
-            if (relatedWPs.length === 0) {
-                const d = dataSource.deliverables.find(i => i.id === entityId);
-                return d ? parseStatus(d.status) : 0;
+        try {
+            if (type === 'work-package') {
+                const wp = Array.isArray(dataSource.workPackages) ? dataSource.workPackages.find(w => w.id === entityId) : null;
+                return wp ? parseStatus(wp.status) : 0;
             }
-            const total = relatedWPs.reduce((sum, wp) => sum + parseStatus(wp.status), 0);
-            return Math.round(total / relatedWPs.length);
-        }
-        if (type === 'phase') {
-            const relatedDeliverables = dataSource.deliverables.filter(d => d.phaseId === entityId);
-            if (relatedDeliverables.length === 0) return 0;
-            const total = relatedDeliverables.reduce((sum, d) => sum + calculateCompletion(d.id, 'deliverable', dataSource), 0);
-            return Math.round(total / relatedDeliverables.length);
-        }
-        if (type === 'final-product') {
-            const relatedPhases = dataSource.phases.filter(p => p.finalProductId === entityId);
-            if (relatedPhases.length === 0) return 0;
-            const total = relatedPhases.reduce((sum, p) => sum + calculateCompletion(p.id, 'phase', dataSource), 0);
-            return Math.round(total / relatedPhases.length);
-        }
-        if (type === 'project') {
-            const relatedFPs = dataSource.finalProducts.filter(fp => fp.projectId === entityId);
-            if (relatedFPs.length === 0) return 0;
-            const total = relatedFPs.reduce((sum, fp) => sum + calculateCompletion(fp.id, 'final-product', dataSource), 0);
-            return Math.round(total / relatedFPs.length);
+            if (type === 'deliverable') {
+                const relatedWPs = Array.isArray(dataSource.workPackages) ? dataSource.workPackages.filter(wp => wp.deliverableId === entityId) : [];
+                if (relatedWPs.length === 0) {
+                    const d = Array.isArray(dataSource.deliverables) ? dataSource.deliverables.find(i => i.id === entityId) : null;
+                    return d ? parseStatus(d.status) : 0;
+                }
+                const total = relatedWPs.reduce((sum, wp) => sum + parseStatus(wp.status), 0);
+                return Math.round(total / relatedWPs.length);
+            }
+            if (type === 'phase') {
+                const relatedDeliverables = Array.isArray(dataSource.deliverables) ? dataSource.deliverables.filter(d => d.phaseId === entityId) : [];
+                if (relatedDeliverables.length === 0) return 0;
+                const total = relatedDeliverables.reduce((sum, d) => sum + calculateCompletion(d.id, 'deliverable', dataSource), 0);
+                return Math.round(total / relatedDeliverables.length);
+            }
+            if (type === 'final-product') {
+                const relatedPhases = Array.isArray(dataSource.phases) ? dataSource.phases.filter(p => p.finalProductId === entityId) : [];
+                if (relatedPhases.length === 0) return 0;
+                const total = relatedPhases.reduce((sum, p) => sum + calculateCompletion(p.id, 'phase', dataSource), 0);
+                return Math.round(total / relatedPhases.length);
+            }
+            if (type === 'project') {
+                const relatedFPs = Array.isArray(dataSource.finalProducts) ? dataSource.finalProducts.filter(fp => fp.projectId === entityId) : [];
+                if (relatedFPs.length === 0) return 0;
+                const total = relatedFPs.reduce((sum, fp) => sum + calculateCompletion(fp.id, 'final-product', dataSource), 0);
+                return Math.round(total / relatedFPs.length);
+            }
+        } catch (e) {
+            console.error("Error in calculateCompletion:", e);
+            return 0;
         }
         return 0;
     };
@@ -422,24 +427,34 @@ export const StoreProvider = ({ children }) => {
         let children = [];
         let childType = '';
 
-        if (type === 'project') {
-            item = dataSource.projects.find(p => p.id === entityId);
-            children = dataSource.finalProducts.filter(fp => fp.projectId === entityId);
-            childType = 'final-product';
-        } else if (type === 'final-product') {
-            item = dataSource.finalProducts.find(fp => fp.id === entityId);
-            children = dataSource.phases.filter(p => p.finalProductId === entityId);
-            childType = 'phase';
-        } else if (type === 'phase') {
-            item = dataSource.phases.find(p => p.id === entityId);
-            children = dataSource.deliverables.filter(d => d.phaseId === entityId);
-            childType = 'deliverable';
-        } else if (type === 'deliverable') {
-            item = dataSource.deliverables.find(d => d.id === entityId);
-            children = dataSource.workPackages.filter(wp => wp.deliverableId === entityId);
-            childType = 'work-package';
-        } else if (type === 'work-package') {
-            item = dataSource.workPackages.find(wp => wp.id === entityId);
+        try {
+            if (type === 'project') {
+                // Handle both state (projects array) and snapshot (single project object)
+                if (Array.isArray(dataSource.projects)) {
+                    item = dataSource.projects.find(p => p.id === entityId);
+                } else if (dataSource.project && dataSource.project.id === entityId) {
+                    item = dataSource.project;
+                }
+                children = Array.isArray(dataSource.finalProducts) ? dataSource.finalProducts.filter(fp => fp.projectId === entityId) : [];
+                childType = 'final-product';
+            } else if (type === 'final-product') {
+                item = Array.isArray(dataSource.finalProducts) ? dataSource.finalProducts.find(fp => fp.id === entityId) : null;
+                children = Array.isArray(dataSource.phases) ? dataSource.phases.filter(p => p.finalProductId === entityId) : [];
+                childType = 'phase';
+            } else if (type === 'phase') {
+                item = Array.isArray(dataSource.phases) ? dataSource.phases.find(p => p.id === entityId) : null;
+                children = Array.isArray(dataSource.deliverables) ? dataSource.deliverables.filter(d => d.phaseId === entityId) : [];
+                childType = 'deliverable';
+            } else if (type === 'deliverable') {
+                item = Array.isArray(dataSource.deliverables) ? dataSource.deliverables.find(d => d.id === entityId) : null;
+                children = Array.isArray(dataSource.workPackages) ? dataSource.workPackages.filter(wp => wp.deliverableId === entityId) : [];
+                childType = 'work-package';
+            } else if (type === 'work-package') {
+                item = Array.isArray(dataSource.workPackages) ? dataSource.workPackages.find(wp => wp.id === entityId) : null;
+            }
+        } catch (e) {
+            console.error("Error in calculateTimeline data access:", e);
+            return { startDate: '', endDate: '', actualStartDate: '', actualEndDate: '' };
         }
 
         if (!item) return { startDate: '', endDate: '', actualStartDate: '', actualEndDate: '' };

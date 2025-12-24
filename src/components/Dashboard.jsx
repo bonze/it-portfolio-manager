@@ -67,7 +67,7 @@ const Dashboard = () => {
         return sum + budget;
     }, 0);
     const avgCompletion = totalProjects > 0
-        ? Math.round(filteredProjects.reduce((sum, p) => sum + (p.completion || 0), 0) / totalProjects)
+        ? Math.round(filteredProjects.reduce((sum, p) => sum + calculateCompletion(p.id, 'project'), 0) / totalProjects)
         : 0;
 
     const isAdmin = user?.role === 'admin';

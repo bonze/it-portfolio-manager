@@ -41,7 +41,7 @@ export function authenticateToken(req, res, next) {
     jwt.verify(token, SECRET_KEY, (err, user) => {
         if (err) {
             console.error('JWT Verify Error:', err.message);
-            return res.sendStatus(403);
+            return res.status(403).json({ message: 'Forbidden', error: err.message });
         }
         req.user = user;
         next();

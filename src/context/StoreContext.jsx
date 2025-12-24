@@ -182,11 +182,19 @@ export const StoreProvider = ({ children }) => {
             body: JSON.stringify({ username, password })
         });
 
-        const data = await res.json();
-
         if (!res.ok) {
-            throw new Error(data.message || 'Login failed');
+            let errorMessage = 'Login failed';
+            try {
+                const data = await res.json();
+                errorMessage = data.message || errorMessage;
+            } catch (e) {
+                const text = await res.text();
+                errorMessage = text || errorMessage;
+            }
+            throw new Error(errorMessage);
         }
+
+        const data = await res.json();
 
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -206,15 +214,35 @@ export const StoreProvider = ({ children }) => {
         if (!token) return;
         try {
             const headers = { 'Authorization': `Bearer ${token}` };
+
+            const fetchJson = async (url) => {
+                const r = await fetch(url, { headers });
+                if (!r.ok) {
+                    const text = await r.text();
+                    console.error(`Fetch error for ${url}: ${r.status} ${text}`);
+                    return []; // Return empty array on error to prevent crash
+                }
+                return await r.json();
+            };
+
             const [projects, finalProducts, phases, deliverables, workPackages] = await Promise.all([
-                fetch('/api/projects', { headers }).then(r => r.json()),
-                fetch('/api/final-products', { headers }).then(r => r.json()),
-                fetch('/api/phases', { headers }).then(r => r.json()),
-                fetch('/api/deliverables', { headers }).then(r => r.json()),
-                fetch('/api/work-packages', { headers }).then(r => r.json())
+                fetchJson('/api/projects'),
+                fetchJson('/api/final-products'),
+                fetchJson('/api/phases'),
+                fetchJson('/api/deliverables'),
+                fetchJson('/api/work-packages')
             ]);
 
-            dispatch({ type: 'LOAD_DATA', payload: { projects, finalProducts, phases, deliverables, workPackages } });
+            dispatch({
+                type: 'LOAD_DATA',
+                payload: {
+                    projects: Array.isArray(projects) ? projects : [],
+                    finalProducts: Array.isArray(finalProducts) ? finalProducts : [],
+                    phases: Array.isArray(phases) ? phases : [],
+                    deliverables: Array.isArray(deliverables) ? deliverables : [],
+                    workPackages: Array.isArray(workPackages) ? workPackages : []
+                }
+            });
         } catch (e) {
             console.error("Failed to fetch data", e);
         }

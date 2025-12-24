@@ -89,7 +89,7 @@ const BaselineViewer = ({ entity, snapshot, onClose, isOpen = true }) => {
                                 </button>
                                 <div>
                                     <h2>Baseline v{selectedSnapshot.version}</h2>
-                                    <span className="meta-info">Created: {new Date(selectedSnapshot.createdAt).toLocaleString()}</span>
+                                    <span className="meta-info">Created: {selectedSnapshot.createdAt ? new Date(selectedSnapshot.createdAt).toLocaleString() : '-'}</span>
                                 </div>
                             </div>
                             <button onClick={onClose} className="close-btn"><FaTimes /></button>

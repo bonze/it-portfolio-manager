@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/BaselineModal.css';
 import BaselineViewer from './BaselineViewer';
+import { formatDate } from '../utils/dateFormat';
 
 const BaselineModal = ({ project, onClose, onUpdate, userRole }) => {
     const [baseline, setBaseline] = useState(project.baseline || 0);
@@ -128,7 +129,7 @@ const BaselineModal = ({ project, onClose, onUpdate, userRole }) => {
                                         <div key={item.id} className="history-item">
                                             <div className="history-info">
                                                 <span className="history-ver">v{item.version}</span>
-                                                <span className="history-date">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                <span className="history-date">{formatDate(item.createdAt)}</span>
                                             </div>
                                             <button
                                                 className="btn btn-sm btn-outline"

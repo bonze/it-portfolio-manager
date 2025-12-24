@@ -5,6 +5,7 @@ import PhaseItem from './PhaseItem';
 import InlineAdd from './InlineAdd';
 import { FaChevronDown, FaChevronRight, FaBoxOpen } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
+import { formatDate } from '../utils/dateFormat';
 
 const FinalProductItem = ({ finalProduct }) => {
     const { state, calculateCompletion, calculateTimeline, dispatch } = useStore();
@@ -44,7 +45,7 @@ const FinalProductItem = ({ finalProduct }) => {
                         if (!timeline.startDate && !timeline.endDate) return null;
                         return (
                             <span className="text-[10px] text-muted">
-                                {new Date(timeline.startDate).toLocaleDateString()} - {new Date(timeline.endDate).toLocaleDateString()}
+                                {formatDate(timeline.startDate)} - {formatDate(timeline.endDate)}
                             </span>
                         );
                     })()}

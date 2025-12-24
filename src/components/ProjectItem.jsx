@@ -7,6 +7,7 @@ import { FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaEdit, F
 import { v4 as uuidv4 } from 'uuid';
 import EditModal from './EditModal';
 import BaselineModal from './BaselineModal';
+import { formatDate } from '../utils/dateFormat';
 
 const ProjectItem = ({ project, ...props }) => {
     const { state, calculateCompletion, calculateTimeline, calculateBudgetVariance, calculateResourceUtilization, dispatch, user } = useStore();
@@ -157,10 +158,10 @@ const ProjectItem = ({ project, ...props }) => {
                         return (
                             <div>
                                 <span className="font-medium">Timeline: </span>
-                                <span>{timeline.startDate ? new Date(timeline.startDate).toLocaleDateString() : '?'} - {timeline.endDate ? new Date(timeline.endDate).toLocaleDateString() : '?'}</span>
+                                <span>{timeline.startDate ? formatDate(timeline.startDate) : '?'} - {timeline.endDate ? formatDate(timeline.endDate) : '?'}</span>
                                 {timeline.actualStartDate && (
                                     <span className="ml-2 text-success">
-                                        (Actual: {new Date(timeline.actualStartDate).toLocaleDateString()} - {timeline.actualEndDate ? new Date(timeline.actualEndDate).toLocaleDateString() : '...'})
+                                        (Actual: {formatDate(timeline.actualStartDate)} - {timeline.actualEndDate ? formatDate(timeline.actualEndDate) : '...'})
                                     </span>
                                 )}
                             </div>

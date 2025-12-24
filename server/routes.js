@@ -459,7 +459,7 @@ const createCrud = (entityName, tableName) => {
     }
 
     // DELETE
-    router.delete(`/${entityName}/:id`, authenticateToken, authorizeRole(['admin', 'operator']), async (req, res) => {
+    router.delete(`/${entityName}/:id`, authenticateToken, authorizeRole(['admin', 'operator', 'user']), async (req, res) => {
         const { id } = req.params;
         try {
             await dbOps.delete(tableName, id);

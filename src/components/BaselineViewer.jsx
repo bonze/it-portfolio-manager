@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaChevronDown, FaChevronRight, FaArrowLeft, FaEye, FaClock } from 'react-icons/fa';
 import { useStore } from '../context/StoreContext';
+import { formatDate } from '../utils/dateFormat';
 import '../styles/BaselineViewer.css';
 
 const BaselineViewer = ({ entity, snapshot, onClose, isOpen = true }) => {
@@ -44,9 +45,9 @@ const BaselineViewer = ({ entity, snapshot, onClose, isOpen = true }) => {
         setExpandedGoals(prev => ({ ...prev, [goalId]: !prev[goalId] }));
     };
 
-    const formatDate = (dateString) => {
+    const formatDateOrDash = (dateString) => {
         if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString();
+        return formatDate(dateString) || '-';
     };
 
     const handleBack = () => {
@@ -64,10 +65,10 @@ const BaselineViewer = ({ entity, snapshot, onClose, isOpen = true }) => {
         return (
             <div className="text-xs text-muted flex items-center gap-1 mt-1">
                 <FaClock size={10} />
-                <span>{formatDate(timeline.startDate)} - {formatDate(timeline.endDate)}</span>
+                <span>{formatDateOrDash(timeline.startDate)} - {formatDateOrDash(timeline.endDate)}</span>
                 {timeline.actualStartDate && (
                     <span className="ml-2 text-success">
-                        Actual: {formatDate(timeline.actualStartDate)} - {formatDate(timeline.actualEndDate) || '...'}
+                        Actual: {formatDateOrDash(timeline.actualStartDate)} - {formatDateOrDash(timeline.actualEndDate) || '...'}
                     </span>
                 )}
             </div>
@@ -218,7 +219,7 @@ const BaselineViewer = ({ entity, snapshot, onClose, isOpen = true }) => {
                                         <div key={item.id} className="bg-bg-secondary p-3 rounded flex justify-between items-center border border-border-color hover:border-accent transition-colors cursor-pointer" onClick={() => setSelectedSnapshot(item)}>
                                             <div>
                                                 <div className="font-semibold text-accent">Version {item.version}</div>
-                                                <div className="text-xs text-muted">{formatDate(item.createdAt)}</div>
+                                                <div className="text-xs text-muted">{formatDateOrDash(item.createdAt)}</div>
                                             </div>
                                             <button className="btn btn-icon-only text-muted hover:text-white">
                                                 <FaEye />

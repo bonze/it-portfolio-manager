@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { FaCheckCircle, FaRegCircle, FaEdit } from 'react-icons/fa';
 import EditModal from './EditModal';
+import { formatDate } from '../utils/dateFormat';
 
 const WorkPackageItem = ({ workPackage }) => {
     const { dispatch } = useStore();
@@ -43,10 +44,10 @@ const WorkPackageItem = ({ workPackage }) => {
                         </span>
                         {(workPackage.startDate || workPackage.endDate) && (
                             <span className="text-[10px] text-muted">
-                                {workPackage.startDate ? new Date(workPackage.startDate).toLocaleDateString() : '?'} - {workPackage.endDate ? new Date(workPackage.endDate).toLocaleDateString() : '?'}
+                                {workPackage.startDate ? formatDate(workPackage.startDate) : '?'} - {workPackage.endDate ? formatDate(workPackage.endDate) : '?'}
                                 {workPackage.actualStartDate && (
                                     <span className="ml-1 text-success">
-                                        (A: {new Date(workPackage.actualStartDate).toLocaleDateString()})
+                                        (A: {formatDate(workPackage.actualStartDate)})
                                     </span>
                                 )}
                             </span>

@@ -23,6 +23,14 @@ const ImportButton = () => {
                     if (val instanceof Date) {
                         return val.toISOString().split('T')[0];
                     }
+                    // Handle MM/DD/YYYY format
+                    if (typeof val === 'string' && val.includes('/')) {
+                        const parts = val.split('/');
+                        if (parts.length === 3) {
+                            const [month, day, year] = parts;
+                            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                        }
+                    }
                     return val.toString();
                 };
 

@@ -23,24 +23,30 @@ const COLUMNS = {
         { header: 'Man Days Plan', key: 'manDaysPlan', width: 15 },
         { header: 'Man Days Actual', key: 'manDaysActual', width: 15 }
     ],
-    goals: [
+    finalProducts: [
         { header: 'Project Name', key: 'projectName', width: 30 },
         { header: 'Description', key: 'description', width: 50 },
         { header: 'Owner', key: 'owner', width: 20 },
         { header: 'Budget', key: 'budget', width: 15 }
     ],
-    scopes: [
-        { header: 'Goal Description', key: 'goalDescription', width: 50 },
+    phases: [
+        { header: 'Final Product Description', key: 'finalProductDescription', width: 50 },
         { header: 'Description', key: 'description', width: 50 },
         { header: 'Owner', key: 'owner', width: 20 },
         { header: 'Budget', key: 'budget', width: 15 },
         { header: 'Timeline', key: 'timeline', width: 20 }
     ],
     deliverables: [
-        { header: 'Scope Description(s)', key: 'scopeDescriptions', width: 50 },
+        { header: 'Phase Description', key: 'phaseDescription', width: 50 },
+        { header: 'Description', key: 'description', width: 50 },
+        { header: 'Owner', key: 'owner', width: 20 },
+        { header: 'Budget', key: 'budget', width: 15 },
+        { header: 'Status', key: 'status', width: 10 }
+    ],
+    workPackages: [
+        { header: 'Deliverable Description', key: 'deliverableDescription', width: 50 },
         { header: 'Description', key: 'description', width: 50 },
         { header: 'Assignee', key: 'assignee', width: 20 },
-        { header: 'Owner', key: 'owner', width: 20 },
         { header: 'Budget', key: 'budget', width: 15 },
         { header: 'Status', key: 'status', width: 10 }
     ]
@@ -49,9 +55,10 @@ const COLUMNS = {
 // Generate Dynamic Sample Data
 function generateSampleData() {
     const projects = [];
-    const goals = [];
-    const scopes = [];
+    const finalProducts = [];
+    const phases = [];
     const deliverables = [];
+    const workPackages = [];
 
     const projectList = [
         { name: 'Cloud Migration 2025', bu: 'Infrastructure', owner: 'John Doe' },
@@ -80,46 +87,58 @@ function generateSampleData() {
             manDaysActual: 20 * (pIdx + 1)
         });
 
-        // Create 2-3 Goals per Project
-        const numGoals = 2 + (pIdx % 2); // 2 or 3
-        for (let g = 1; g <= numGoals; g++) {
-            const goalDesc = `${p.name} - Goal ${g}`;
-            goals.push({
+        // Create 2-3 Final Products per Project
+        const numFPs = 2 + (pIdx % 2); // 2 or 3
+        for (let fp = 1; fp <= numFPs; fp++) {
+            const fpDesc = `${p.name} - Product ${fp}`;
+            finalProducts.push({
                 projectName: p.name,
-                description: goalDesc,
+                description: fpDesc,
                 owner: p.owner,
                 budget: 30000
             });
 
-            // Create 2-3 Scopes per Goal
-            const numScopes = 2 + (g % 2); // 2 or 3
-            for (let s = 1; s <= numScopes; s++) {
-                const scopeDesc = `${goalDesc} - Scope ${s}`;
-                scopes.push({
-                    goalDescription: goalDesc,
-                    description: scopeDesc,
-                    owner: `Lead ${s}`,
+            // Create 2-3 Phases per Final Product
+            const numPhases = 2 + (fp % 2); // 2 or 3
+            for (let ph = 1; ph <= numPhases; ph++) {
+                const phaseDesc = `${fpDesc} - Phase ${ph}`;
+                phases.push({
+                    finalProductDescription: fpDesc,
+                    description: phaseDesc,
+                    owner: `Lead ${ph}`,
                     budget: 10000,
-                    timeline: `Q${s} 2025`
+                    timeline: `Q${ph} 2025`
                 });
 
-                // Create 1-3 Deliverables per Scope
-                const numDeliverables = 1 + (s % 3); // 1, 2, or 3
+                // Create 1-3 Deliverables per Phase
+                const numDeliverables = 1 + (ph % 3); // 1, 2, or 3
                 for (let d = 1; d <= numDeliverables; d++) {
+                    const delDesc = `${phaseDesc} - Deliverable ${d}`;
                     deliverables.push({
-                        scopeDescriptions: scopeDesc,
-                        description: `${scopeDesc} - Deliverable ${d}`,
-                        assignee: `Dev ${d}`,
-                        owner: `Lead ${s}`,
+                        phaseDescription: phaseDesc,
+                        description: delDesc,
+                        owner: `Lead ${ph}`,
                         budget: 5000,
-                        status: (d * 20) % 100
+                        status: 0 // Calculated from Work Packages
                     });
+
+                    // Create 2-4 Work Packages per Deliverable
+                    const numWPs = 2 + (d % 3); // 2, 3, or 4
+                    for (let wp = 1; wp <= numWPs; wp++) {
+                        workPackages.push({
+                            deliverableDescription: delDesc,
+                            description: `${delDesc} - WP ${wp}`,
+                            assignee: `Dev ${wp}`,
+                            budget: 1000,
+                            status: (wp * 20) % 100
+                        });
+                    }
                 }
             }
         }
     });
 
-    return { projects, goals, scopes, deliverables };
+    return { projects, finalProducts, phases, deliverables, workPackages };
 }
 
 const SAMPLE_DATA = generateSampleData();
@@ -129,18 +148,20 @@ async function generateFile(filename, data = null) {
 
     // Create Sheets
     const projectsSheet = workbook.addWorksheet('Projects');
-    const goalsSheet = workbook.addWorksheet('Goals');
-    const scopesSheet = workbook.addWorksheet('Scopes');
+    const finalProductsSheet = workbook.addWorksheet('Final Products');
+    const phasesSheet = workbook.addWorksheet('Phases');
     const deliverablesSheet = workbook.addWorksheet('Deliverables');
+    const workPackagesSheet = workbook.addWorksheet('Work Packages');
 
     // Set Columns
     projectsSheet.columns = COLUMNS.projects;
-    goalsSheet.columns = COLUMNS.goals;
-    scopesSheet.columns = COLUMNS.scopes;
+    finalProductsSheet.columns = COLUMNS.finalProducts;
+    phasesSheet.columns = COLUMNS.phases;
     deliverablesSheet.columns = COLUMNS.deliverables;
+    workPackagesSheet.columns = COLUMNS.workPackages;
 
     // Style Headers
-    [projectsSheet, goalsSheet, scopesSheet, deliverablesSheet].forEach(sheet => {
+    [projectsSheet, finalProductsSheet, phasesSheet, deliverablesSheet, workPackagesSheet].forEach(sheet => {
         sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
         sheet.getRow(1).fill = {
             type: 'pattern',
@@ -152,9 +173,10 @@ async function generateFile(filename, data = null) {
     // Add Data if provided
     if (data) {
         data.projects.forEach(r => projectsSheet.addRow(r));
-        data.goals.forEach(r => goalsSheet.addRow(r));
-        data.scopes.forEach(r => scopesSheet.addRow(r));
+        data.finalProducts.forEach(r => finalProductsSheet.addRow(r));
+        data.phases.forEach(r => phasesSheet.addRow(r));
         data.deliverables.forEach(r => deliverablesSheet.addRow(r));
+        data.workPackages.forEach(r => workPackagesSheet.addRow(r));
     }
 
     // Write File

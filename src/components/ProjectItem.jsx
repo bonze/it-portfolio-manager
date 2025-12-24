@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import ProgressBar from './ProgressBar';
-import GoalItem from './GoalItem';
+import FinalProductItem from './FinalProductItem';
 import InlineAdd from './InlineAdd';
 import { FaChevronDown, FaChevronRight, FaFolder, FaExclamationCircle, FaEdit, FaHistory } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,13 +15,13 @@ const ProjectItem = ({ project, ...props }) => {
     const [isBaselineModalOpen, setIsBaselineModalOpen] = useState(false);
 
     const completion = calculateCompletion(project.id, 'project');
-    const goals = state.goals.filter(g => g.projectId === project.id);
+    const finalProducts = state.finalProducts.filter(fp => fp.projectId === project.id);
     const budgetVariance = calculateBudgetVariance(project.id, 'project');
     const resourceUtil = calculateResourceUtilization(project.id, 'project');
 
-    const handleAddGoal = (description) => {
+    const handleAddFinalProduct = (description) => {
         dispatch({
-            type: 'ADD_GOAL',
+            type: 'ADD_FINAL_PRODUCT',
             payload: {
                 id: uuidv4(),
                 projectId: project.id,
@@ -169,11 +169,11 @@ const ProjectItem = ({ project, ...props }) => {
                         <p className="text-muted mb-4">{project.description}</p>
 
                         <div className="flex flex-col gap-3">
-                            {goals.map(goal => (
-                                <GoalItem key={goal.id} goal={goal} />
+                            {finalProducts.map(fp => (
+                                <FinalProductItem key={fp.id} finalProduct={fp} />
                             ))}
-                            {goals.length === 0 && <p className="text-sm text-muted">No goals defined.</p>}
-                            <InlineAdd onAdd={handleAddGoal} placeholder="Add New Goal" />
+                            {finalProducts.length === 0 && <p className="text-sm text-muted">No final products defined.</p>}
+                            <InlineAdd onAdd={handleAddFinalProduct} placeholder="Add New Final Product" />
                         </div>
                     </div>
                 )}

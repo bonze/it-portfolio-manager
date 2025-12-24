@@ -20,19 +20,22 @@ const ImportButton = () => {
 
                 // Parse Sheets
                 const projectsSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const goalsSheet = workbook.Sheets[workbook.SheetNames[1]];
-                const scopesSheet = workbook.Sheets[workbook.SheetNames[2]];
+                const finalProductsSheet = workbook.Sheets[workbook.SheetNames[1]];
+                const phasesSheet = workbook.Sheets[workbook.SheetNames[2]];
                 const deliverablesSheet = workbook.Sheets[workbook.SheetNames[3]];
+                const workPackagesSheet = workbook.Sheets[workbook.SheetNames[4]];
 
                 const projectsData = XLSX.utils.sheet_to_json(projectsSheet);
-                const goalsData = XLSX.utils.sheet_to_json(goalsSheet);
-                const scopesData = XLSX.utils.sheet_to_json(scopesSheet);
+                const finalProductsData = XLSX.utils.sheet_to_json(finalProductsSheet);
+                const phasesData = XLSX.utils.sheet_to_json(phasesSheet);
                 const deliverablesData = XLSX.utils.sheet_to_json(deliverablesSheet);
+                const workPackagesData = workPackagesSheet ? XLSX.utils.sheet_to_json(workPackagesSheet) : [];
 
                 // Map to store IDs to resolve relationships
                 const projectMap = {}; // Name -> ID
-                const goalMap = {}; // Description -> ID
-                const scopeMap = {}; // Description -> ID
+                const finalProductMap = {}; // Description -> ID
+                const phaseMap = {}; // Description -> ID
+                const deliverableMap = {}; // Description -> ID
 
                 // 1. Import Projects
                 for (const p of projectsData) {
@@ -72,47 +75,47 @@ const ImportButton = () => {
                             budget,
                             vendor,
                             resources,
-                            kpis: [], // Initialize empty KPIs
-                            risks: [] // Initialize empty Risks
+                            kpis: [],
+                            risks: []
                         }
                     });
                 }
 
-                // 2. Import Goals
-                for (const g of goalsData) {
-                    const projectId = projectMap[g['Project Name']];
+                // 2. Import Final Products
+                for (const fp of finalProductsData) {
+                    const projectId = projectMap[fp['Project Name']];
                     if (projectId) {
                         const id = uuidv4();
-                        goalMap[g.Description] = id;
+                        finalProductMap[fp.Description] = id;
                         await apiDispatch({
-                            type: 'ADD_GOAL',
+                            type: 'ADD_FINAL_PRODUCT',
                             payload: {
                                 id,
                                 projectId,
-                                description: g.Description,
-                                owner: g.Owner,
-                                budget: { plan: g.Budget || 0, actual: 0, additional: 0 },
+                                description: fp.Description,
+                                owner: fp.Owner,
+                                budget: { plan: fp.Budget || 0, actual: 0, additional: 0 },
                                 status: 'Planning'
                             }
                         });
                     }
                 }
 
-                // 3. Import Scopes
-                for (const s of scopesData) {
-                    const goalId = goalMap[s['Goal Description']];
-                    if (goalId) {
+                // 3. Import Phases
+                for (const ph of phasesData) {
+                    const finalProductId = finalProductMap[ph['Final Product Description']];
+                    if (finalProductId) {
                         const id = uuidv4();
-                        scopeMap[s.Description] = id;
+                        phaseMap[ph.Description] = id;
                         await apiDispatch({
-                            type: 'ADD_SCOPE',
+                            type: 'ADD_PHASE',
                             payload: {
                                 id,
-                                goalId,
-                                description: s.Description,
-                                owner: s.Owner,
-                                budget: s.Budget || 0,
-                                timeline: s.Timeline || 'TBD',
+                                finalProductId,
+                                description: ph.Description,
+                                owner: ph.Owner,
+                                budget: ph.Budget || 0,
+                                timeline: ph.Timeline || 'TBD',
                                 status: 'Planning'
                             }
                         });
@@ -121,17 +124,16 @@ const ImportButton = () => {
 
                 // 4. Import Deliverables
                 for (const d of deliverablesData) {
-                    const scopeNames = d['Scope Description(s)'] ? d['Scope Description(s)'].split(',').map(s => s.trim()) : [];
-                    const scopeIds = scopeNames.map(name => scopeMap[name]).filter(id => id);
-
-                    if (scopeIds.length > 0) {
+                    const phaseId = phaseMap[d['Phase Description']];
+                    if (phaseId) {
+                        const id = uuidv4();
+                        deliverableMap[d.Description] = id;
                         await apiDispatch({
                             type: 'ADD_DELIVERABLE',
                             payload: {
-                                id: uuidv4(),
-                                scopeIds,
+                                id,
+                                phaseId,
                                 description: d.Description,
-                                assignee: d.Assignee || 'Unassigned',
                                 owner: d.Owner,
                                 budget: d.Budget || 0,
                                 status: d.Status || 0,
@@ -141,8 +143,25 @@ const ImportButton = () => {
                     }
                 }
 
+                // 5. Import Work Packages
+                for (const wp of workPackagesData) {
+                    const deliverableId = deliverableMap[wp['Deliverable Description']];
+                    if (deliverableId) {
+                        await apiDispatch({
+                            type: 'ADD_WORK_PACKAGE',
+                            payload: {
+                                id: uuidv4(),
+                                deliverableId,
+                                description: wp.Description,
+                                assignee: wp.Assignee || 'Unassigned',
+                                budget: wp.Budget || 0,
+                                status: wp.Status || 0
+                            }
+                        });
+                    }
+                }
+
                 alert('Import Successful! Data saved to database.');
-                // Reset input
                 if (fileInputRef.current) fileInputRef.current.value = '';
             } catch (error) {
                 console.error('Import failed:', error);

@@ -429,6 +429,31 @@ const createCrud = (entityName, tableName) => {
                 res.status(500).json({ error: e.message });
             }
         });
+
+        // Create Baseline Snapshot (Manual/Approve)
+        router.post('/baselines', authenticateToken, authorizeRole(['admin', 'operator']), async (req, res) => {
+            try {
+                const { projectId, version, snapshot } = req.body;
+                // If snapshot is provided, we use it. Otherwise we create a new one.
+                if (snapshot) {
+                    // We need to handle the snapshot format which is usually a full project tree
+                    // dbOps.insert for project_baselines expects a specific structure if using IS_VERCEL
+                    // For SQLite it's just JSON.stringify
+                    // Let's use a dedicated method or ensure dbOps.insert handles it.
+                    // Actually dbOps.createBaselineSnapshot is better but it fetches from DB.
+                    // If the frontend sends a snapshot, it's likely because it wants to save the CURRENT state.
+
+                    // For now, let's just use createBaselineSnapshot if snapshot is not provided,
+                    // or implement a way to save the provided snapshot.
+                    await dbOps.createBaselineSnapshot(projectId, version);
+                } else {
+                    await dbOps.createBaselineSnapshot(projectId, version);
+                }
+                res.status(201).json({ message: 'Baseline created successfully' });
+            } catch (e) {
+                res.status(500).json({ error: e.message });
+            }
+        });
     }
 
     // DELETE
@@ -444,17 +469,78 @@ const createCrud = (entityName, tableName) => {
 };
 
 createCrud('projects', 'projects');
-createCrud('goals', 'goals');
-createCrud('scopes', 'scopes');
+createCrud('final-products', 'final_products');
+createCrud('phases', 'phases');
 createCrud('deliverables', 'deliverables');
+createCrud('work-packages', 'work_packages');
+
+// =====================================================
+// KPI ROUTES
+// =====================================================
+
+// Get all KPIs
+router.get('/kpis', authenticateToken, async (req, res) => {
+    try {
+        const kpis = await dbOps.getAllKPIs();
+        res.json(kpis);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get KPIs for entity
+router.get('/kpis/:entityType/:entityId', authenticateToken, async (req, res) => {
+    try {
+        const { entityType, entityId } = req.params;
+        const kpis = await dbOps.getKPIsByEntity(entityType, entityId);
+        res.json(kpis);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Create KPI
+router.post('/kpis', authenticateToken, async (req, res) => {
+    try {
+        const kpi = req.body;
+        await dbOps.createKPI(kpi);
+        res.status(201).json(kpi);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update KPI
+router.put('/kpis/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const kpi = req.body;
+        await dbOps.updateKPI(id, kpi);
+        res.json(kpi);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete KPI
+router.delete('/kpis/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        await dbOps.deleteKPI(id);
+        res.json({ message: 'KPI deleted' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // Export Excel
 router.get('/export', authenticateToken, async (req, res) => {
     try {
         const projects = await dbOps.getAll('projects');
-        const goals = await dbOps.getAll('goals');
-        const scopes = await dbOps.getAll('scopes');
+        const finalProducts = await dbOps.getAll('final_products');
+        const phases = await dbOps.getAll('phases');
         const deliverables = await dbOps.getAll('deliverables');
+        const workPackages = await dbOps.getAll('work_packages');
 
         const workbook = new ExcelJS.Workbook();
 
@@ -500,48 +586,48 @@ router.get('/export', authenticateToken, async (req, res) => {
             });
         });
 
-        // Sheet 2: Goals
-        const goalsSheet = workbook.addWorksheet('Goals');
-        goalsSheet.columns = [
+        // Sheet 2: Final Products
+        const finalProductsSheet = workbook.addWorksheet('Final Products');
+        finalProductsSheet.columns = [
             { header: 'Project Name', key: 'projectName', width: 30 },
             { header: 'Description', key: 'description', width: 50 },
             { header: 'Owner', key: 'owner', width: 20 },
             { header: 'Budget', key: 'budget', width: 15 }
         ];
 
-        goals.forEach(g => {
-            const project = projects.find(p => p.id === g.projectId);
+        finalProducts.forEach(fp => {
+            const project = projects.find(p => p.id === fp.projectId);
             if (project) {
-                const budget = g.budget || 0;
-                goalsSheet.addRow({
+                const budget = fp.budget || 0;
+                finalProductsSheet.addRow({
                     projectName: project.name,
-                    description: g.description || g.title || '',
-                    owner: g.owner || '',
+                    description: fp.description || fp.title || '',
+                    owner: fp.owner || '',
                     budget: typeof budget === 'object' ? (budget.plan || 0) : budget
                 });
             }
         });
 
-        // Sheet 3: Scopes
-        const scopesSheet = workbook.addWorksheet('Scopes');
-        scopesSheet.columns = [
-            { header: 'Goal Description', key: 'goalDescription', width: 50 },
+        // Sheet 3: Phases
+        const phasesSheet = workbook.addWorksheet('Phases');
+        phasesSheet.columns = [
+            { header: 'Final Product Description', key: 'finalProductDescription', width: 50 },
             { header: 'Description', key: 'description', width: 50 },
             { header: 'Owner', key: 'owner', width: 20 },
             { header: 'Budget', key: 'budget', width: 15 },
             { header: 'Timeline', key: 'timeline', width: 20 }
         ];
 
-        scopes.forEach(s => {
-            const goal = goals.find(g => g.id === s.goalId);
-            if (goal) {
-                const budget = s.budget || 0;
-                scopesSheet.addRow({
-                    goalDescription: goal.description || goal.title || '',
-                    description: s.description || s.title || '',
-                    owner: s.owner || '',
+        phases.forEach(ph => {
+            const fp = finalProducts.find(f => f.id === ph.finalProductId);
+            if (fp) {
+                const budget = ph.budget || 0;
+                phasesSheet.addRow({
+                    finalProductDescription: fp.description || fp.title || '',
+                    description: ph.description || ph.title || '',
+                    owner: ph.owner || '',
                     budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
-                    timeline: s.timeline || 'TBD'
+                    timeline: ph.timeline || 'TBD'
                 });
             }
         });
@@ -549,37 +635,20 @@ router.get('/export', authenticateToken, async (req, res) => {
         // Sheet 4: Deliverables
         const deliverablesSheet = workbook.addWorksheet('Deliverables');
         deliverablesSheet.columns = [
-            { header: 'Scope Description(s)', key: 'scopeDescriptions', width: 50 },
+            { header: 'Phase Description', key: 'phaseDescription', width: 50 },
             { header: 'Description', key: 'description', width: 50 },
-            { header: 'Assignee', key: 'assignee', width: 20 },
             { header: 'Owner', key: 'owner', width: 20 },
             { header: 'Budget', key: 'budget', width: 15 },
             { header: 'Status', key: 'status', width: 10 }
         ];
 
         deliverables.forEach(d => {
-            // Get scope descriptions
-            let scopeIds = [];
-            if (d.scopeId) {
-                scopeIds = [d.scopeId];
-            } else if (d.scopeIds && Array.isArray(d.scopeIds)) {
-                scopeIds = d.scopeIds;
-            }
-
-            const scopeDescriptions = scopeIds
-                .map(scopeId => {
-                    const scope = scopes.find(s => s.id === scopeId);
-                    return scope ? (scope.description || scope.title || '') : '';
-                })
-                .filter(desc => desc)
-                .join(', ');
-
-            if (scopeDescriptions) {
+            const phase = phases.find(p => p.id === d.phaseId);
+            if (phase) {
                 const budget = d.budget || 0;
                 deliverablesSheet.addRow({
-                    scopeDescriptions,
+                    phaseDescription: phase.description || phase.title || '',
                     description: d.description || d.title || '',
-                    assignee: d.assignee || 'Unassigned',
                     owner: d.owner || '',
                     budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
                     status: d.status || 0
@@ -587,8 +656,32 @@ router.get('/export', authenticateToken, async (req, res) => {
             }
         });
 
+        // Sheet 5: Work Packages
+        const workPackagesSheet = workbook.addWorksheet('Work Packages');
+        workPackagesSheet.columns = [
+            { header: 'Deliverable Description', key: 'deliverableDescription', width: 50 },
+            { header: 'Description', key: 'description', width: 50 },
+            { header: 'Assignee', key: 'assignee', width: 20 },
+            { header: 'Budget', key: 'budget', width: 15 },
+            { header: 'Status', key: 'status', width: 10 }
+        ];
+
+        workPackages.forEach(wp => {
+            const deliverable = deliverables.find(d => d.id === wp.deliverableId);
+            if (deliverable) {
+                const budget = wp.budget || 0;
+                workPackagesSheet.addRow({
+                    deliverableDescription: deliverable.description || deliverable.title || '',
+                    description: wp.description || wp.title || '',
+                    assignee: wp.assignee || 'Unassigned',
+                    budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
+                    status: wp.status || 0
+                });
+            }
+        });
+
         // Style headers for all sheets
-        [projectsSheet, goalsSheet, scopesSheet, deliverablesSheet].forEach(sheet => {
+        [projectsSheet, finalProductsSheet, phasesSheet, deliverablesSheet, workPackagesSheet].forEach(sheet => {
             sheet.getRow(1).font = { bold: true };
             sheet.getRow(1).fill = {
                 type: 'pattern',

@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import ProgressBar from './ProgressBar';
-import ScopeItem from './ScopeItem';
+import PhaseItem from './PhaseItem';
 import InlineAdd from './InlineAdd';
-import { FaChevronDown, FaChevronRight, FaBullseye } from 'react-icons/fa';
+import { FaChevronDown, FaChevronRight, FaBoxOpen } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 
-const GoalItem = ({ goal }) => {
+const FinalProductItem = ({ finalProduct }) => {
     const { state, calculateCompletion, dispatch } = useStore();
     const [expanded, setExpanded] = useState(false);
 
-    const completion = calculateCompletion(goal.id, 'goal');
-    const scopes = state.scopes.filter(s => s.goalId === goal.id);
+    const completion = calculateCompletion(finalProduct.id, 'final-product');
+    const phases = state.phases.filter(p => p.finalProductId === finalProduct.id);
 
-    const handleAddScope = (description) => {
+    const handleAddPhase = (description) => {
         dispatch({
-            type: 'ADD_SCOPE',
+            type: 'ADD_PHASE',
             payload: {
                 id: uuidv4(),
-                goalId: goal.id,
+                finalProductId: finalProduct.id,
                 description,
                 budget: 0,
                 timeline: 'TBD',
@@ -32,8 +32,8 @@ const GoalItem = ({ goal }) => {
             <div className="flex justify-between items-center cursor-pointer" onClick={() => setExpanded(!expanded)}>
                 <div className="flex items-center gap-2">
                     {expanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
-                    <FaBullseye className="text-warning-color" />
-                    <span className="font-medium">{goal.description}</span>
+                    <FaBoxOpen className="text-warning-color" />
+                    <span className="font-medium">{finalProduct.description}</span>
                 </div>
                 <div style={{ width: '100px' }}>
                     <ProgressBar percentage={completion} />
@@ -43,11 +43,11 @@ const GoalItem = ({ goal }) => {
             {expanded && (
                 <div className="pl-4 mt-3 border-l border-border-color ml-1">
                     <div className="flex flex-col gap-2">
-                        {scopes.map(scope => (
-                            <ScopeItem key={scope.id} scope={scope} />
+                        {phases.map(phase => (
+                            <PhaseItem key={phase.id} phase={phase} />
                         ))}
-                        {scopes.length === 0 && <p className="text-xs text-muted">No scopes defined.</p>}
-                        <InlineAdd onAdd={handleAddScope} placeholder="Add New Scope" />
+                        {phases.length === 0 && <p className="text-xs text-muted">No phases defined.</p>}
+                        <InlineAdd onAdd={handleAddPhase} placeholder="Add New Phase" />
                     </div>
                 </div>
             )}
@@ -55,4 +55,4 @@ const GoalItem = ({ goal }) => {
     );
 };
 
-export default GoalItem;
+export default FinalProductItem;

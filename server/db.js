@@ -70,7 +70,7 @@ function createSQLiteTables() {
     `);
 
     db.run(`
-        CREATE TABLE IF NOT EXISTS goals (
+        CREATE TABLE IF NOT EXISTS final_products (
             id TEXT PRIMARY KEY,
             projectId TEXT,
             data TEXT,
@@ -79,19 +79,29 @@ function createSQLiteTables() {
     `);
 
     db.run(`
-        CREATE TABLE IF NOT EXISTS scopes (
+        CREATE TABLE IF NOT EXISTS phases (
             id TEXT PRIMARY KEY,
-            goalId TEXT,
+            finalProductId TEXT,
             data TEXT,
-            FOREIGN KEY(goalId) REFERENCES goals(id) ON DELETE CASCADE
+            FOREIGN KEY(finalProductId) REFERENCES final_products(id) ON DELETE CASCADE
         );
     `);
 
     db.run(`
         CREATE TABLE IF NOT EXISTS deliverables (
             id TEXT PRIMARY KEY,
-            scopeId TEXT,
-            data TEXT
+            phaseId TEXT,
+            data TEXT,
+            FOREIGN KEY(phaseId) REFERENCES phases(id) ON DELETE CASCADE
+        );
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS work_packages (
+            id TEXT PRIMARY KEY,
+            deliverableId TEXT,
+            data TEXT,
+            FOREIGN KEY(deliverableId) REFERENCES deliverables(id) ON DELETE CASCADE
         );
     `);
 
@@ -102,6 +112,21 @@ function createSQLiteTables() {
             version INTEGER,
             data TEXT,
             FOREIGN KEY(projectId) REFERENCES projects(id) ON DELETE CASCADE
+        );
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS kpis (
+            id TEXT PRIMARY KEY,
+            entityType TEXT NOT NULL,
+            entityId TEXT NOT NULL,
+            name TEXT NOT NULL,
+            target REAL,
+            actual REAL,
+            unit TEXT,
+            status TEXT,
+            createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
         );
     `);
 
@@ -306,24 +331,27 @@ export const dbOps = {
     async insert(tableName, item) {
         if (IS_VERCEL) {
             const row = { id: item.id, data: item };
-            if (tableName === 'goals') row.projectId = item.projectId;
-            if (tableName === 'scopes') row.goalId = item.goalId;
-            if (tableName === 'deliverables') row.scopeId = item.scopeId || (item.scopeIds ? item.scopeIds[0] : null);
+            if (tableName === 'final_products') row.projectId = item.projectId;
+            if (tableName === 'phases') row.finalProductId = item.finalProductId;
+            if (tableName === 'deliverables') row.phaseId = item.phaseId;
+            if (tableName === 'work_packages') row.deliverableId = item.deliverableId;
 
             await supabase.from(tableName).insert(row);
         } else {
-            let projectId = null, goalId = null, scopeId = null;
-            if (tableName === 'goals') projectId = item.projectId;
-            if (tableName === 'scopes') goalId = item.goalId;
-            if (tableName === 'deliverables') scopeId = item.scopeId || (item.scopeIds ? item.scopeIds[0] : null);
+            let projectId = null, finalProductId = null, phaseId = null, deliverableId = null;
+            if (tableName === 'final_products') projectId = item.projectId;
+            if (tableName === 'phases') finalProductId = item.finalProductId;
+            if (tableName === 'deliverables') phaseId = item.phaseId;
+            if (tableName === 'work_packages') deliverableId = item.deliverableId;
 
             const cols = ['id'];
             const vals = [item.id];
             const placeholders = ['?'];
 
             if (projectId) { cols.push('projectId'); vals.push(projectId); placeholders.push('?'); }
-            if (goalId) { cols.push('goalId'); vals.push(goalId); placeholders.push('?'); }
-            if (scopeId) { cols.push('scopeId'); vals.push(scopeId); placeholders.push('?'); }
+            if (finalProductId) { cols.push('finalProductId'); vals.push(finalProductId); placeholders.push('?'); }
+            if (phaseId) { cols.push('phaseId'); vals.push(phaseId); placeholders.push('?'); }
+            if (deliverableId) { cols.push('deliverableId'); vals.push(deliverableId); placeholders.push('?'); }
 
             cols.push('data');
             vals.push(JSON.stringify(item));
@@ -524,32 +552,26 @@ export const dbOps = {
     // Create a baseline snapshot
     async createBaselineSnapshot(projectId, version) {
         // 1. Fetch all data for the project
-        let project, goals, scopes, deliverables;
+        let project, finalProducts, phases, deliverables, workPackages;
 
         if (IS_VERCEL) {
             const { data: pData } = await supabase.from('projects').select('*').eq('id', projectId).single();
             project = { ...pData.data, id: pData.id };
 
-            const { data: gData } = await supabase.from('goals').select('*').eq('projectId', projectId);
-            goals = (gData || []).map(i => ({ ...i.data, id: i.id }));
+            const { data: fpData } = await supabase.from('final_products').select('*').eq('projectId', projectId);
+            finalProducts = (fpData || []).map(i => ({ ...i.data, id: i.id }));
 
-            const goalIds = goals.map(g => g.id);
-            const { data: sData } = await supabase.from('scopes').select('*').in('goalId', goalIds);
-            scopes = (sData || []).map(i => ({ ...i.data, id: i.id }));
+            const finalProductIds = finalProducts.map(g => g.id);
+            const { data: phData } = await supabase.from('phases').select('*').in('finalProductId', finalProductIds);
+            phases = (phData || []).map(i => ({ ...i.data, id: i.id }));
 
-            const scopeIds = scopes.map(s => s.id);
-            // Note: Deliverables might link to scopeId (singular) or scopeIds (array). 
-            // For simplicity in snapshot, we fetch all and filter in memory or fetch by scopeId if possible.
-            // Since we don't have a direct 'in' query for JSON arrays easily here without complex filters,
-            // we'll fetch all deliverables and filter (assuming dataset isn't huge) OR better:
-            // Fetch deliverables where scopeId is in list.
-            const { data: dData } = await supabase.from('deliverables').select('*'); // Fetching all is safest for mixed schema
-            deliverables = (dData || []).map(i => ({ ...i.data, id: i.id }))
-                .filter(d => {
-                    if (d.scopeId && scopeIds.includes(d.scopeId)) return true;
-                    if (d.scopeIds && d.scopeIds.some(id => scopeIds.includes(id))) return true;
-                    return false;
-                });
+            const phaseIds = phases.map(s => s.id);
+            const { data: dData } = await supabase.from('deliverables').select('*').in('phaseId', phaseIds);
+            deliverables = (dData || []).map(i => ({ ...i.data, id: i.id }));
+
+            const deliverableIds = deliverables.map(d => d.id);
+            const { data: wpData } = await supabase.from('work_packages').select('*').in('deliverableId', deliverableIds);
+            workPackages = (wpData || []).map(i => ({ ...i.data, id: i.id }));
 
         } else {
             // SQLite implementation
@@ -557,27 +579,32 @@ export const dbOps = {
             project = JSON.parse(pRes[0].values[0][1]);
             project.id = pRes[0].values[0][0];
 
-            const gRes = db.exec('SELECT * FROM goals WHERE projectId = ?', [projectId]);
-            goals = gRes.length ? gRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+            const fpRes = db.exec('SELECT * FROM final_products WHERE projectId = ?', [projectId]);
+            finalProducts = fpRes.length ? fpRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
 
-            const goalIds = goals.map(g => g.id);
-            let scopes = [];
-            if (goalIds.length > 0) {
-                const placeholders = goalIds.map(() => '?').join(',');
-                const sRes = db.exec(`SELECT * FROM scopes WHERE goalId IN (${placeholders})`, goalIds);
-                scopes = sRes.length ? sRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+            const finalProductIds = finalProducts.map(g => g.id);
+            let phases = [];
+            if (finalProductIds.length > 0) {
+                const placeholders = finalProductIds.map(() => '?').join(',');
+                const phRes = db.exec(`SELECT * FROM phases WHERE finalProductId IN (${placeholders})`, finalProductIds);
+                phases = phRes.length ? phRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
             }
 
-            const scopeIds = scopes.map(s => s.id);
+            const phaseIds = phases.map(s => s.id);
             let deliverables = [];
-            // SQLite doesn't strictly enforce FKs on JSON content, so fetching all and filtering is robust
-            const dRes = db.exec('SELECT * FROM deliverables');
-            const allDeliverables = dRes.length ? dRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
-            deliverables = allDeliverables.filter(d => {
-                if (d.scopeId && scopeIds.includes(d.scopeId)) return true;
-                if (d.scopeIds && d.scopeIds.some(id => scopeIds.includes(id))) return true;
-                return false;
-            });
+            if (phaseIds.length > 0) {
+                const placeholders = phaseIds.map(() => '?').join(',');
+                const dRes = db.exec(`SELECT * FROM deliverables WHERE phaseId IN (${placeholders})`, phaseIds);
+                deliverables = dRes.length ? dRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+            }
+
+            const deliverableIds = deliverables.map(d => d.id);
+            let workPackages = [];
+            if (deliverableIds.length > 0) {
+                const placeholders = deliverableIds.map(() => '?').join(',');
+                const wpRes = db.exec(`SELECT * FROM work_packages WHERE deliverableId IN (${placeholders})`, deliverableIds);
+                workPackages = wpRes.length ? wpRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
+            }
         }
 
         // 2. Construct Snapshot
@@ -585,9 +612,10 @@ export const dbOps = {
             version,
             createdAt: new Date().toISOString(),
             project,
-            goals,
-            scopes,
-            deliverables
+            finalProducts,
+            phases,
+            deliverables,
+            workPackages
         };
 
         // 3. Insert into project_baselines
@@ -812,6 +840,98 @@ export const dbOps = {
     },
 
     // =====================================================
+    // KPI OPERATIONS
+    // =====================================================
+
+    async getAllKPIs() {
+        if (IS_VERCEL) {
+            const { data } = await supabase.from('kpis').select('*');
+            return data || [];
+        } else {
+            const result = db.exec('SELECT * FROM kpis');
+            if (result.length === 0) return [];
+
+            const kpis = [];
+            result[0].values.forEach(row => {
+                kpis.push({
+                    id: row[0],
+                    entityType: row[1],
+                    entityId: row[2],
+                    name: row[3],
+                    target: row[4],
+                    actual: row[5],
+                    unit: row[6],
+                    status: row[7],
+                    createdAt: row[8],
+                    updatedAt: row[9]
+                });
+            });
+            return kpis;
+        }
+    },
+
+    async getKPIsByEntity(entityType, entityId) {
+        if (IS_VERCEL) {
+            const { data } = await supabase.from('kpis').select('*').eq('entityType', entityType).eq('entityId', entityId);
+            return data || [];
+        } else {
+            const result = db.exec('SELECT * FROM kpis WHERE entityType = ? AND entityId = ?', [entityType, entityId]);
+            if (result.length === 0) return [];
+
+            const kpis = [];
+            result[0].values.forEach(row => {
+                kpis.push({
+                    id: row[0],
+                    entityType: row[1],
+                    entityId: row[2],
+                    name: row[3],
+                    target: row[4],
+                    actual: row[5],
+                    unit: row[6],
+                    status: row[7],
+                    createdAt: row[8],
+                    updatedAt: row[9]
+                });
+            });
+            return kpis;
+        }
+    },
+
+    async createKPI(kpi) {
+        if (IS_VERCEL) {
+            await supabase.from('kpis').insert(kpi);
+        } else {
+            db.run(`
+                INSERT INTO kpis (id, entityType, entityId, name, target, actual, unit, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `, [kpi.id, kpi.entityType, kpi.entityId, kpi.name, kpi.target, kpi.actual, kpi.unit, kpi.status]);
+            saveDatabase();
+        }
+    },
+
+    async updateKPI(id, kpi) {
+        if (IS_VERCEL) {
+            await supabase.from('kpis').update({ ...kpi, updatedAt: new Date().toISOString() }).eq('id', id);
+        } else {
+            db.run(`
+                UPDATE kpis 
+                SET name = ?, target = ?, actual = ?, unit = ?, status = ?, updatedAt = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `, [kpi.name, kpi.target, kpi.actual, kpi.unit, kpi.status, id]);
+            saveDatabase();
+        }
+    },
+
+    async deleteKPI(id) {
+        if (IS_VERCEL) {
+            await supabase.from('kpis').delete().eq('id', id);
+        } else {
+            db.run('DELETE FROM kpis WHERE id = ?', [id]);
+            saveDatabase();
+        }
+    },
+
+    // =====================================================
     // AUDIT LOG OPERATIONS
     // =====================================================
 
@@ -893,17 +1013,19 @@ export const dbOps = {
         if (IS_VERCEL) {
             // Delete in reverse order of dependencies
             // Using neq('id', 0) or neq('id', '0') as a way to delete all rows since Supabase requires a filter
+            await supabase.from('work_packages').delete().neq('id', '0');
             await supabase.from('deliverables').delete().neq('id', '0');
-            await supabase.from('scopes').delete().neq('id', '0');
-            await supabase.from('goals').delete().neq('id', '0');
+            await supabase.from('phases').delete().neq('id', '0');
+            await supabase.from('final_products').delete().neq('id', '0');
             await supabase.from('projects').delete().neq('id', '0');
             await supabase.from('project_baselines').delete().neq('id', 0);
             await supabase.from('vendor_evaluations').delete().neq('id', 0);
             await supabase.from('audit_logs').delete().neq('id', 0);
         } else {
+            db.run('DELETE FROM work_packages');
             db.run('DELETE FROM deliverables');
-            db.run('DELETE FROM scopes');
-            db.run('DELETE FROM goals');
+            db.run('DELETE FROM phases');
+            db.run('DELETE FROM final_products');
             db.run('DELETE FROM projects');
             db.run('DELETE FROM project_baselines');
             db.run('DELETE FROM vendor_evaluations');

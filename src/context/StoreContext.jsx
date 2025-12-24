@@ -1,14 +1,14 @@
 import React, { createContext, useReducer, useEffect, useContext, useState } from 'react';
-import { seedData } from '../utils/seedData';
 import { v4 as uuidv4 } from 'uuid';
 
 const StoreContext = createContext();
 
 const initialState = {
     projects: [],
-    goals: [],
-    scopes: [],
+    finalProducts: [],
+    phases: [],
     deliverables: [],
+    workPackages: [],
 };
 
 const reducer = (state, action) => {
@@ -22,119 +22,142 @@ const reducer = (state, action) => {
                 ...state,
                 projects: state.projects.filter(p => !action.payload.ids.includes(p.id))
             };
-        case 'ADD_GOAL':
-            return { ...state, goals: [...state.goals, action.payload] };
-        case 'ADD_SCOPE':
-            return { ...state, scopes: [...state.scopes, action.payload] };
+        case 'ADD_FINAL_PRODUCT':
+            return { ...state, finalProducts: [...state.finalProducts, action.payload] };
+        case 'ADD_PHASE':
+            return { ...state, phases: [...state.phases, action.payload] };
         case 'ADD_DELIVERABLE':
             return { ...state, deliverables: [...state.deliverables, action.payload] };
-        case 'UPDATE_DELIVERABLE':
+        case 'ADD_WORK_PACKAGE':
+            return { ...state, workPackages: [...state.workPackages, action.payload] };
+        case 'UPDATE_WORK_PACKAGE':
             return {
                 ...state,
-                deliverables: state.deliverables.map((d) =>
-                    d.id === action.payload.id ? { ...d, ...action.payload } : d
+                workPackages: state.workPackages.map((wp) =>
+                    wp.id === action.payload.id ? { ...wp, ...action.payload } : wp
                 ),
             };
-        case 'UPDATE_ENTITY': // Generic update for Project/Goal/Scope
+        case 'UPDATE_ENTITY': // Generic update
             const { type, id, data } = action.payload;
-            const listName = type + 's'; // projects, goals, scopes
+            // Map type to list name: project->projects, final-product->finalProducts, phase->phases, etc.
+            let listName = '';
+            if (type === 'project') listName = 'projects';
+            else if (type === 'final-product') listName = 'finalProducts';
+            else if (type === 'phase') listName = 'phases';
+            else if (type === 'deliverable') listName = 'deliverables';
+            else if (type === 'work-package') listName = 'workPackages';
+
+            if (!listName) return state;
+
             return {
                 ...state,
                 [listName]: state[listName].map(item => item.id === id ? { ...item, ...data } : item)
             };
 
-        // KPI Management
+        // --- KPI Management ---
         case 'ADD_KPI': {
-            const { entityType, entityId, kpi } = action.payload;
-            const list = entityType + 's';
+            const { entityId, entityType, kpi } = action.payload;
+            let list = '';
+            if (entityType === 'project') list = 'projects';
+            else if (entityType === 'final-product') list = 'finalProducts';
+            else if (entityType === 'phase') list = 'phases';
+            else if (entityType === 'deliverable') list = 'deliverables';
+            else if (entityType === 'work-package') list = 'workPackages';
+
+            if (!list) return state;
+
             return {
                 ...state,
-                [list]: state[list].map(item =>
-                    item.id === entityId
-                        ? { ...item, kpis: [...(item.kpis || []), kpi] }
-                        : item
-                )
+                [list]: state[list].map(item => {
+                    if (item.id === entityId) {
+                        return { ...item, kpis: [...(item.kpis || []), kpi] };
+                    }
+                    return item;
+                })
             };
         }
         case 'UPDATE_KPI': {
-            const { entityType, entityId, kpiId, kpiData } = action.payload;
-            const list = entityType + 's';
+            const { entityId, entityType, kpi } = action.payload;
+            let list = '';
+            if (entityType === 'project') list = 'projects';
+            else if (entityType === 'final-product') list = 'finalProducts';
+            else if (entityType === 'phase') list = 'phases';
+            else if (entityType === 'deliverable') list = 'deliverables';
+            else if (entityType === 'work-package') list = 'workPackages';
+
+            if (!list) return state;
+
             return {
                 ...state,
-                [list]: state[list].map(item =>
-                    item.id === entityId
-                        ? {
+                [list]: state[list].map(item => {
+                    if (item.id === entityId) {
+                        return {
                             ...item,
-                            kpis: item.kpis.map(k => k.id === kpiId ? { ...k, ...kpiData } : k)
-                        }
-                        : item
-                )
+                            kpis: item.kpis.map(k => k.id === kpi.id ? kpi : k)
+                        };
+                    }
+                    return item;
+                })
             };
         }
         case 'DELETE_KPI': {
-            const { entityType, entityId, kpiId } = action.payload;
-            const list = entityType + 's';
+            const { entityId, entityType, kpiId } = action.payload;
+            let list = '';
+            if (entityType === 'project') list = 'projects';
+            else if (entityType === 'final-product') list = 'finalProducts';
+            else if (entityType === 'phase') list = 'phases';
+            else if (entityType === 'deliverable') list = 'deliverables';
+            else if (entityType === 'work-package') list = 'workPackages';
+
+            if (!list) return state;
+
             return {
                 ...state,
-                [list]: state[list].map(item =>
-                    item.id === entityId
-                        ? { ...item, kpis: item.kpis.filter(k => k.id !== kpiId) }
-                        : item
-                )
+                [list]: state[list].map(item => {
+                    if (item.id === entityId) {
+                        return {
+                            ...item,
+                            kpis: item.kpis.filter(k => k.id !== kpiId)
+                        };
+                    }
+                    return item;
+                })
             };
         }
 
-        // Baseline Management
+        // --- Baseline Management ---
         case 'SUBMIT_CHANGE_REQUEST': {
-            const { entityType, entityId, changes } = action.payload;
-            const list = entityType + 's';
+            const { projectId, request } = action.payload;
             return {
                 ...state,
-                [list]: state[list].map(item =>
-                    item.id === entityId
-                        ? { ...item, pendingChanges: changes }
-                        : item
+                projects: state.projects.map(p =>
+                    p.id === projectId ? { ...p, pendingChanges: request } : p
                 )
             };
         }
         case 'APPROVE_BASELINE_CHANGE': {
-            const { entityType, entityId, approvedBy } = action.payload;
-            const list = entityType + 's';
+            const { projectId, newBaselineVersion, snapshot } = action.payload;
             return {
                 ...state,
-                [list]: state[list].map(item => {
-                    if (item.id !== entityId || !item.pendingChanges) return item;
-
-                    const newBaseline = (item.currentBaseline || 0) + 1;
-                    const newHistory = [
-                        ...(item.baselineHistory || []),
-                        {
-                            version: newBaseline,
-                            data: { ...item, ...item.pendingChanges },
-                            timestamp: Date.now(),
-                            approvedBy: approvedBy || 'System'
-                        }
-                    ];
-
-                    return {
-                        ...item,
-                        ...item.pendingChanges,
-                        currentBaseline: newBaseline,
-                        baselineHistory: newHistory,
-                        pendingChanges: null
-                    };
+                projects: state.projects.map(p => {
+                    if (p.id === projectId) {
+                        return {
+                            ...p,
+                            baseline: newBaselineVersion,
+                            baselineHistory: [...(p.baselineHistory || []), snapshot],
+                            pendingChanges: null
+                        };
+                    }
+                    return p;
                 })
             };
         }
         case 'REJECT_BASELINE_CHANGE': {
-            const { entityType, entityId } = action.payload;
-            const list = entityType + 's';
+            const { projectId } = action.payload;
             return {
                 ...state,
-                [list]: state[list].map(item =>
-                    item.id === entityId
-                        ? { ...item, pendingChanges: null }
-                        : item
+                projects: state.projects.map(p =>
+                    p.id === projectId ? { ...p, pendingChanges: null } : p
                 )
             };
         }
@@ -183,16 +206,15 @@ export const StoreProvider = ({ children }) => {
         if (!token) return;
         try {
             const headers = { 'Authorization': `Bearer ${token}` };
-            const [projects, goals, scopes, deliverables] = await Promise.all([
+            const [projects, finalProducts, phases, deliverables, workPackages] = await Promise.all([
                 fetch('/api/projects', { headers }).then(r => r.json()),
-                fetch('/api/goals', { headers }).then(r => r.json()),
-                fetch('/api/scopes', { headers }).then(r => r.json()),
-                fetch('/api/deliverables', { headers }).then(r => r.json())
+                fetch('/api/final-products', { headers }).then(r => r.json()),
+                fetch('/api/phases', { headers }).then(r => r.json()),
+                fetch('/api/deliverables', { headers }).then(r => r.json()),
+                fetch('/api/work-packages', { headers }).then(r => r.json())
             ]);
 
-            // Basic migration/normalization if needed (similar to old migrateData)
-            // For now assuming API returns correct structure or we trust it
-            dispatch({ type: 'LOAD_DATA', payload: { projects, goals, scopes, deliverables } });
+            dispatch({ type: 'LOAD_DATA', payload: { projects, finalProducts, phases, deliverables, workPackages } });
         } catch (e) {
             console.error("Failed to fetch data", e);
         }
@@ -221,17 +243,20 @@ export const StoreProvider = ({ children }) => {
                 case 'ADD_PROJECT':
                     await fetch('/api/projects', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
-                case 'ADD_GOAL':
-                    await fetch('/api/goals', { method: 'POST', headers, body: JSON.stringify(action.payload) });
+                case 'ADD_FINAL_PRODUCT':
+                    await fetch('/api/final-products', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
-                case 'ADD_SCOPE':
-                    await fetch('/api/scopes', { method: 'POST', headers, body: JSON.stringify(action.payload) });
+                case 'ADD_PHASE':
+                    await fetch('/api/phases', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
                 case 'ADD_DELIVERABLE':
                     await fetch('/api/deliverables', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
-                case 'UPDATE_DELIVERABLE':
-                    await fetch(`/api/deliverables/${action.payload.id}`, { method: 'PUT', headers, body: JSON.stringify(action.payload) });
+                case 'ADD_WORK_PACKAGE':
+                    await fetch('/api/work-packages', { method: 'POST', headers, body: JSON.stringify(action.payload) });
+                    break;
+                case 'UPDATE_WORK_PACKAGE':
+                    await fetch(`/api/work-packages/${action.payload.id}`, { method: 'PUT', headers, body: JSON.stringify(action.payload) });
                     break;
                 case 'DELETE_PROJECTS':
                     const { ids } = action.payload;
@@ -242,31 +267,82 @@ export const StoreProvider = ({ children }) => {
 
                 case 'UPDATE_ENTITY':
                     const { type, id, data } = action.payload;
-                    const list = type + 's';
-                    const item = state[list].find(i => i.id === id);
-                    const updatedItem = { ...item, ...data };
-                    await fetch(`/api/${type}s/${id}`, { method: 'PUT', headers, body: JSON.stringify(updatedItem) });
+                    let listName = '';
+                    if (type === 'project') listName = 'projects';
+                    else if (type === 'final-product') listName = 'finalProducts';
+                    else if (type === 'phase') listName = 'phases';
+                    else if (type === 'deliverable') listName = 'deliverables';
+                    else if (type === 'work-package') listName = 'workPackages';
+
+                    if (listName) {
+                        const item = state[listName].find(i => i.id === id);
+                        const updatedItem = { ...item, ...data };
+                        const endpoint = type + 's';
+                        await fetch(`/api/${endpoint}/${id}`, { method: 'PUT', headers, body: JSON.stringify(updatedItem) });
+                    }
                     break;
 
-                // ... Implement other cases (KPIs, Baselines) similarly ...
-                // For brevity in this turn, I will handle the main CRUD. 
-                // KPIs and Baselines are nested in the entity JSON blob, so UPDATE_ENTITY logic applies if we treat them as part of the entity.
-                // But the reducer has specific cases for ADD_KPI etc.
-                // We need to map those to API calls too.
+                case 'ADD_KPI': {
+                    const { entityId, entityType, kpi } = action.payload;
+                    await fetch('/api/kpis', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ ...kpi, entityId, entityType })
+                    });
+                    break;
+                }
+                case 'UPDATE_KPI':
+                    await fetch(`/api/kpis/${action.payload.kpi.id}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify(action.payload.kpi)
+                    });
+                    break;
+                case 'DELETE_KPI':
+                    await fetch(`/api/kpis/${action.payload.kpiId}`, { method: 'DELETE', headers });
+                    break;
+
+                case 'SUBMIT_CHANGE_REQUEST':
+                    // In a real app, this would save to a 'change_requests' table
+                    // For now, we update the project to have a 'pendingChanges' field
+                    await fetch(`/api/projects/${action.payload.projectId}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({ pendingChanges: action.payload.request })
+                    });
+                    break;
+                case 'APPROVE_BASELINE_CHANGE':
+                    // 1. Create Baseline Snapshot
+                    await fetch('/api/baselines', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            projectId: action.payload.projectId,
+                            version: action.payload.newBaselineVersion,
+                            snapshot: action.payload.snapshot
+                        })
+                    });
+                    // 2. Update Project (clear pending changes, update version)
+                    await fetch(`/api/projects/${action.payload.projectId}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({
+                            baseline: action.payload.newBaselineVersion,
+                            pendingChanges: null
+                        })
+                    });
+                    break;
+                case 'REJECT_BASELINE_CHANGE':
+                    await fetch(`/api/projects/${action.payload.projectId}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({ pendingChanges: null })
+                    });
+                    break;
 
                 case 'RESET_DATA':
                     await fetch('/api/reset', { method: 'POST', headers });
                     break;
-
-                case 'ADD_KPI': {
-                    const { entityType, entityId, kpi } = action.payload;
-                    const list = entityType + 's';
-                    const item = state[list].find(i => i.id === entityId);
-                    const updated = { ...item, kpis: [...(item.kpis || []), kpi] };
-                    await fetch(`/api/${entityType}s/${entityId}`, { method: 'PUT', headers, body: JSON.stringify(updated) });
-                    break;
-                }
-                // ... other KPI/Baseline cases ...
             }
             dispatch(action); // Optimistic update or update after success
         } catch (e) {
@@ -277,45 +353,97 @@ export const StoreProvider = ({ children }) => {
 
     // Helper to calculate completion
     const calculateCompletion = (entityId, type) => {
-        if (type === 'scope') {
-            const relatedDeliverables = state.deliverables.filter(d => {
-                if (d.scopeId) return d.scopeId === entityId;
-                if (d.scopeIds) return d.scopeIds.includes(entityId);
-                return false;
-            });
+        if (type === 'work-package') {
+            const wp = state.workPackages.find(w => w.id === entityId);
+            return wp ? (wp.status || 0) : 0;
+        }
+        if (type === 'deliverable') {
+            const relatedWPs = state.workPackages.filter(wp => wp.deliverableId === entityId);
+            if (relatedWPs.length === 0) {
+                const d = state.deliverables.find(i => i.id === entityId);
+                return d ? (d.status || 0) : 0;
+            }
+            const total = relatedWPs.reduce((sum, wp) => sum + (wp.status || 0), 0);
+            return Math.round(total / relatedWPs.length);
+        }
+        if (type === 'phase') {
+            const relatedDeliverables = state.deliverables.filter(d => d.phaseId === entityId);
             if (relatedDeliverables.length === 0) return 0;
-            const total = relatedDeliverables.reduce((sum, d) => sum + (d.status || 0), 0);
+            const total = relatedDeliverables.reduce((sum, d) => sum + calculateCompletion(d.id, 'deliverable'), 0);
             return Math.round(total / relatedDeliverables.length);
         }
-        if (type === 'goal') {
-            const relatedScopes = state.scopes.filter(s => s.goalId === entityId);
-            if (relatedScopes.length === 0) return 0;
-            const total = relatedScopes.reduce((sum, s) => sum + calculateCompletion(s.id, 'scope'), 0);
-            return Math.round(total / relatedScopes.length);
+        if (type === 'final-product') {
+            const relatedPhases = state.phases.filter(p => p.finalProductId === entityId);
+            if (relatedPhases.length === 0) return 0;
+            const total = relatedPhases.reduce((sum, p) => sum + calculateCompletion(p.id, 'phase'), 0);
+            return Math.round(total / relatedPhases.length);
         }
         if (type === 'project') {
-            const relatedGoals = state.goals.filter(g => g.projectId === entityId);
-            if (relatedGoals.length === 0) return 0;
-            const total = relatedGoals.reduce((sum, g) => sum + calculateCompletion(g.id, 'goal'), 0);
-            return Math.round(total / relatedGoals.length);
+            const relatedFPs = state.finalProducts.filter(fp => fp.projectId === entityId);
+            if (relatedFPs.length === 0) return 0;
+            const total = relatedFPs.reduce((sum, fp) => sum + calculateCompletion(fp.id, 'final-product'), 0);
+            return Math.round(total / relatedFPs.length);
         }
         return 0;
     };
 
-    // Helper to calculate budget variance
+    // Helper to calculate budget variance (Hierarchical)
     const calculateBudgetVariance = (entityId, type) => {
-        const list = type + 's';
-        const entity = state[list]?.find(item => item.id === entityId);
-        if (!entity || !entity.budget) return null;
+        let item = null;
+        let children = [];
+        let childType = '';
 
-        const budget = entity.budget;
-        const plan = budget.plan || 0;
-        const actual = budget.actual || 0;
-        const additional = budget.additional || 0;
+        if (type === 'project') {
+            item = state.projects.find(p => p.id === entityId);
+            children = state.finalProducts.filter(fp => fp.projectId === entityId);
+            childType = 'final-product';
+        } else if (type === 'final-product') {
+            item = state.finalProducts.find(fp => fp.id === entityId);
+            children = state.phases.filter(p => p.finalProductId === entityId);
+            childType = 'phase';
+        } else if (type === 'phase') {
+            item = state.phases.find(p => p.id === entityId);
+            children = state.deliverables.filter(d => d.phaseId === entityId);
+            childType = 'deliverable';
+        } else if (type === 'deliverable') {
+            item = state.deliverables.find(d => d.id === entityId);
+            children = state.workPackages.filter(wp => wp.deliverableId === entityId);
+            childType = 'work-package';
+        } else if (type === 'work-package') {
+            item = state.workPackages.find(wp => wp.id === entityId);
+        }
+
+        if (!item) return null;
+
+        let plan = 0;
+        let actual = 0;
+        let additional = 0;
+
+        // If item has its own budget defined, use it
+        if (item.budget && (typeof item.budget === 'number' || (typeof item.budget === 'object' && (item.budget.plan || item.budget.actual)))) {
+            if (typeof item.budget === 'object') {
+                plan = item.budget.plan || 0;
+                actual = item.budget.actual || 0;
+                additional = item.budget.additional || 0;
+            } else {
+                plan = item.budget || 0;
+            }
+        } else if (children.length > 0) {
+            // Otherwise roll up from children
+            children.forEach(child => {
+                const childMetrics = calculateBudgetVariance(child.id, childType);
+                if (childMetrics) {
+                    plan += childMetrics.plan;
+                    actual += childMetrics.actual;
+                    additional += childMetrics.additional;
+                }
+            });
+        }
 
         const totalBudget = plan + additional;
-        const variance = totalBudget - actual;
-        const variancePercent = plan > 0 ? ((variance / plan) * 100).toFixed(1) : 0;
+        const variance = actual - totalBudget;
+        const variancePercent = totalBudget > 0 ? Math.round((variance / totalBudget) * 100) : 0;
+        const isOverBudget = variance > 0;
 
         return {
             plan,
@@ -324,75 +452,114 @@ export const StoreProvider = ({ children }) => {
             totalBudget,
             variance,
             variancePercent,
-            isOverBudget: actual > totalBudget,
-            isUnderBudget: actual < totalBudget
+            isOverBudget
         };
     };
 
-    // Helper to calculate resource utilization
+    // Helper to calculate resource utilization (Hierarchical)
     const calculateResourceUtilization = (entityId, type) => {
-        const list = type + 's';
-        const entity = state[list]?.find(item => item.id === entityId);
-        if (!entity || !entity.resources) return null;
+        let item = null;
+        let children = [];
+        let childType = '';
 
-        const resources = entity.resources;
-        const planDays = resources.planManDays || 0;
-        const actualDays = resources.actualManDays || 0;
-        const planMonths = resources.planManMonths || 0;
-        const actualMonths = resources.actualManMonths || 0;
+        if (type === 'project') {
+            item = state.projects.find(p => p.id === entityId);
+            children = state.finalProducts.filter(fp => fp.projectId === entityId);
+            childType = 'final-product';
+        } else if (type === 'final-product') {
+            item = state.finalProducts.find(fp => fp.id === entityId);
+            children = state.phases.filter(p => p.finalProductId === entityId);
+            childType = 'phase';
+        } else if (type === 'phase') {
+            item = state.phases.find(p => p.id === entityId);
+            children = state.deliverables.filter(d => d.phaseId === entityId);
+            childType = 'deliverable';
+        } else if (type === 'deliverable') {
+            item = state.deliverables.find(d => d.id === entityId);
+            children = state.workPackages.filter(wp => wp.deliverableId === entityId);
+            childType = 'work-package';
+        } else if (type === 'work-package') {
+            item = state.workPackages.find(wp => wp.id === entityId);
+        }
+
+        if (!item) return null;
+
+        let planManDays = 0;
+        let actualManDays = 0;
+
+        // If item has its own resources defined
+        if (item.resources && (item.resources.planManDays || item.resources.actualManDays)) {
+            planManDays = item.resources.planManDays || 0;
+            actualManDays = item.resources.actualManDays || 0;
+        } else if (children.length > 0) {
+            // Roll up from children
+            children.forEach(child => {
+                const childRes = calculateResourceUtilization(child.id, childType);
+                if (childRes) {
+                    planManDays += childRes.planManDays;
+                    actualManDays += childRes.actualManDays;
+                }
+            });
+        }
+
+        const daysUtilization = planManDays > 0 ? Math.round((actualManDays / planManDays) * 100) : 0;
 
         return {
-            planManDays: planDays,
-            actualManDays: actualDays,
-            planManMonths: planMonths,
-            actualManMonths: actualMonths,
-            daysUtilization: planDays > 0 ? ((actualDays / planDays) * 100).toFixed(1) : 0,
-            monthsUtilization: planMonths > 0 ? ((actualMonths / planMonths) * 100).toFixed(1) : 0,
-            daysVariance: planDays - actualDays,
-            monthsVariance: planMonths - actualMonths
+            planManDays,
+            actualManDays,
+            daysUtilization
         };
     };
 
     // Helper to get baseline history
-    const getBaselineHistory = (entityId, type) => {
-        const list = type + 's';
-        const entity = state[list]?.find(item => item.id === entityId);
-        if (!entity) return [];
-
-        return entity.baselineHistory || [];
+    const getBaselineHistory = (projectId) => {
+        const project = state.projects.find(p => p.id === projectId);
+        return project ? (project.baselineHistory || []) : [];
     };
 
     // Helper to compare baselines
-    const compareBaselines = (entityId, baseline1, baseline2, type) => {
-        const history = getBaselineHistory(entityId, type);
-        const b1 = history.find(h => h.version === baseline1);
-        const b2 = history.find(h => h.version === baseline2);
-
-        if (!b1 || !b2) return null;
-
-        const changes = {};
-        const allKeys = new Set([...Object.keys(b1.data), ...Object.keys(b2.data)]);
-
-        allKeys.forEach(key => {
-            if (JSON.stringify(b1.data[key]) !== JSON.stringify(b2.data[key])) {
-                changes[key] = {
-                    before: b1.data[key],
-                    after: b2.data[key]
+    const compareBaselines = (projectId, version1, version2) => {
+        const history = getBaselineHistory(projectId);
+        // Find snapshots. If version is 'current', construct snapshot from current state
+        const getSnapshot = (v) => {
+            if (v === 'current') {
+                const project = state.projects.find(p => p.id === projectId);
+                // Construct a snapshot of current state (simplified)
+                return {
+                    project,
+                    finalProducts: state.finalProducts.filter(fp => fp.projectId === projectId),
+                    phases: state.phases.filter(p => state.finalProducts.some(fp => fp.projectId === projectId && fp.id === p.finalProductId)),
+                    // ... deeper levels if needed for comparison
                 };
             }
-        });
-
-        return {
-            baseline1: b1,
-            baseline2: b2,
-            changes
+            return history.find(h => h.version === v)?.snapshot;
         };
+
+        const s1 = getSnapshot(version1);
+        const s2 = getSnapshot(version2);
+
+        if (!s1 || !s2) return null;
+
+        // Perform comparison (simplified diff)
+        const changes = [];
+
+        // Compare Project Budget
+        if (s1.project.budget.plan !== s2.project.budget.plan) {
+            changes.push({ field: 'Project Budget Plan', v1: s1.project.budget.plan, v2: s2.project.budget.plan });
+        }
+
+        // Compare Final Products Count
+        if (s1.finalProducts.length !== s2.finalProducts.length) {
+            changes.push({ field: 'Final Products Count', v1: s1.finalProducts.length, v2: s2.finalProducts.length });
+        }
+
+        return changes;
     };
 
     return (
         <StoreContext.Provider value={{
             state,
-            dispatch: apiDispatch, // Use the API wrapper
+            dispatch: apiDispatch,
             user,
             login,
             logout,

@@ -6,23 +6,19 @@ import InlineAdd from './InlineAdd';
 import { FaChevronDown, FaChevronRight, FaLayerGroup } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 
-const ScopeItem = ({ scope }) => {
+const PhaseItem = ({ phase }) => {
     const { state, calculateCompletion, dispatch } = useStore();
     const [expanded, setExpanded] = useState(false);
 
-    const completion = calculateCompletion(scope.id, 'scope');
-    const deliverables = state.deliverables.filter(d => {
-        if (d.scopeId) return d.scopeId === scope.id;
-        if (d.scopeIds) return d.scopeIds.includes(scope.id);
-        return false;
-    });
+    const completion = calculateCompletion(phase.id, 'phase');
+    const deliverables = state.deliverables.filter(d => d.phaseId === phase.id);
 
     const handleAddDeliverable = (description) => {
         dispatch({
             type: 'ADD_DELIVERABLE',
             payload: {
                 id: uuidv4(),
-                scopeId: scope.id,
+                phaseId: phase.id,
                 description,
                 assignee: 'Unassigned',
                 owner: 'TBD',
@@ -39,10 +35,10 @@ const ScopeItem = ({ scope }) => {
                 <div className="flex items-center gap-2">
                     {expanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
                     <FaLayerGroup className="text-accent-color" size={12} />
-                    <span className="text-sm font-medium">{scope.description}</span>
+                    <span className="text-sm font-medium">{phase.description}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-muted">Budget: ${scope.budget}</span>
+                    <span className="text-xs text-muted">Budget: ${phase.budget}</span>
                     <div style={{ width: '80px' }}>
                         <ProgressBar percentage={completion} />
                     </div>
@@ -64,4 +60,4 @@ const ScopeItem = ({ scope }) => {
     );
 };
 
-export default ScopeItem;
+export default PhaseItem;

@@ -302,7 +302,7 @@ const EditModal = ({ isOpen, onClose, onSave, entity, type }) => {
                             )}
 
                             {/* KPI Manager Section */}
-                            {entity && type !== 'project' && (
+                            {entity && (
                                 <div className="form-section">
                                     <h4 className="form-section-title">
                                         <FaChartLine className="text-purple-400" /> Key Performance Indicators

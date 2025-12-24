@@ -16,7 +16,15 @@ const ImportButton = () => {
         reader.onload = async (evt) => {
             try {
                 const bstr = evt.target.result;
-                const workbook = XLSX.read(bstr, { type: 'binary' });
+                const workbook = XLSX.read(bstr, { type: 'binary', cellDates: true });
+
+                const formatDate = (val) => {
+                    if (!val) return '';
+                    if (val instanceof Date) {
+                        return val.toISOString().split('T')[0];
+                    }
+                    return val.toString();
+                };
 
                 // Parse Sheets
                 const projectsSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -75,10 +83,10 @@ const ImportButton = () => {
                             budget,
                             vendor,
                             resources,
-                            startDate: p['Start Date'] || '',
-                            endDate: p['End Date'] || '',
-                            actualStartDate: p['Actual Start Date'] || '',
-                            actualEndDate: p['Actual End Date'] || '',
+                            startDate: formatDate(p['Start Date']),
+                            endDate: formatDate(p['End Date']),
+                            actualStartDate: formatDate(p['Actual Start Date']),
+                            actualEndDate: formatDate(p['Actual End Date']),
                             kpis: [],
                             risks: []
                         }
@@ -99,10 +107,10 @@ const ImportButton = () => {
                                 description: fp.Description,
                                 owner: fp.Owner,
                                 budget: { plan: fp.Budget || 0, actual: 0, additional: 0 },
-                                startDate: fp['Start Date'] || '',
-                                endDate: fp['End Date'] || '',
-                                actualStartDate: fp['Actual Start Date'] || '',
-                                actualEndDate: fp['Actual End Date'] || '',
+                                startDate: formatDate(fp['Start Date']),
+                                endDate: formatDate(fp['End Date']),
+                                actualStartDate: formatDate(fp['Actual Start Date']),
+                                actualEndDate: formatDate(fp['Actual End Date']),
                                 status: 'Planning'
                             }
                         });
@@ -123,10 +131,10 @@ const ImportButton = () => {
                                 description: ph.Description,
                                 owner: ph.Owner,
                                 budget: { plan: ph.Budget || 0, actual: 0, additional: 0 },
-                                startDate: ph['Start Date'] || '',
-                                endDate: ph['End Date'] || '',
-                                actualStartDate: ph['Actual Start Date'] || '',
-                                actualEndDate: ph['Actual End Date'] || '',
+                                startDate: formatDate(ph['Start Date']),
+                                endDate: formatDate(ph['End Date']),
+                                actualStartDate: formatDate(ph['Actual Start Date']),
+                                actualEndDate: formatDate(ph['Actual End Date']),
                                 timeline: ph.Timeline || 'TBD',
                                 status: 'Planning'
                             }
@@ -148,10 +156,10 @@ const ImportButton = () => {
                                 description: d.Description,
                                 owner: d.Owner,
                                 budget: { plan: d.Budget || 0, actual: 0, additional: 0 },
-                                startDate: d['Start Date'] || '',
-                                endDate: d['End Date'] || '',
-                                actualStartDate: d['Actual Start Date'] || '',
-                                actualEndDate: d['Actual End Date'] || '',
+                                startDate: formatDate(d['Start Date']),
+                                endDate: formatDate(d['End Date']),
+                                actualStartDate: formatDate(d['Actual Start Date']),
+                                actualEndDate: formatDate(d['Actual End Date']),
                                 status: d.Status || 0,
                                 completionDate: null
                             }
@@ -171,10 +179,10 @@ const ImportButton = () => {
                                 description: wp.Description,
                                 assignee: wp.Assignee || 'Unassigned',
                                 budget: { plan: wp.Budget || 0, actual: 0, additional: 0 },
-                                startDate: wp['Start Date'] || '',
-                                endDate: wp['End Date'] || '',
-                                actualStartDate: wp['Actual Start Date'] || '',
-                                actualEndDate: wp['Actual End Date'] || '',
+                                startDate: formatDate(wp['Start Date']),
+                                endDate: formatDate(wp['End Date']),
+                                actualStartDate: formatDate(wp['Actual Start Date']),
+                                actualEndDate: formatDate(wp['Actual End Date']),
                                 status: wp.Status || 0
                             }
                         });

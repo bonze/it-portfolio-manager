@@ -499,25 +499,35 @@ export const StoreProvider = ({ children }) => {
         const childTimelines = children.map(c => calculateTimeline(c.id, childType, dataSource));
 
         const getMinDate = (dates) => {
-            const validDates = dates.filter(d => d && d !== '');
+            const validDates = dates.filter(d => d && d !== '' && !isNaN(new Date(d).getTime()));
             if (validDates.length === 0) return '';
             return validDates.reduce((min, d) => (d < min ? d : min), validDates[0]);
         };
 
         const getMaxDate = (dates) => {
-            const validDates = dates.filter(d => d && d !== '');
+            const validDates = dates.filter(d => d && d !== '' && !isNaN(new Date(d).getTime()));
             if (validDates.length === 0) return '';
             return validDates.reduce((max, d) => (d > max ? d : max), validDates[0]);
         };
 
         const allChildrenCompleted = children.every(c => calculateCompletion(c.id, childType, dataSource) >= 100);
 
-        return {
+        const result = {
             startDate: getMinDate(childTimelines.map(t => t.startDate)),
             endDate: getMaxDate(childTimelines.map(t => t.endDate)),
             actualStartDate: getMinDate(childTimelines.map(t => t.actualStartDate)),
             actualEndDate: allChildrenCompleted ? getMaxDate(childTimelines.map(t => t.actualEndDate)) : ''
         };
+
+        return result;
+    };
+
+    // Helper to safely get year from date string
+    const safeGetYear = (dateStr) => {
+        if (!dateStr) return null;
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return null;
+        return date.getFullYear();
     };
 
     // Helper to calculate budget variance (Hierarchical)
@@ -699,6 +709,7 @@ export const StoreProvider = ({ children }) => {
             loading,
             calculateCompletion,
             calculateTimeline,
+            safeGetYear,
             calculateBudgetVariance,
             calculateResourceUtilization,
             getBaselineHistory,

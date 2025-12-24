@@ -1071,17 +1071,34 @@ export const dbOps = {
     // Reset Data (Delete all project data)
     async resetData() {
         if (IS_VERCEL) {
+            console.log('Resetting all data in Supabase...');
             // Delete in reverse order of dependencies
-            // Using neq('id', 0) or neq('id', '0') as a way to delete all rows since Supabase requires a filter
-            await supabase.from('work_packages').delete().neq('id', '0');
-            await supabase.from('deliverables').delete().neq('id', '0');
-            await supabase.from('phases').delete().neq('id', '0');
-            await supabase.from('final_products').delete().neq('id', '0');
-            await supabase.from('projects').delete().neq('id', '0');
-            await supabase.from('project_baselines').delete().neq('id', 0);
-            await supabase.from('vendor_evaluations').delete().neq('id', 0);
-            await supabase.from('audit_logs').delete().neq('id', 0);
+            const tables = [
+                'kpis',
+                'work_packages',
+                'deliverables',
+                'phases',
+                'final_products',
+                'projects',
+                'project_baselines',
+                'vendor_evaluations',
+                'audit_logs'
+            ];
+
+            for (const table of tables) {
+                console.log(`Deleting all rows from ${table}...`);
+                // Using .neq('id', '00000000-0000-0000-0000-000000000000') for UUIDs 
+                // and .neq('id', 0) for integers is safer. 
+                // A more universal way is .not('id', 'is', null)
+                const { error } = await supabase.from(table).delete().not('id', 'is', null);
+                if (error) {
+                    console.error(`Error resetting table ${table}:`, error.message);
+                    throw new Error(`Failed to reset table ${table}: ${error.message}`);
+                }
+            }
+            console.log('All data reset successfully in Supabase.');
         } else {
+            db.run('DELETE FROM kpis');
             db.run('DELETE FROM work_packages');
             db.run('DELETE FROM deliverables');
             db.run('DELETE FROM phases');

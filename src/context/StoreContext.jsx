@@ -384,6 +384,10 @@ export const StoreProvider = ({ children }) => {
 
                 case 'RESET_DATA':
                     res = await fetch('/api/reset', { method: 'POST', headers });
+                    if (res.ok) {
+                        alert('All data has been reset successfully.');
+                        fetchData(token); // Refresh data to clear local state
+                    }
                     break;
             }
 

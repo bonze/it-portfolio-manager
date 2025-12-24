@@ -7,7 +7,7 @@ import { FaChevronDown, FaChevronRight, FaCube } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 
 const DeliverableItem = ({ deliverable }) => {
-    const { state, calculateCompletion, dispatch } = useStore();
+    const { state, calculateCompletion, calculateTimeline, dispatch } = useStore();
     const [expanded, setExpanded] = useState(false);
 
     const completion = calculateCompletion(deliverable.id, 'deliverable');
@@ -40,7 +40,6 @@ const DeliverableItem = ({ deliverable }) => {
                     <div className="flex flex-col">
                         <span className="text-sm">{deliverable.description}</span>
                         {(() => {
-                            const { calculateTimeline } = useStore();
                             const timeline = calculateTimeline(deliverable.id, 'deliverable');
                             if (!timeline.startDate && !timeline.endDate) return null;
                             return (

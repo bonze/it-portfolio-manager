@@ -9,7 +9,7 @@ import EditModal from './EditModal';
 import BaselineModal from './BaselineModal';
 
 const ProjectItem = ({ project, ...props }) => {
-    const { state, calculateCompletion, calculateBudgetVariance, calculateResourceUtilization, dispatch, user } = useStore();
+    const { state, calculateCompletion, calculateTimeline, calculateBudgetVariance, calculateResourceUtilization, dispatch, user } = useStore();
     const [expanded, setExpanded] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isBaselineModalOpen, setIsBaselineModalOpen] = useState(false);

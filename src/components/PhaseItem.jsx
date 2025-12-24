@@ -7,7 +7,7 @@ import { FaChevronDown, FaChevronRight, FaLayerGroup } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 
 const PhaseItem = ({ phase }) => {
-    const { state, calculateCompletion, dispatch } = useStore();
+    const { state, calculateCompletion, calculateTimeline, dispatch } = useStore();
     const [expanded, setExpanded] = useState(false);
 
     const completion = calculateCompletion(phase.id, 'phase');
@@ -42,7 +42,6 @@ const PhaseItem = ({ phase }) => {
                     <div className="flex flex-col">
                         <span className="text-sm font-medium">{phase.description}</span>
                         {(() => {
-                            const { calculateTimeline } = useStore();
                             const timeline = calculateTimeline(phase.id, 'phase');
                             if (!timeline.startDate && !timeline.endDate) return null;
                             return (

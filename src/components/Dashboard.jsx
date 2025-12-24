@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { FaTrash, FaPlus } from 'react-icons/fa';
 
 const Dashboard = () => {
-    const { state, dispatch, user } = useStore();
+    const { state, dispatch, user, calculateCompletion, calculateTimeline } = useStore();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const currentYear = new Date().getFullYear();
     const [selectedYears, setSelectedYears] = useState([currentYear]);
@@ -49,7 +49,6 @@ const Dashboard = () => {
         }
     };
 
-    const { calculateTimeline } = useStore();
 
     // Filter projects by selected years
     const filteredProjects = state.projects.filter(project => {

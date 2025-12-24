@@ -7,7 +7,7 @@ import { FaChevronDown, FaChevronRight, FaBoxOpen } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 
 const FinalProductItem = ({ finalProduct }) => {
-    const { state, calculateCompletion, dispatch } = useStore();
+    const { state, calculateCompletion, calculateTimeline, dispatch } = useStore();
     const [expanded, setExpanded] = useState(false);
 
     const completion = calculateCompletion(finalProduct.id, 'final-product');
@@ -40,7 +40,6 @@ const FinalProductItem = ({ finalProduct }) => {
                         <ProgressBar percentage={completion} />
                     </div>
                     {(() => {
-                        const { calculateTimeline } = useStore();
                         const timeline = calculateTimeline(finalProduct.id, 'final-product');
                         if (!timeline.startDate && !timeline.endDate) return null;
                         return (

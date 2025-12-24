@@ -698,6 +698,7 @@ export const StoreProvider = ({ children }) => {
             logout,
             loading,
             calculateCompletion,
+            calculateTimeline,
             calculateBudgetVariance,
             calculateResourceUtilization,
             getBaselineHistory,

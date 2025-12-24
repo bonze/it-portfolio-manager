@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { dbOps } from './db.js';
 
-const SECRET_KEY = 'your-secret-key-should-be-in-env'; // In a real app, use .env
+const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key-should-be-in-env';
+console.log('JWT SECRET_KEY length:', SECRET_KEY.length);
 
 export async function login(req, res) {
     const { username, password } = req.body;

@@ -14,9 +14,14 @@ const Dashboard = () => {
     const [selectedYears, setSelectedYears] = useState([currentYear]);
     const [selectedProjectIds, setSelectedProjectIds] = useState([]);
 
-    const handleReset = () => {
+    const handleReset = async () => {
         if (window.confirm('Are you sure you want to reset all data?')) {
-            dispatch({ type: 'RESET_DATA' });
+            try {
+                await dispatch({ type: 'RESET_DATA' });
+                alert('All data has been reset successfully.');
+            } catch (e) {
+                console.error('Reset failed', e);
+            }
         }
     };
 

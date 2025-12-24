@@ -384,11 +384,6 @@ export const StoreProvider = ({ children }) => {
 
                 case 'RESET_DATA':
                     res = await fetch('/api/reset', { method: 'POST', headers });
-                    if (res.ok) {
-                        alert('All data has been reset successfully.');
-                        dispatch({ type: 'RESET_DATA' }); // Clear local state immediately
-                        fetchData(token); // Refresh data
-                    }
                     break;
             }
 

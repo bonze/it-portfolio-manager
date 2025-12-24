@@ -1069,6 +1069,7 @@ export const dbOps = {
     },
 
     // Reset Data (Delete all project data)
+    // Reset Data (Delete all project data)
     async resetData() {
         if (IS_VERCEL) {
             console.log('Resetting all data in Supabase...');
@@ -1087,16 +1088,9 @@ export const dbOps = {
 
             for (const table of tables) {
                 console.log(`Deleting all rows from ${table}...`);
-                let query = supabase.from(table).delete();
+                // Use .not('id', 'is', null) as a universal filter to delete all rows
+                const { error } = await supabase.from(table).delete().not('id', 'is', null);
 
-                // Use different filters based on ID type
-                if (['project_baselines', 'vendor_evaluations', 'audit_logs'].includes(table)) {
-                    query = query.gt('id', 0);
-                } else {
-                    query = query.neq('id', '00000000-0000-0000-0000-000000000000');
-                }
-
-                const { error } = await query;
                 if (error) {
                     console.error(`Error resetting table ${table}:`, error.message);
                     throw new Error(`Failed to reset table ${table}: ${error.message}`);

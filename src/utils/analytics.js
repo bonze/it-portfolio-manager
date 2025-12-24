@@ -464,25 +464,25 @@ export const getBudgetTrend = (projects) => {
 // 7. KPI TRACKING
 // ============================================================================
 
-export const getKPIAchievementRate = (projects, finalProducts) => {
+export const getKPIAchievementRate = (projects, finalProducts, phases, deliverables, workPackages) => {
     let totalKPIs = 0;
     let achievedKPIs = 0;
 
-    // Count project KPIs
-    projects.forEach(p => {
-        if (p.kpis && Array.isArray(p.kpis)) {
-            totalKPIs += p.kpis.length;
-            achievedKPIs += p.kpis.filter(kpi => kpi.actual >= kpi.target).length;
-        }
-    });
+    const countKPIs = (items) => {
+        if (!items || !Array.isArray(items)) return;
+        items.forEach(item => {
+            if (item.kpis && Array.isArray(item.kpis)) {
+                totalKPIs += item.kpis.length;
+                achievedKPIs += item.kpis.filter(kpi => kpi.actual >= kpi.target).length;
+            }
+        });
+    };
 
-    // Count final product KPIs
-    finalProducts.forEach(fp => {
-        if (fp.kpis && Array.isArray(fp.kpis)) {
-            totalKPIs += fp.kpis.length;
-            achievedKPIs += fp.kpis.filter(kpi => kpi.actual >= kpi.target).length;
-        }
-    });
+    countKPIs(projects);
+    countKPIs(finalProducts);
+    countKPIs(phases);
+    countKPIs(deliverables);
+    countKPIs(workPackages);
 
     return {
         total: totalKPIs,

@@ -311,8 +311,14 @@ export const dbOps = {
     // Get all items from a table
     async getAll(tableName) {
         if (IS_VERCEL) {
-            const { data } = await supabase.from(tableName).select('*');
+            const { data, error } = await supabase.from(tableName).select('*');
+            if (error) {
+                console.error(`Supabase getAll error for ${tableName}:`, error);
+                throw new Error(`Failed to fetch ${tableName}: ${error.message}`);
+            }
+            console.log(`Supabase getAll ${tableName} returned ${data?.length || 0} items`);
             return (data || []).map(item => {
+                if (!item.data) return { id: item.id };
                 const parsedData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
                 return { ...parsedData, id: item.id };
             });
@@ -339,7 +345,12 @@ export const dbOps = {
             if (tableName === 'deliverables') row.phaseId = item.phaseId;
             if (tableName === 'work_packages') row.deliverableId = item.deliverableId;
 
-            await supabase.from(tableName).insert(row);
+            const { error } = await supabase.from(tableName).insert(row);
+            if (error) {
+                console.error(`Supabase insert error for ${tableName}:`, error);
+                throw new Error(`Failed to insert into ${tableName}: ${error.message}`);
+            }
+            console.log(`Supabase insert into ${tableName} successful:`, item.id);
         } else {
             let projectId = null, finalProductId = null, phaseId = null, deliverableId = null;
             if (tableName === 'final_products') projectId = item.projectId;
@@ -368,7 +379,12 @@ export const dbOps = {
     // Update item
     async update(tableName, id, item) {
         if (IS_VERCEL) {
-            await supabase.from(tableName).update({ data: item }).eq('id', id);
+            const { error } = await supabase.from(tableName).update({ data: item }).eq('id', id);
+            if (error) {
+                console.error(`Supabase update error for ${tableName}:`, error);
+                throw new Error(`Failed to update ${tableName}: ${error.message}`);
+            }
+            console.log(`Supabase update ${tableName} successful:`, id);
         } else {
             db.run(`UPDATE ${tableName} SET data = ? WHERE id = ?`, [JSON.stringify(item), id]);
             saveDatabase();
@@ -378,7 +394,12 @@ export const dbOps = {
     // Delete item
     async delete(tableName, id) {
         if (IS_VERCEL) {
-            await supabase.from(tableName).delete().eq('id', id);
+            const { error } = await supabase.from(tableName).delete().eq('id', id);
+            if (error) {
+                console.error(`Supabase delete error for ${tableName}:`, error);
+                throw new Error(`Failed to delete from ${tableName}: ${error.message}`);
+            }
+            console.log(`Supabase delete from ${tableName} successful:`, id);
         } else {
             db.run(`DELETE FROM ${tableName} WHERE id = ?`, [id]);
             saveDatabase();
@@ -465,8 +486,7 @@ export const dbOps = {
                 .from('user_project_access')
                 .select('id')
                 .eq('userId', userId)
-                .eq('projectId', projectId)
-                ;//.single();
+                .eq('projectId', projectId);
 
             if (!existing || existing.length == 0) {
                 await supabase.from('user_project_access').insert({ userId, projectId });
@@ -514,28 +534,34 @@ export const dbOps = {
 
     // Get projects filtered by user access (for non-admin users)
     async getProjectsByUserAccess(userId, userRole) {
-        // Admin sees all projects
-        if (userRole === 'admin') {
-            const projects = await this.getAll('projects');
-            return projects.map(p => ({ ...p, baseline: p.baseline || 0 }));
-        }
-
-        // Non-admin users see only assigned projects
         if (IS_VERCEL) {
-            const { data: accessData } = await supabase
-                .from('user_project_access')
-                .select('projectId')
-                .eq('userId', userId);
+            if (userRole === 'admin') return this.getAll('projects');
+
+            const { data: accessData, error: accessError } = await supabase.from('user_project_access').select('projectId').eq('userId', userId);
+            if (accessError) {
+                console.error('Supabase get access error:', accessError);
+                throw new Error('Failed to fetch project access: ' + accessError.message);
+            }
 
             if (!accessData || accessData.length === 0) return [];
 
             const projectIds = accessData.map(item => item.projectId);
-            const { data } = await supabase.from('projects').select('*').in('id', projectIds);
+            const { data, error } = await supabase.from('projects').select('*').in('id', projectIds);
+            if (error) {
+                console.error('Supabase get projects error:', error);
+                throw new Error('Failed to fetch projects: ' + error.message);
+            }
             return (data || []).map(item => {
                 const parsedData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
                 return { ...parsedData, id: item.id, baseline: parsedData.baseline || 0 };
             });
         } else {
+            // Admin sees all projects
+            if (userRole === 'admin') {
+                const projects = await this.getAll('projects');
+                return projects.map(p => ({ ...p, baseline: p.baseline || 0 }));
+            }
+
             const result = db.exec(`
                 SELECT p.* FROM projects p
                 INNER JOIN user_project_access upa ON p.id = upa.projectId
@@ -572,25 +598,37 @@ export const dbOps = {
             });
 
             const finalProductIds = finalProducts.map(g => g.id);
-            const { data: phData } = await supabase.from('phases').select('*').in('finalProductId', finalProductIds);
-            phases = (phData || []).map(i => {
-                const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
-                return { ...parsed, id: i.id };
-            });
+            if (finalProductIds.length > 0) {
+                const { data: phData } = await supabase.from('phases').select('*').in('finalProductId', finalProductIds);
+                phases = (phData || []).map(i => {
+                    const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
+                    return { ...parsed, id: i.id };
+                });
+            } else {
+                phases = [];
+            }
 
             const phaseIds = phases.map(s => s.id);
-            const { data: dData } = await supabase.from('deliverables').select('*').in('phaseId', phaseIds);
-            deliverables = (dData || []).map(i => {
-                const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
-                return { ...parsed, id: i.id };
-            });
+            if (phaseIds.length > 0) {
+                const { data: dData } = await supabase.from('deliverables').select('*').in('phaseId', phaseIds);
+                deliverables = (dData || []).map(i => {
+                    const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
+                    return { ...parsed, id: i.id };
+                });
+            } else {
+                deliverables = [];
+            }
 
             const deliverableIds = deliverables.map(d => d.id);
-            const { data: wpData } = await supabase.from('work_packages').select('*').in('deliverableId', deliverableIds);
-            workPackages = (wpData || []).map(i => {
-                const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
-                return { ...parsed, id: i.id };
-            });
+            if (deliverableIds.length > 0) {
+                const { data: wpData } = await supabase.from('work_packages').select('*').in('deliverableId', deliverableIds);
+                workPackages = (wpData || []).map(i => {
+                    const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
+                    return { ...parsed, id: i.id };
+                });
+            } else {
+                workPackages = [];
+            }
 
         } else {
             // SQLite implementation

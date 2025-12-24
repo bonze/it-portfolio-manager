@@ -360,17 +360,22 @@ export const StoreProvider = ({ children }) => {
 
     // Helper to calculate completion
     const calculateCompletion = (entityId, type) => {
+        const parseStatus = (val) => {
+            const num = parseInt(val, 10);
+            return isNaN(num) ? 0 : num;
+        };
+
         if (type === 'work-package') {
             const wp = state.workPackages.find(w => w.id === entityId);
-            return wp ? (wp.status || 0) : 0;
+            return wp ? parseStatus(wp.status) : 0;
         }
         if (type === 'deliverable') {
             const relatedWPs = state.workPackages.filter(wp => wp.deliverableId === entityId);
             if (relatedWPs.length === 0) {
                 const d = state.deliverables.find(i => i.id === entityId);
-                return d ? (d.status || 0) : 0;
+                return d ? parseStatus(d.status) : 0;
             }
-            const total = relatedWPs.reduce((sum, wp) => sum + (wp.status || 0), 0);
+            const total = relatedWPs.reduce((sum, wp) => sum + parseStatus(wp.status), 0);
             return Math.round(total / relatedWPs.length);
         }
         if (type === 'phase') {

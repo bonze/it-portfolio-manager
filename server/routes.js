@@ -390,7 +390,7 @@ const createCrud = (entityName, tableName) => {
     });
 
     // PUT (Update)
-    router.put(`/${entityName}/:id`, authenticateToken, authorizeRole(['admin', 'operator']), async (req, res) => {
+    router.put(`/${entityName}/:id`, authenticateToken, authorizeRole(['admin', 'operator', 'user']), async (req, res) => {
         const { id } = req.params;
         const item = req.body;
         try {

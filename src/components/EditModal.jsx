@@ -138,7 +138,7 @@ const EditModal = ({ isOpen, onClose, onSave, entity, type }) => {
                                                 className="form-input"
                                             />
                                         </div>
-                                        {type === 'deliverable' && (
+                                        {(type === 'deliverable' || type === 'work-package') && (
                                             <div className="form-group">
                                                 <label className="form-label">Assignee</label>
                                                 <input
@@ -156,149 +156,146 @@ const EditModal = ({ isOpen, onClose, onSave, entity, type }) => {
 
                             {/* Project Specific Fields */}
                             {type === 'project' && (
-                                <>
-                                    <div className="form-grid form-grid-2">
-                                        <div className="form-group">
-                                            <label className="form-label">Business Unit</label>
-                                            <input
-                                                name="businessUnit"
-                                                value={formData.businessUnit || ''}
-                                                onChange={handleChange}
-                                                className="form-input"
-                                            />
+                                <div className="form-grid form-grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">Business Unit</label>
+                                        <input
+                                            name="businessUnit"
+                                            value={formData.businessUnit || ''}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Project Manager</label>
+                                        <input
+                                            name="pm"
+                                            value={formData.pm || ''}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Status</label>
+                                        <select
+                                            name="status"
+                                            value={formData.status || 'Planning'}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        >
+                                            <option value="Planning">Planning</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="On Hold">On Hold</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Budget Section for all types */}
+                            <div className="form-section">
+                                <h4 className="form-section-title">
+                                    <FaMoneyBillWave className="text-success" /> Financials
+                                </h4>
+                                <div className="form-grid form-grid-3">
+                                    <div className="form-group">
+                                        <label className="form-label">Plan ($)</label>
+                                        <input
+                                            type="number"
+                                            value={budget.plan || 0}
+                                            onChange={(e) => handleBudgetChange('plan', e.target.value)}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Actual ($)</label>
+                                        <input
+                                            type="number"
+                                            value={budget.actual || 0}
+                                            onChange={(e) => handleBudgetChange('actual', e.target.value)}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Additional ($)</label>
+                                        <input
+                                            type="number"
+                                            value={budget.additional || 0}
+                                            onChange={(e) => handleBudgetChange('additional', e.target.value)}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Budget Summary */}
+                                {(budget.plan > 0 || budget.additional > 0) && (
+                                    <div className="budget-summary">
+                                        <div className="flex gap-4">
+                                            <span>Total: <span className="font-semibold text-text-primary">${((budget.plan || 0) + (budget.additional || 0)).toLocaleString()}</span></span>
+                                            <span>Variance:
+                                                <span className={`font-semibold ml-1 ${(budget.actual || 0) > ((budget.plan || 0) + (budget.additional || 0)) ? 'text-error' : 'text-success'}`}>
+                                                    ${(((budget.plan || 0) + (budget.additional || 0)) - (budget.actual || 0)).toLocaleString()}
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
+                                )}
+                            </div>
 
-                                    <div className="form-grid form-grid-2">
-                                        <div className="form-group">
-                                            <label className="form-label">Status</label>
-                                            <select
-                                                name="status"
-                                                value={formData.status || 'Planning'}
-                                                onChange={handleChange}
-                                                className="form-input"
-                                            >
-                                                <option value="Planning">Planning</option>
-                                                <option value="In Progress">In Progress</option>
-                                                <option value="Completed">Completed</option>
-                                                <option value="On Hold">On Hold</option>
-                                            </select>
-                                        </div>
-                                        <div className="form-group">
-                                            <label className="form-label">Project Manager</label>
-                                            <input
-                                                name="pm"
-                                                value={formData.pm || ''}
-                                                onChange={handleChange}
-                                                className="form-input"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Budget Section */}
+                            {/* Vendor & Resources - Project Only */}
+                            {type === 'project' && (
+                                <div className="form-grid form-grid-2">
                                     <div className="form-section">
                                         <h4 className="form-section-title">
-                                            <FaMoneyBillWave className="text-success" /> Financials
+                                            <FaUserTie className="text-warning" /> Vendor
                                         </h4>
-                                        <div className="form-grid form-grid-3">
+                                        <div className="form-grid">
                                             <div className="form-group">
-                                                <label className="form-label">Plan ($)</label>
+                                                <label className="form-label">Name</label>
                                                 <input
-                                                    type="number"
-                                                    value={budget.plan || 0}
-                                                    onChange={(e) => handleBudgetChange('plan', e.target.value)}
+                                                    value={vendor.name || ''}
+                                                    onChange={(e) => handleVendorChange('name', e.target.value)}
                                                     className="form-input"
                                                 />
                                             </div>
                                             <div className="form-group">
-                                                <label className="form-label">Actual ($)</label>
+                                                <label className="form-label">Value ($)</label>
                                                 <input
                                                     type="number"
-                                                    value={budget.actual || 0}
-                                                    onChange={(e) => handleBudgetChange('actual', e.target.value)}
+                                                    value={vendor.contractValue || 0}
+                                                    onChange={(e) => handleVendorChange('contractValue', e.target.value)}
                                                     className="form-input"
                                                 />
-                                            </div>
-                                            <div className="form-group">
-                                                <label className="form-label">Additional ($)</label>
-                                                <input
-                                                    type="number"
-                                                    value={budget.additional || 0}
-                                                    onChange={(e) => handleBudgetChange('additional', e.target.value)}
-                                                    className="form-input"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Budget Summary */}
-                                        {(budget.plan > 0 || budget.additional > 0) && (
-                                            <div className="budget-summary">
-                                                <div className="flex gap-4">
-                                                    <span>Total: <span className="font-semibold text-text-primary">${((budget.plan || 0) + (budget.additional || 0)).toLocaleString()}</span></span>
-                                                    <span>Variance:
-                                                        <span className={`font-semibold ml-1 ${(budget.actual || 0) > ((budget.plan || 0) + (budget.additional || 0)) ? 'text-error' : 'text-success'}`}>
-                                                            ${(((budget.plan || 0) + (budget.additional || 0)) - (budget.actual || 0)).toLocaleString()}
-                                                        </span>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Vendor & Resources */}
-                                    <div className="form-grid form-grid-2">
-                                        <div className="form-section">
-                                            <h4 className="form-section-title">
-                                                <FaUserTie className="text-warning" /> Vendor
-                                            </h4>
-                                            <div className="form-grid">
-                                                <div className="form-group">
-                                                    <label className="form-label">Name</label>
-                                                    <input
-                                                        value={vendor.name || ''}
-                                                        onChange={(e) => handleVendorChange('name', e.target.value)}
-                                                        className="form-input"
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label className="form-label">Value ($)</label>
-                                                    <input
-                                                        type="number"
-                                                        value={vendor.contractValue || 0}
-                                                        onChange={(e) => handleVendorChange('contractValue', e.target.value)}
-                                                        className="form-input"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="form-section">
-                                            <h4 className="form-section-title">
-                                                <FaUsers className="text-accent" /> Resources
-                                            </h4>
-                                            <div className="form-grid form-grid-2">
-                                                <div className="form-group">
-                                                    <label className="form-label">Plan (Days)</label>
-                                                    <input
-                                                        type="number"
-                                                        value={resources.planManDays || 0}
-                                                        onChange={(e) => handleResourceChange('planManDays', e.target.value)}
-                                                        className="form-input"
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label className="form-label">Actual</label>
-                                                    <input
-                                                        type="number"
-                                                        value={resources.actualManDays || 0}
-                                                        onChange={(e) => handleResourceChange('actualManDays', e.target.value)}
-                                                        className="form-input"
-                                                    />
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </>
+
+                                    <div className="form-section">
+                                        <h4 className="form-section-title">
+                                            <FaUsers className="text-accent" /> Resources
+                                        </h4>
+                                        <div className="form-grid form-grid-2">
+                                            <div className="form-group">
+                                                <label className="form-label">Plan (Days)</label>
+                                                <input
+                                                    type="number"
+                                                    value={resources.planManDays || 0}
+                                                    onChange={(e) => handleResourceChange('planManDays', e.target.value)}
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Actual</label>
+                                                <input
+                                                    type="number"
+                                                    value={resources.actualManDays || 0}
+                                                    onChange={(e) => handleResourceChange('actualManDays', e.target.value)}
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
 
                             {/* KPI Manager Section */}

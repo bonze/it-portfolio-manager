@@ -256,9 +256,16 @@ export const StoreProvider = ({ children }) => {
                 case 'ADD_WORK_PACKAGE':
                     res = await fetch('/api/work-packages', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
-                case 'UPDATE_WORK_PACKAGE':
-                    res = await fetch(`/api/work-packages/${action.payload.id}`, { method: 'PUT', headers, body: JSON.stringify(action.payload) });
+                case 'UPDATE_WORK_PACKAGE': {
+                    const existingWP = state.workPackages.find(wp => wp.id === action.payload.id);
+                    const updatedWP = { ...existingWP, ...action.payload };
+                    res = await fetch(`/api/work-packages/${action.payload.id}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify(updatedWP)
+                    });
                     break;
+                }
                 case 'DELETE_PROJECTS':
                     const { ids } = action.payload;
                     const results = await Promise.all(ids.map(id =>
@@ -305,10 +312,12 @@ export const StoreProvider = ({ children }) => {
                     break;
 
                 case 'SUBMIT_CHANGE_REQUEST':
+                    const projectToSubmit = state.projects.find(p => p.id === action.payload.projectId);
+                    const updatedProjectToSubmit = { ...projectToSubmit, pendingChanges: action.payload.request };
                     res = await fetch(`/api/projects/${action.payload.projectId}`, {
                         method: 'PUT',
                         headers,
-                        body: JSON.stringify({ pendingChanges: action.payload.request })
+                        body: JSON.stringify(updatedProjectToSubmit)
                     });
                     break;
                 case 'APPROVE_BASELINE_CHANGE':
@@ -323,20 +332,25 @@ export const StoreProvider = ({ children }) => {
                     });
                     if (!res1.ok) throw new Error('Failed to create baseline snapshot');
 
+                    const projectToApprove = state.projects.find(p => p.id === action.payload.projectId);
+                    const updatedProjectToApprove = {
+                        ...projectToApprove,
+                        baseline: action.payload.newBaselineVersion,
+                        pendingChanges: null
+                    };
                     res = await fetch(`/api/projects/${action.payload.projectId}`, {
                         method: 'PUT',
                         headers,
-                        body: JSON.stringify({
-                            baseline: action.payload.newBaselineVersion,
-                            pendingChanges: null
-                        })
+                        body: JSON.stringify(updatedProjectToApprove)
                     });
                     break;
                 case 'REJECT_BASELINE_CHANGE':
+                    const projectToReject = state.projects.find(p => p.id === action.payload.projectId);
+                    const updatedProjectToReject = { ...projectToReject, pendingChanges: null };
                     res = await fetch(`/api/projects/${action.payload.projectId}`, {
                         method: 'PUT',
                         headers,
-                        body: JSON.stringify({ pendingChanges: null })
+                        body: JSON.stringify(updatedProjectToReject)
                     });
                     break;
 

@@ -22,7 +22,7 @@ const PhaseItem = ({ phase }) => {
                 description,
                 assignee: 'Unassigned',
                 owner: 'TBD',
-                budget: 0,
+                budget: { plan: 0, actual: 0, additional: 0 },
                 status: 0,
                 completionDate: null
             }
@@ -38,7 +38,7 @@ const PhaseItem = ({ phase }) => {
                     <span className="text-sm font-medium">{phase.description}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-muted">Budget: ${phase.budget}</span>
+                    <span className="text-xs text-muted">Budget: ${((phase.budget?.plan || 0) + (phase.budget?.additional || 0)).toLocaleString()}</span>
                     <div style={{ width: '80px' }}>
                         <ProgressBar percentage={completion} />
                     </div>

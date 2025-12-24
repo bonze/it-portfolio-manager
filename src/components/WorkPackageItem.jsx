@@ -44,7 +44,11 @@ const WorkPackageItem = ({ workPackage }) => {
                         <span className="text-xs text-muted bg-bg-primary px-1 rounded border border-border-color">
                             {workPackage.assignee}
                         </span>
-                        {workPackage.budget > 0 && <span className="text-xs text-muted bg-bg-primary px-1 rounded border border-border-color">${workPackage.budget}</span>}
+                        {((workPackage.budget?.plan || 0) + (workPackage.budget?.additional || 0)) > 0 && (
+                            <span className="text-xs text-muted bg-bg-primary px-1 rounded border border-border-color">
+                                ${((workPackage.budget?.plan || 0) + (workPackage.budget?.additional || 0)).toLocaleString()}
+                            </span>
+                        )}
                     </div>
                     <button onClick={() => setIsEditOpen(true)} className="text-muted hover:text-accent-color opacity-0 group-hover:opacity-100 transition-opacity ml-2">
                         <FaEdit size={12} />

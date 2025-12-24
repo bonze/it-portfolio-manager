@@ -21,7 +21,7 @@ const DeliverableItem = ({ deliverable }) => {
                 deliverableId: deliverable.id,
                 description,
                 assignee: 'Unassigned',
-                budget: 0,
+                budget: { plan: 0, actual: 0, additional: 0 },
                 status: 0
             }
         });
@@ -36,7 +36,7 @@ const DeliverableItem = ({ deliverable }) => {
                     <span className="text-sm">{deliverable.description}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-muted">Budget: ${deliverable.budget}</span>
+                    <span className="text-xs text-muted">Budget: ${((deliverable.budget?.plan || 0) + (deliverable.budget?.additional || 0)).toLocaleString()}</span>
                     <div style={{ width: '60px' }}>
                         <ProgressBar percentage={completion} />
                     </div>

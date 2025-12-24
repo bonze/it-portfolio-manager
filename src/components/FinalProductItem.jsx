@@ -20,7 +20,7 @@ const FinalProductItem = ({ finalProduct }) => {
                 id: uuidv4(),
                 finalProductId: finalProduct.id,
                 description,
-                budget: 0,
+                budget: { plan: 0, actual: 0, additional: 0 },
                 timeline: 'TBD',
                 status: 'Planning'
             }

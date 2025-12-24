@@ -75,6 +75,10 @@ const ImportButton = () => {
                             budget,
                             vendor,
                             resources,
+                            startDate: p['Start Date'] || '',
+                            endDate: p['End Date'] || '',
+                            actualStartDate: p['Actual Start Date'] || '',
+                            actualEndDate: p['Actual End Date'] || '',
                             kpis: [],
                             risks: []
                         }
@@ -95,6 +99,10 @@ const ImportButton = () => {
                                 description: fp.Description,
                                 owner: fp.Owner,
                                 budget: { plan: fp.Budget || 0, actual: 0, additional: 0 },
+                                startDate: fp['Start Date'] || '',
+                                endDate: fp['End Date'] || '',
+                                actualStartDate: fp['Actual Start Date'] || '',
+                                actualEndDate: fp['Actual End Date'] || '',
                                 status: 'Planning'
                             }
                         });
@@ -114,7 +122,11 @@ const ImportButton = () => {
                                 finalProductId,
                                 description: ph.Description,
                                 owner: ph.Owner,
-                                budget: ph.Budget || 0,
+                                budget: { plan: ph.Budget || 0, actual: 0, additional: 0 },
+                                startDate: ph['Start Date'] || '',
+                                endDate: ph['End Date'] || '',
+                                actualStartDate: ph['Actual Start Date'] || '',
+                                actualEndDate: ph['Actual End Date'] || '',
                                 timeline: ph.Timeline || 'TBD',
                                 status: 'Planning'
                             }
@@ -135,7 +147,11 @@ const ImportButton = () => {
                                 phaseId,
                                 description: d.Description,
                                 owner: d.Owner,
-                                budget: d.Budget || 0,
+                                budget: { plan: d.Budget || 0, actual: 0, additional: 0 },
+                                startDate: d['Start Date'] || '',
+                                endDate: d['End Date'] || '',
+                                actualStartDate: d['Actual Start Date'] || '',
+                                actualEndDate: d['Actual End Date'] || '',
                                 status: d.Status || 0,
                                 completionDate: null
                             }
@@ -154,7 +170,11 @@ const ImportButton = () => {
                                 deliverableId,
                                 description: wp.Description,
                                 assignee: wp.Assignee || 'Unassigned',
-                                budget: wp.Budget || 0,
+                                budget: { plan: wp.Budget || 0, actual: 0, additional: 0 },
+                                startDate: wp['Start Date'] || '',
+                                endDate: wp['End Date'] || '',
+                                actualStartDate: wp['Actual Start Date'] || '',
+                                actualEndDate: wp['Actual End Date'] || '',
                                 status: wp.Status || 0
                             }
                         });

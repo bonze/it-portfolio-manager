@@ -12,7 +12,11 @@ const AddProjectModal = ({ isOpen, onClose, onSave }) => {
         businessUnit: '',
         budget: { plan: 0, actual: 0, additional: 0 },
         vendor: { name: '', contact: '', contractValue: 0 },
-        resources: { planManDays: 0, actualManDays: 0, planManMonths: 0, actualManMonths: 0 }
+        resources: { planManDays: 0, actualManDays: 0, planManMonths: 0, actualManMonths: 0 },
+        startDate: '',
+        endDate: '',
+        actualStartDate: '',
+        actualEndDate: ''
     });
 
     if (!isOpen) return null;
@@ -81,7 +85,11 @@ const AddProjectModal = ({ isOpen, onClose, onSave }) => {
             businessUnit: '',
             budget: { plan: 0, actual: 0, additional: 0 },
             vendor: { name: '', contact: '', contractValue: 0 },
-            resources: { planManDays: 0, actualManDays: 0, planManMonths: 0, actualManMonths: 0 }
+            resources: { planManDays: 0, actualManDays: 0, planManMonths: 0, actualManMonths: 0 },
+            startDate: '',
+            endDate: '',
+            actualStartDate: '',
+            actualEndDate: ''
         });
 
         onClose();
@@ -159,6 +167,52 @@ const AddProjectModal = ({ isOpen, onClose, onSave }) => {
                                             value={formData.pm}
                                             onChange={handleChange}
                                             placeholder="e.g. John Doe"
+                                            className="form-input"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-grid form-grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">Planned Start Date</label>
+                                        <input
+                                            type="date"
+                                            name="startDate"
+                                            value={formData.startDate}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Planned End Date</label>
+                                        <input
+                                            type="date"
+                                            name="endDate"
+                                            value={formData.endDate}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-grid form-grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">Actual Start Date</label>
+                                        <input
+                                            type="date"
+                                            name="actualStartDate"
+                                            value={formData.actualStartDate}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Actual End Date</label>
+                                        <input
+                                            type="date"
+                                            name="actualEndDate"
+                                            value={formData.actualEndDate}
+                                            onChange={handleChange}
                                             className="form-input"
                                         />
                                     </div>

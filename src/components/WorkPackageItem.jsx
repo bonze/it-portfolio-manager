@@ -37,9 +37,21 @@ const WorkPackageItem = ({ workPackage }) => {
                     <button onClick={toggleComplete} className="text-accent-color hover:text-accent-hover">
                         {workPackage.status === 100 ? <FaCheckCircle size={12} /> : <FaRegCircle size={12} />}
                     </button>
-                    <span className={`text-sm ${workPackage.status === 100 ? 'line-through text-muted' : ''}`}>
-                        {workPackage.description}
-                    </span>
+                    <div className="flex flex-col">
+                        <span className={`text-sm ${workPackage.status === 100 ? 'line-through text-muted' : ''}`}>
+                            {workPackage.description}
+                        </span>
+                        {(workPackage.startDate || workPackage.endDate) && (
+                            <span className="text-[10px] text-muted">
+                                {workPackage.startDate ? new Date(workPackage.startDate).toLocaleDateString() : '?'} - {workPackage.endDate ? new Date(workPackage.endDate).toLocaleDateString() : '?'}
+                                {workPackage.actualStartDate && (
+                                    <span className="ml-1 text-success">
+                                        (A: {new Date(workPackage.actualStartDate).toLocaleDateString()})
+                                    </span>
+                                )}
+                            </span>
+                        )}
+                    </div>
                     <div className="flex gap-2">
                         <span className="text-xs text-muted bg-bg-primary px-1 rounded border border-border-color">
                             {workPackage.assignee}

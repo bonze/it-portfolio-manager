@@ -35,8 +35,20 @@ const FinalProductItem = ({ finalProduct }) => {
                     <FaBoxOpen className="text-warning-color" />
                     <span className="font-medium">{finalProduct.description}</span>
                 </div>
-                <div style={{ width: '100px' }}>
-                    <ProgressBar percentage={completion} />
+                <div className="flex flex-col items-end gap-1">
+                    <div style={{ width: '100px' }}>
+                        <ProgressBar percentage={completion} />
+                    </div>
+                    {(() => {
+                        const { calculateTimeline } = useStore();
+                        const timeline = calculateTimeline(finalProduct.id, 'final-product');
+                        if (!timeline.startDate && !timeline.endDate) return null;
+                        return (
+                            <span className="text-[10px] text-muted">
+                                {new Date(timeline.startDate).toLocaleDateString()} - {new Date(timeline.endDate).toLocaleDateString()}
+                            </span>
+                        );
+                    })()}
                 </div>
             </div>
 

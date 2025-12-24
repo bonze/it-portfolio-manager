@@ -137,9 +137,9 @@ const ProjectItem = ({ project, ...props }) => {
                     </div>
                 </div>
 
-                {/* Budget and Resource Summary */}
-                {budgetVariance && (
-                    <div className="flex gap-4 text-xs text-muted mb-2">
+                {/* Budget, Resource and Timeline Summary */}
+                <div className="flex flex-wrap gap-4 text-xs text-muted mb-2">
+                    {budgetVariance && (
                         <div>
                             <span className="font-medium">Budget: </span>
                             <span className={budgetVariance.isOverBudget ? 'text-red-500' : 'text-green-500'}>
@@ -149,20 +149,37 @@ const ProjectItem = ({ project, ...props }) => {
                                 ({budgetVariance.isOverBudget ? '+' : ''}{budgetVariance.variancePercent}%)
                             </span>
                         </div>
-                        {project.vendor?.name && (
+                    )}
+
+                    {(() => {
+                        const timeline = calculateTimeline(project.id, 'project');
+                        if (!timeline.startDate && !timeline.endDate) return null;
+                        return (
                             <div>
-                                <span className="font-medium">Vendor: </span>
-                                <span>{project.vendor.name}</span>
+                                <span className="font-medium">Timeline: </span>
+                                <span>{timeline.startDate ? new Date(timeline.startDate).toLocaleDateString() : '?'} - {timeline.endDate ? new Date(timeline.endDate).toLocaleDateString() : '?'}</span>
+                                {timeline.actualStartDate && (
+                                    <span className="ml-2 text-success">
+                                        (Actual: {new Date(timeline.actualStartDate).toLocaleDateString()} - {timeline.actualEndDate ? new Date(timeline.actualEndDate).toLocaleDateString() : '...'})
+                                    </span>
+                                )}
                             </div>
-                        )}
-                        {resourceUtil && resourceUtil.planManDays > 0 && (
-                            <div>
-                                <span className="font-medium">Resource: </span>
-                                <span>{resourceUtil.daysUtilization}% utilized</span>
-                            </div>
-                        )}
-                    </div>
-                )}
+                        );
+                    })()}
+
+                    {project.vendor?.name && (
+                        <div>
+                            <span className="font-medium">Vendor: </span>
+                            <span>{project.vendor.name}</span>
+                        </div>
+                    )}
+                    {resourceUtil && resourceUtil.planManDays > 0 && (
+                        <div>
+                            <span className="font-medium">Resource: </span>
+                            <span>{resourceUtil.daysUtilization}% utilized</span>
+                        </div>
+                    )}
+                </div>
 
                 {expanded && (
                     <div className="pl-6 mt-4 border-l-2 border-border-color ml-2">

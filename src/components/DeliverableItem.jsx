@@ -22,7 +22,11 @@ const DeliverableItem = ({ deliverable }) => {
                 description,
                 assignee: 'Unassigned',
                 budget: { plan: 0, actual: 0, additional: 0 },
-                status: 0
+                status: 0,
+                startDate: '',
+                endDate: '',
+                actualStartDate: '',
+                actualEndDate: ''
             }
         });
     };
@@ -33,7 +37,19 @@ const DeliverableItem = ({ deliverable }) => {
                 <div className="flex items-center gap-2">
                     {expanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
                     <FaCube className="text-text-secondary" size={12} />
-                    <span className="text-sm">{deliverable.description}</span>
+                    <div className="flex flex-col">
+                        <span className="text-sm">{deliverable.description}</span>
+                        {(() => {
+                            const { calculateTimeline } = useStore();
+                            const timeline = calculateTimeline(deliverable.id, 'deliverable');
+                            if (!timeline.startDate && !timeline.endDate) return null;
+                            return (
+                                <span className="text-[10px] text-muted">
+                                    {new Date(timeline.startDate).toLocaleDateString()} - {new Date(timeline.endDate).toLocaleDateString()}
+                                </span>
+                            );
+                        })()}
+                    </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <span className="text-xs text-muted">Budget: ${((deliverable.budget?.plan || 0) + (deliverable.budget?.additional || 0)).toLocaleString()}</span>

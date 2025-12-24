@@ -154,6 +154,55 @@ const EditModal = ({ isOpen, onClose, onSave, entity, type }) => {
                                 </div>
                             </div>
 
+                            {/* Timeline Section */}
+                            <div className="form-section">
+                                <h4 className="form-section-title">
+                                    <FaTasks className="text-accent" /> Timeline
+                                </h4>
+                                <div className="form-grid form-grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">Planned Start Date</label>
+                                        <input
+                                            type="date"
+                                            name="startDate"
+                                            value={formData.startDate || ''}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Planned End Date</label>
+                                        <input
+                                            type="date"
+                                            name="endDate"
+                                            value={formData.endDate || ''}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Actual Start Date</label>
+                                        <input
+                                            type="date"
+                                            name="actualStartDate"
+                                            value={formData.actualStartDate || ''}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Actual End Date</label>
+                                        <input
+                                            type="date"
+                                            name="actualEndDate"
+                                            value={formData.actualEndDate || ''}
+                                            onChange={handleChange}
+                                            className="form-input"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Project Specific Fields */}
                             {type === 'project' && (
                                 <div className="form-grid form-grid-2">

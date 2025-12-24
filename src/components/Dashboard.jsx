@@ -49,9 +49,12 @@ const Dashboard = () => {
         }
     };
 
+    const { calculateTimeline } = useStore();
+
     // Filter projects by selected years
     const filteredProjects = state.projects.filter(project => {
-        const projectYear = project.year || currentYear;
+        const timeline = calculateTimeline(project.id, 'project');
+        const projectYear = timeline.startDate ? new Date(timeline.startDate).getFullYear() : (project.year || currentYear);
         return selectedYears.includes(projectYear);
     });
 

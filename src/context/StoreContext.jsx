@@ -373,44 +373,108 @@ export const StoreProvider = ({ children }) => {
     };
 
     // Helper to calculate completion
-    const calculateCompletion = (entityId, type) => {
+    const calculateCompletion = (entityId, type, customData = null) => {
         const parseStatus = (val) => {
             const num = parseInt(val, 10);
             return isNaN(num) ? 0 : num;
         };
 
+        const dataSource = customData || state;
+
         if (type === 'work-package') {
-            const wp = state.workPackages.find(w => w.id === entityId);
+            const wp = dataSource.workPackages.find(w => w.id === entityId);
             return wp ? parseStatus(wp.status) : 0;
         }
         if (type === 'deliverable') {
-            const relatedWPs = state.workPackages.filter(wp => wp.deliverableId === entityId);
+            const relatedWPs = dataSource.workPackages.filter(wp => wp.deliverableId === entityId);
             if (relatedWPs.length === 0) {
-                const d = state.deliverables.find(i => i.id === entityId);
+                const d = dataSource.deliverables.find(i => i.id === entityId);
                 return d ? parseStatus(d.status) : 0;
             }
             const total = relatedWPs.reduce((sum, wp) => sum + parseStatus(wp.status), 0);
             return Math.round(total / relatedWPs.length);
         }
         if (type === 'phase') {
-            const relatedDeliverables = state.deliverables.filter(d => d.phaseId === entityId);
+            const relatedDeliverables = dataSource.deliverables.filter(d => d.phaseId === entityId);
             if (relatedDeliverables.length === 0) return 0;
-            const total = relatedDeliverables.reduce((sum, d) => sum + calculateCompletion(d.id, 'deliverable'), 0);
+            const total = relatedDeliverables.reduce((sum, d) => sum + calculateCompletion(d.id, 'deliverable', dataSource), 0);
             return Math.round(total / relatedDeliverables.length);
         }
         if (type === 'final-product') {
-            const relatedPhases = state.phases.filter(p => p.finalProductId === entityId);
+            const relatedPhases = dataSource.phases.filter(p => p.finalProductId === entityId);
             if (relatedPhases.length === 0) return 0;
-            const total = relatedPhases.reduce((sum, p) => sum + calculateCompletion(p.id, 'phase'), 0);
+            const total = relatedPhases.reduce((sum, p) => sum + calculateCompletion(p.id, 'phase', dataSource), 0);
             return Math.round(total / relatedPhases.length);
         }
         if (type === 'project') {
-            const relatedFPs = state.finalProducts.filter(fp => fp.projectId === entityId);
+            const relatedFPs = dataSource.finalProducts.filter(fp => fp.projectId === entityId);
             if (relatedFPs.length === 0) return 0;
-            const total = relatedFPs.reduce((sum, fp) => sum + calculateCompletion(fp.id, 'final-product'), 0);
+            const total = relatedFPs.reduce((sum, fp) => sum + calculateCompletion(fp.id, 'final-product', dataSource), 0);
             return Math.round(total / relatedFPs.length);
         }
         return 0;
+    };
+
+    // Helper to calculate timeline (Hierarchical)
+    const calculateTimeline = (entityId, type, customData = null) => {
+        const dataSource = customData || state;
+        let item = null;
+        let children = [];
+        let childType = '';
+
+        if (type === 'project') {
+            item = dataSource.projects.find(p => p.id === entityId);
+            children = dataSource.finalProducts.filter(fp => fp.projectId === entityId);
+            childType = 'final-product';
+        } else if (type === 'final-product') {
+            item = dataSource.finalProducts.find(fp => fp.id === entityId);
+            children = dataSource.phases.filter(p => p.finalProductId === entityId);
+            childType = 'phase';
+        } else if (type === 'phase') {
+            item = dataSource.phases.find(p => p.id === entityId);
+            children = dataSource.deliverables.filter(d => d.phaseId === entityId);
+            childType = 'deliverable';
+        } else if (type === 'deliverable') {
+            item = dataSource.deliverables.find(d => d.id === entityId);
+            children = dataSource.workPackages.filter(wp => wp.deliverableId === entityId);
+            childType = 'work-package';
+        } else if (type === 'work-package') {
+            item = dataSource.workPackages.find(wp => wp.id === entityId);
+        }
+
+        if (!item) return { startDate: '', endDate: '', actualStartDate: '', actualEndDate: '' };
+
+        if (type === 'work-package' || children.length === 0) {
+            return {
+                startDate: item.startDate || '',
+                endDate: item.endDate || '',
+                actualStartDate: item.actualStartDate || '',
+                actualEndDate: item.actualEndDate || ''
+            };
+        }
+
+        const childTimelines = children.map(c => calculateTimeline(c.id, childType, dataSource));
+
+        const getMinDate = (dates) => {
+            const validDates = dates.filter(d => d && d !== '');
+            if (validDates.length === 0) return '';
+            return validDates.reduce((min, d) => (d < min ? d : min), validDates[0]);
+        };
+
+        const getMaxDate = (dates) => {
+            const validDates = dates.filter(d => d && d !== '');
+            if (validDates.length === 0) return '';
+            return validDates.reduce((max, d) => (d > max ? d : max), validDates[0]);
+        };
+
+        const allChildrenCompleted = children.every(c => calculateCompletion(c.id, childType, dataSource) >= 100);
+
+        return {
+            startDate: getMinDate(childTimelines.map(t => t.startDate)),
+            endDate: getMaxDate(childTimelines.map(t => t.endDate)),
+            actualStartDate: getMinDate(childTimelines.map(t => t.actualStartDate)),
+            actualEndDate: allChildrenCompleted ? getMaxDate(childTimelines.map(t => t.actualEndDate)) : ''
+        };
     };
 
     // Helper to calculate budget variance (Hierarchical)

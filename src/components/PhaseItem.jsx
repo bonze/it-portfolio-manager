@@ -24,6 +24,10 @@ const PhaseItem = ({ phase }) => {
                 owner: 'TBD',
                 budget: { plan: 0, actual: 0, additional: 0 },
                 status: 0,
+                startDate: '',
+                endDate: '',
+                actualStartDate: '',
+                actualEndDate: '',
                 completionDate: null
             }
         });
@@ -35,7 +39,19 @@ const PhaseItem = ({ phase }) => {
                 <div className="flex items-center gap-2">
                     {expanded ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
                     <FaLayerGroup className="text-accent-color" size={12} />
-                    <span className="text-sm font-medium">{phase.description}</span>
+                    <div className="flex flex-col">
+                        <span className="text-sm font-medium">{phase.description}</span>
+                        {(() => {
+                            const { calculateTimeline } = useStore();
+                            const timeline = calculateTimeline(phase.id, 'phase');
+                            if (!timeline.startDate && !timeline.endDate) return null;
+                            return (
+                                <span className="text-[10px] text-muted">
+                                    {new Date(timeline.startDate).toLocaleDateString()} - {new Date(timeline.endDate).toLocaleDateString()}
+                                </span>
+                            );
+                        })()}
+                    </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <span className="text-xs text-muted">Budget: ${((phase.budget?.plan || 0) + (phase.budget?.additional || 0)).toLocaleString()}</span>

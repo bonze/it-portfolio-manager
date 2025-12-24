@@ -100,34 +100,46 @@ const BaselineViewer = ({ entity, snapshot, onClose, isOpen = true }) => {
                             </div>
 
                             <div className="goals-section section">
-                                <h3>Goals & Scope</h3>
-                                {selectedSnapshot.goals.length === 0 ? <p className="text-muted">No goals recorded.</p> : (
+                                <h3>WBS Structure (Final Products & Phases)</h3>
+                                {(!selectedSnapshot.finalProducts || selectedSnapshot.finalProducts.length === 0) ? <p className="text-muted">No final products recorded.</p> : (
                                     <div className="goals-list">
-                                        {selectedSnapshot.goals.map(goal => (
-                                            <div key={goal.id} className="goal-item-viewer">
-                                                <div className="goal-header" onClick={() => toggleGoal(goal.id)}>
-                                                    {expandedGoals[goal.id] ? <FaChevronDown /> : <FaChevronRight />}
-                                                    <span className="font-medium">{goal.description}</span>
+                                        {selectedSnapshot.finalProducts.map(fp => (
+                                            <div key={fp.id} className="goal-item-viewer">
+                                                <div className="goal-header" onClick={() => toggleGoal(fp.id)}>
+                                                    {expandedGoals[fp.id] ? <FaChevronDown /> : <FaChevronRight />}
+                                                    <span className="font-medium">{fp.description}</span>
+                                                    <span className="text-xs text-muted ml-2">Owner: {fp.owner}</span>
                                                 </div>
 
-                                                {expandedGoals[goal.id] && (
+                                                {expandedGoals[fp.id] && (
                                                     <div className="goal-content">
-                                                        {/* Scopes for this goal */}
-                                                        {selectedSnapshot.scopes.filter(s => s.goalId === goal.id).map(scope => (
-                                                            <div key={scope.id} className="scope-item-viewer">
+                                                        {/* Phases for this final product */}
+                                                        {(selectedSnapshot.phases || []).filter(ph => ph.finalProductId === fp.id).map(phase => (
+                                                            <div key={phase.id} className="scope-item-viewer">
                                                                 <div className="scope-header">
-                                                                    <span className="badge">Scope</span>
-                                                                    <span>{scope.description}</span>
+                                                                    <span className="badge">Phase</span>
+                                                                    <span>{phase.description}</span>
+                                                                    <span className="text-xs text-muted ml-2">Timeline: {phase.timeline}</span>
                                                                 </div>
 
-                                                                {/* Deliverables for this scope */}
+                                                                {/* Deliverables for this phase */}
                                                                 <div className="deliverables-list">
-                                                                    {selectedSnapshot.deliverables.filter(d =>
-                                                                        d.scopeId === scope.id || (d.scopeIds && d.scopeIds.includes(scope.id))
-                                                                    ).map(del => (
-                                                                        <div key={del.id} className="deliverable-item-viewer">
-                                                                            <span>• {del.description}</span>
-                                                                            <span className={`status-badge status-${del.status >= 100 ? 'completed' : 'pending'}`}>{del.status}%</span>
+                                                                    {(selectedSnapshot.deliverables || []).filter(d => d.phaseId === phase.id).map(del => (
+                                                                        <div key={del.id} className="deliverable-item-viewer-container">
+                                                                            <div className="deliverable-item-viewer">
+                                                                                <span>• {del.description}</span>
+                                                                                <span className={`status-badge status-${del.status >= 100 ? 'completed' : 'pending'}`}>{del.status}%</span>
+                                                                            </div>
+
+                                                                            {/* Work Packages for this deliverable */}
+                                                                            <div className="work-packages-list ml-4 border-l border-border-color pl-2">
+                                                                                {(selectedSnapshot.workPackages || []).filter(wp => wp.deliverableId === del.id).map(wp => (
+                                                                                    <div key={wp.id} className="text-xs text-muted flex justify-between py-1">
+                                                                                        <span>- {wp.description} ({wp.assignee})</span>
+                                                                                        <span>{wp.status}%</span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
                                                                         </div>
                                                                     ))}
                                                                 </div>

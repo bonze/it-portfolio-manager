@@ -602,7 +602,7 @@ export const dbOps = {
             finalProducts = fpRes.length ? fpRes[0].values.map(r => ({ ...JSON.parse(r[2]), id: r[0] })) : [];
 
             const finalProductIds = finalProducts.map(g => g.id);
-            let phases = [];
+            phases = [];
             if (finalProductIds.length > 0) {
                 const placeholders = finalProductIds.map(() => '?').join(',');
                 const phRes = db.exec(`SELECT * FROM phases WHERE finalProductId IN (${placeholders})`, finalProductIds);
@@ -610,7 +610,7 @@ export const dbOps = {
             }
 
             const phaseIds = phases.map(s => s.id);
-            let deliverables = [];
+            deliverables = [];
             if (phaseIds.length > 0) {
                 const placeholders = phaseIds.map(() => '?').join(',');
                 const dRes = db.exec(`SELECT * FROM deliverables WHERE phaseId IN (${placeholders})`, phaseIds);
@@ -618,7 +618,7 @@ export const dbOps = {
             }
 
             const deliverableIds = deliverables.map(d => d.id);
-            let workPackages = [];
+            workPackages = [];
             if (deliverableIds.length > 0) {
                 const placeholders = deliverableIds.map(() => '?').join(',');
                 const wpRes = db.exec(`SELECT * FROM work_packages WHERE deliverableId IN (${placeholders})`, deliverableIds);
@@ -660,7 +660,10 @@ export const dbOps = {
                 .select('*')
                 .eq('projectId', projectId)
                 .order('version', { ascending: false });
-            return (data || []).map(item => ({ ...item.data, id: item.id }));
+            return (data || []).map(item => {
+                const parsedData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+                return { ...parsedData, id: item.id };
+            });
         } else {
             const result = db.exec('SELECT * FROM project_baselines WHERE projectId = ? ORDER BY version DESC', [projectId]);
             if (result.length === 0) return [];

@@ -368,12 +368,14 @@ const createCrud = (entityName, tableName) => {
     router.post(`/${entityName}`, authenticateToken, async (req, res) => {
         const item = req.body;
         try {
+            console.log(`Creating ${entityName}:`, item.id);
             await dbOps.insert(tableName, item);
 
             // Auto-grant access to creator for projects
             if (tableName === 'projects' && req.user && req.user.id) {
                 try {
                     await dbOps.addUserProjectAccess(req.user.id, item.id);
+                    console.log(`Granted access to project ${item.id} for user ${req.user.id}`);
                 } catch (accessError) {
                     console.error('Failed to grant project access:', accessError);
                     // Don't fail the request if access grant fails
@@ -382,7 +384,7 @@ const createCrud = (entityName, tableName) => {
 
             res.status(201).json(item);
         } catch (e) {
-            console.error(e);
+            console.error(`Error creating ${entityName}:`, e);
             res.status(500).json({ error: e.message });
         }
     });

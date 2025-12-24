@@ -239,30 +239,32 @@ export const StoreProvider = ({ children }) => {
         };
 
         try {
+            let res;
             switch (action.type) {
                 case 'ADD_PROJECT':
-                    await fetch('/api/projects', { method: 'POST', headers, body: JSON.stringify(action.payload) });
+                    res = await fetch('/api/projects', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
                 case 'ADD_FINAL_PRODUCT':
-                    await fetch('/api/final-products', { method: 'POST', headers, body: JSON.stringify(action.payload) });
+                    res = await fetch('/api/final-products', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
                 case 'ADD_PHASE':
-                    await fetch('/api/phases', { method: 'POST', headers, body: JSON.stringify(action.payload) });
+                    res = await fetch('/api/phases', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
                 case 'ADD_DELIVERABLE':
-                    await fetch('/api/deliverables', { method: 'POST', headers, body: JSON.stringify(action.payload) });
+                    res = await fetch('/api/deliverables', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
                 case 'ADD_WORK_PACKAGE':
-                    await fetch('/api/work-packages', { method: 'POST', headers, body: JSON.stringify(action.payload) });
+                    res = await fetch('/api/work-packages', { method: 'POST', headers, body: JSON.stringify(action.payload) });
                     break;
                 case 'UPDATE_WORK_PACKAGE':
-                    await fetch(`/api/work-packages/${action.payload.id}`, { method: 'PUT', headers, body: JSON.stringify(action.payload) });
+                    res = await fetch(`/api/work-packages/${action.payload.id}`, { method: 'PUT', headers, body: JSON.stringify(action.payload) });
                     break;
                 case 'DELETE_PROJECTS':
                     const { ids } = action.payload;
-                    await Promise.all(ids.map(id =>
+                    const results = await Promise.all(ids.map(id =>
                         fetch(`/api/projects/${id}`, { method: 'DELETE', headers })
                     ));
+                    if (results.some(r => !r.ok)) throw new Error('Failed to delete some projects');
                     break;
 
                 case 'UPDATE_ENTITY':
@@ -278,13 +280,13 @@ export const StoreProvider = ({ children }) => {
                         const item = state[listName].find(i => i.id === id);
                         const updatedItem = { ...item, ...data };
                         const endpoint = type + 's';
-                        await fetch(`/api/${endpoint}/${id}`, { method: 'PUT', headers, body: JSON.stringify(updatedItem) });
+                        res = await fetch(`/api/${endpoint}/${id}`, { method: 'PUT', headers, body: JSON.stringify(updatedItem) });
                     }
                     break;
 
                 case 'ADD_KPI': {
                     const { entityId, entityType, kpi } = action.payload;
-                    await fetch('/api/kpis', {
+                    res = await fetch('/api/kpis', {
                         method: 'POST',
                         headers,
                         body: JSON.stringify({ ...kpi, entityId, entityType })
@@ -292,28 +294,25 @@ export const StoreProvider = ({ children }) => {
                     break;
                 }
                 case 'UPDATE_KPI':
-                    await fetch(`/api/kpis/${action.payload.kpi.id}`, {
+                    res = await fetch(`/api/kpis/${action.payload.kpi.id}`, {
                         method: 'PUT',
                         headers,
                         body: JSON.stringify(action.payload.kpi)
                     });
                     break;
                 case 'DELETE_KPI':
-                    await fetch(`/api/kpis/${action.payload.kpiId}`, { method: 'DELETE', headers });
+                    res = await fetch(`/api/kpis/${action.payload.kpiId}`, { method: 'DELETE', headers });
                     break;
 
                 case 'SUBMIT_CHANGE_REQUEST':
-                    // In a real app, this would save to a 'change_requests' table
-                    // For now, we update the project to have a 'pendingChanges' field
-                    await fetch(`/api/projects/${action.payload.projectId}`, {
+                    res = await fetch(`/api/projects/${action.payload.projectId}`, {
                         method: 'PUT',
                         headers,
                         body: JSON.stringify({ pendingChanges: action.payload.request })
                     });
                     break;
                 case 'APPROVE_BASELINE_CHANGE':
-                    // 1. Create Baseline Snapshot
-                    await fetch('/api/baselines', {
+                    const res1 = await fetch('/api/baselines', {
                         method: 'POST',
                         headers,
                         body: JSON.stringify({
@@ -322,8 +321,9 @@ export const StoreProvider = ({ children }) => {
                             snapshot: action.payload.snapshot
                         })
                     });
-                    // 2. Update Project (clear pending changes, update version)
-                    await fetch(`/api/projects/${action.payload.projectId}`, {
+                    if (!res1.ok) throw new Error('Failed to create baseline snapshot');
+
+                    res = await fetch(`/api/projects/${action.payload.projectId}`, {
                         method: 'PUT',
                         headers,
                         body: JSON.stringify({
@@ -333,7 +333,7 @@ export const StoreProvider = ({ children }) => {
                     });
                     break;
                 case 'REJECT_BASELINE_CHANGE':
-                    await fetch(`/api/projects/${action.payload.projectId}`, {
+                    res = await fetch(`/api/projects/${action.payload.projectId}`, {
                         method: 'PUT',
                         headers,
                         body: JSON.stringify({ pendingChanges: null })
@@ -341,13 +341,20 @@ export const StoreProvider = ({ children }) => {
                     break;
 
                 case 'RESET_DATA':
-                    await fetch('/api/reset', { method: 'POST', headers });
+                    res = await fetch('/api/reset', { method: 'POST', headers });
                     break;
             }
-            dispatch(action); // Optimistic update or update after success
+
+            if (res && !res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || `API error: ${res.status}`);
+            }
+
+            dispatch(action); // Update local state only if API call succeeded
         } catch (e) {
             console.error("API Action failed", e);
             alert("Action failed: " + e.message);
+            throw e; // Re-throw to allow caller to handle if needed
         }
     };
 

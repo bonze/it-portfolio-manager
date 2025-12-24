@@ -43,26 +43,26 @@ import {
 
 const AnalyticsDashboard = () => {
     const { state } = useStore();
-    const { projects, goals, scopes, deliverables } = state;
+    const { projects, finalProducts, phases, deliverables, workPackages } = state;
     const [activeTab, setActiveTab] = useState('overview');
 
     // Calculate all metrics
-    const portfolioMetrics = calculatePortfolioMetrics(projects, goals, scopes, deliverables);
+    const portfolioMetrics = calculatePortfolioMetrics(projects, finalProducts, phases, deliverables, workPackages);
     const healthScore = calculatePortfolioHealthScore(projects);
     const budgetUtilization = getBudgetUtilizationRate(projects);
     const costVariance = getTotalCostVariance(projects);
     const cpi = getCostPerformanceIndex(projects);
     const resourceUtilization = getResourceUtilizationRate(projects);
-    const kpiAchievement = getKPIAchievementRate(projects, goals);
+    const kpiAchievement = getKPIAchievementRate(projects, finalProducts);
 
     const statusDist = getStatusDistribution(projects);
     const budgetByProject = getBudgetByProject(projects).slice(0, 10);
     const budgetByUnit = getBudgetByBusinessUnit(projects);
     const overBudgetProjects = getOverBudgetProjects(projects);
-    const completionDist = getCompletionDistribution(deliverables);
+    const completionDist = getCompletionDistribution(workPackages);
     const projectsByUnit = getProjectsByBusinessUnit(projects);
     const topPMs = getTopProjectManagers(projects);
-    const assigneeWorkload = getAssigneeWorkload(deliverables);
+    const assigneeWorkload = getAssigneeWorkload(workPackages);
     const vendorPerformance = getVendorPerformance(projects);
     const atRiskProjects = getAtRiskProjects(projects);
     const budgetRiskProjects = getBudgetRiskProjects(projects);

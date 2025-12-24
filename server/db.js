@@ -312,7 +312,10 @@ export const dbOps = {
     async getAll(tableName) {
         if (IS_VERCEL) {
             const { data } = await supabase.from(tableName).select('*');
-            return (data || []).map(item => ({ ...item.data, id: item.id }));
+            return (data || []).map(item => {
+                const parsedData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+                return { ...parsedData, id: item.id };
+            });
         } else {
             const result = db.exec(`SELECT * FROM ${tableName}`);
             if (result.length === 0) return [];
@@ -528,7 +531,10 @@ export const dbOps = {
 
             const projectIds = accessData.map(item => item.projectId);
             const { data } = await supabase.from('projects').select('*').in('id', projectIds);
-            return (data || []).map(item => ({ ...item.data, id: item.id, baseline: item.data.baseline || 0 }));
+            return (data || []).map(item => {
+                const parsedData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+                return { ...parsedData, id: item.id, baseline: parsedData.baseline || 0 };
+            });
         } else {
             const result = db.exec(`
                 SELECT p.* FROM projects p
@@ -556,22 +562,35 @@ export const dbOps = {
 
         if (IS_VERCEL) {
             const { data: pData } = await supabase.from('projects').select('*').eq('id', projectId).single();
-            project = { ...pData.data, id: pData.id };
+            const pParsed = typeof pData.data === 'string' ? JSON.parse(pData.data) : pData.data;
+            project = { ...pParsed, id: pData.id };
 
             const { data: fpData } = await supabase.from('final_products').select('*').eq('projectId', projectId);
-            finalProducts = (fpData || []).map(i => ({ ...i.data, id: i.id }));
+            finalProducts = (fpData || []).map(i => {
+                const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
+                return { ...parsed, id: i.id };
+            });
 
             const finalProductIds = finalProducts.map(g => g.id);
             const { data: phData } = await supabase.from('phases').select('*').in('finalProductId', finalProductIds);
-            phases = (phData || []).map(i => ({ ...i.data, id: i.id }));
+            phases = (phData || []).map(i => {
+                const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
+                return { ...parsed, id: i.id };
+            });
 
             const phaseIds = phases.map(s => s.id);
             const { data: dData } = await supabase.from('deliverables').select('*').in('phaseId', phaseIds);
-            deliverables = (dData || []).map(i => ({ ...i.data, id: i.id }));
+            deliverables = (dData || []).map(i => {
+                const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
+                return { ...parsed, id: i.id };
+            });
 
             const deliverableIds = deliverables.map(d => d.id);
             const { data: wpData } = await supabase.from('work_packages').select('*').in('deliverableId', deliverableIds);
-            workPackages = (wpData || []).map(i => ({ ...i.data, id: i.id }));
+            workPackages = (wpData || []).map(i => {
+                const parsed = typeof i.data === 'string' ? JSON.parse(i.data) : i.data;
+                return { ...parsed, id: i.id };
+            });
 
         } else {
             // SQLite implementation

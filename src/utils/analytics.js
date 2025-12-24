@@ -6,7 +6,11 @@
 // 1. EXECUTIVE SUMMARY METRICS
 // ============================================================================
 
-export const calculatePortfolioMetrics = (projects, goals, scopes, deliverables) => {
+// ============================================================================
+// 1. EXECUTIVE SUMMARY METRICS
+// ============================================================================
+
+export const calculatePortfolioMetrics = (projects, finalProducts, phases, deliverables, workPackages) => {
     const totalBudgetPlan = projects.reduce((sum, p) => {
         const budget = typeof p.budget === 'object' ? (p.budget?.plan || 0) : (p.budget || 0);
         return sum + budget;
@@ -222,15 +226,15 @@ export const getTopProjectManagers = (projects) => {
         .slice(0, 5);
 };
 
-export const getAssigneeWorkload = (deliverables) => {
+export const getAssigneeWorkload = (workPackages) => {
     const workloadMap = {};
-    deliverables.forEach(d => {
-        if (d.assignee) {
-            if (!workloadMap[d.assignee]) {
-                workloadMap[d.assignee] = { total: 0, completed: 0 };
+    workPackages.forEach(wp => {
+        if (wp.assignee) {
+            if (!workloadMap[wp.assignee]) {
+                workloadMap[wp.assignee] = { total: 0, completed: 0 };
             }
-            workloadMap[d.assignee].total++;
-            if (d.status === 100) workloadMap[d.assignee].completed++;
+            workloadMap[wp.assignee].total++;
+            if (wp.status === 100) workloadMap[wp.assignee].completed++;
         }
     });
 
@@ -296,7 +300,7 @@ export const getStatusDistribution = (projects) => {
     }));
 };
 
-export const getCompletionDistribution = (deliverables) => {
+export const getCompletionDistribution = (workPackages) => {
     const ranges = {
         '0-25%': 0,
         '25-50%': 0,
@@ -304,8 +308,8 @@ export const getCompletionDistribution = (deliverables) => {
         '75-100%': 0
     };
 
-    deliverables.forEach(d => {
-        const status = d.status || 0;
+    workPackages.forEach(wp => {
+        const status = wp.status || 0;
         if (status < 25) ranges['0-25%']++;
         else if (status < 50) ranges['25-50%']++;
         else if (status < 75) ranges['50-75%']++;
@@ -460,7 +464,7 @@ export const getBudgetTrend = (projects) => {
 // 7. KPI TRACKING
 // ============================================================================
 
-export const getKPIAchievementRate = (projects, goals) => {
+export const getKPIAchievementRate = (projects, finalProducts) => {
     let totalKPIs = 0;
     let achievedKPIs = 0;
 
@@ -472,11 +476,11 @@ export const getKPIAchievementRate = (projects, goals) => {
         }
     });
 
-    // Count goal KPIs
-    goals.forEach(g => {
-        if (g.kpis && Array.isArray(g.kpis)) {
-            totalKPIs += g.kpis.length;
-            achievedKPIs += g.kpis.filter(kpi => kpi.actual >= kpi.target).length;
+    // Count final product KPIs
+    finalProducts.forEach(fp => {
+        if (fp.kpis && Array.isArray(fp.kpis)) {
+            totalKPIs += fp.kpis.length;
+            achievedKPIs += fp.kpis.filter(kpi => kpi.actual >= kpi.target).length;
         }
     });
 

@@ -455,7 +455,7 @@ export const getBudgetTrend = (projects) => {
         plan: data.plan,
         actual: data.actual,
         variance: data.actual - data.plan,
-        utilizationRate: Math.round((data.actual / data.plan) * 100),
+        utilizationRate: data.plan > 0 ? Math.round((data.actual / data.plan) * 100) : 0,
         projectCount: data.count
     }));
 };

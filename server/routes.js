@@ -562,7 +562,11 @@ router.get('/export', authenticateToken, async (req, res) => {
             { header: 'Vendor Contact', key: 'vendorContact', width: 20 },
             { header: 'Vendor Value', key: 'vendorValue', width: 15 },
             { header: 'Man Days Plan', key: 'manDaysPlan', width: 15 },
-            { header: 'Man Days Actual', key: 'manDaysActual', width: 15 }
+            { header: 'Man Days Actual', key: 'manDaysActual', width: 15 },
+            { header: 'Start Date', key: 'startDate', width: 15 },
+            { header: 'End Date', key: 'endDate', width: 15 },
+            { header: 'Actual Start Date', key: 'actualStartDate', width: 15 },
+            { header: 'Actual End Date', key: 'actualEndDate', width: 15 }
         ];
 
         projects.forEach(p => {
@@ -584,7 +588,11 @@ router.get('/export', authenticateToken, async (req, res) => {
                 vendorContact: vendor.contact || '',
                 vendorValue: vendor.contractValue || 0,
                 manDaysPlan: resources.planManDays || 0,
-                manDaysActual: resources.actualManDays || 0
+                manDaysActual: resources.actualManDays || 0,
+                startDate: p.startDate || '',
+                endDate: p.endDate || '',
+                actualStartDate: p.actualStartDate || '',
+                actualEndDate: p.actualEndDate || ''
             });
         });
 
@@ -594,7 +602,11 @@ router.get('/export', authenticateToken, async (req, res) => {
             { header: 'Project Name', key: 'projectName', width: 30 },
             { header: 'Description', key: 'description', width: 50 },
             { header: 'Owner', key: 'owner', width: 20 },
-            { header: 'Budget', key: 'budget', width: 15 }
+            { header: 'Budget', key: 'budget', width: 15 },
+            { header: 'Start Date', key: 'startDate', width: 15 },
+            { header: 'End Date', key: 'endDate', width: 15 },
+            { header: 'Actual Start Date', key: 'actualStartDate', width: 15 },
+            { header: 'Actual End Date', key: 'actualEndDate', width: 15 }
         ];
 
         finalProducts.forEach(fp => {
@@ -605,7 +617,11 @@ router.get('/export', authenticateToken, async (req, res) => {
                     projectName: project.name,
                     description: fp.description || fp.title || '',
                     owner: fp.owner || '',
-                    budget: typeof budget === 'object' ? (budget.plan || 0) : budget
+                    budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
+                    startDate: fp.startDate || '',
+                    endDate: fp.endDate || '',
+                    actualStartDate: fp.actualStartDate || '',
+                    actualEndDate: fp.actualEndDate || ''
                 });
             }
         });
@@ -617,7 +633,11 @@ router.get('/export', authenticateToken, async (req, res) => {
             { header: 'Description', key: 'description', width: 50 },
             { header: 'Owner', key: 'owner', width: 20 },
             { header: 'Budget', key: 'budget', width: 15 },
-            { header: 'Timeline', key: 'timeline', width: 20 }
+            { header: 'Timeline', key: 'timeline', width: 20 },
+            { header: 'Start Date', key: 'startDate', width: 15 },
+            { header: 'End Date', key: 'endDate', width: 15 },
+            { header: 'Actual Start Date', key: 'actualStartDate', width: 15 },
+            { header: 'Actual End Date', key: 'actualEndDate', width: 15 }
         ];
 
         phases.forEach(ph => {
@@ -629,7 +649,11 @@ router.get('/export', authenticateToken, async (req, res) => {
                     description: ph.description || ph.title || '',
                     owner: ph.owner || '',
                     budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
-                    timeline: ph.timeline || 'TBD'
+                    timeline: ph.timeline || 'TBD',
+                    startDate: ph.startDate || '',
+                    endDate: ph.endDate || '',
+                    actualStartDate: ph.actualStartDate || '',
+                    actualEndDate: ph.actualEndDate || ''
                 });
             }
         });
@@ -641,7 +665,11 @@ router.get('/export', authenticateToken, async (req, res) => {
             { header: 'Description', key: 'description', width: 50 },
             { header: 'Owner', key: 'owner', width: 20 },
             { header: 'Budget', key: 'budget', width: 15 },
-            { header: 'Status', key: 'status', width: 10 }
+            { header: 'Status', key: 'status', width: 10 },
+            { header: 'Start Date', key: 'startDate', width: 15 },
+            { header: 'End Date', key: 'endDate', width: 15 },
+            { header: 'Actual Start Date', key: 'actualStartDate', width: 15 },
+            { header: 'Actual End Date', key: 'actualEndDate', width: 15 }
         ];
 
         deliverables.forEach(d => {
@@ -653,7 +681,11 @@ router.get('/export', authenticateToken, async (req, res) => {
                     description: d.description || d.title || '',
                     owner: d.owner || '',
                     budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
-                    status: d.status || 0
+                    status: d.status || 0,
+                    startDate: d.startDate || '',
+                    endDate: d.endDate || '',
+                    actualStartDate: d.actualStartDate || '',
+                    actualEndDate: d.actualEndDate || ''
                 });
             }
         });
@@ -665,7 +697,11 @@ router.get('/export', authenticateToken, async (req, res) => {
             { header: 'Description', key: 'description', width: 50 },
             { header: 'Assignee', key: 'assignee', width: 20 },
             { header: 'Budget', key: 'budget', width: 15 },
-            { header: 'Status', key: 'status', width: 10 }
+            { header: 'Status', key: 'status', width: 10 },
+            { header: 'Start Date', key: 'startDate', width: 15 },
+            { header: 'End Date', key: 'endDate', width: 15 },
+            { header: 'Actual Start Date', key: 'actualStartDate', width: 15 },
+            { header: 'Actual End Date', key: 'actualEndDate', width: 15 }
         ];
 
         workPackages.forEach(wp => {
@@ -677,7 +713,11 @@ router.get('/export', authenticateToken, async (req, res) => {
                     description: wp.description || wp.title || '',
                     assignee: wp.assignee || 'Unassigned',
                     budget: typeof budget === 'object' ? (budget.plan || 0) : budget,
-                    status: wp.status || 0
+                    status: wp.status || 0,
+                    startDate: wp.startDate || '',
+                    endDate: wp.endDate || '',
+                    actualStartDate: wp.actualStartDate || '',
+                    actualEndDate: wp.actualEndDate || ''
                 });
             }
         });

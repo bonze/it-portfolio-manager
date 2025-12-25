@@ -37,6 +37,18 @@ const reducer = (state, action) => {
                     wp.id === action.payload.id ? { ...wp, ...action.payload } : wp
                 ),
             };
+        case 'RECALCULATE_COMPLETIONS': {
+            // This action expects calculateCompletion function in payload
+            const { calculateCompletion } = action.payload;
+            const enrichedProjects = state.projects.map(p => ({
+                ...p,
+                completion: calculateCompletion(p.id, 'project', state)
+            }));
+            return {
+                ...state,
+                projects: enrichedProjects
+            };
+        }
         case 'UPDATE_ENTITY': // Generic update
             const { type, id, data } = action.payload;
             // Map type to list name: project->projects, final-product->finalProducts, phase->phases, etc.
@@ -209,6 +221,14 @@ export const StoreProvider = ({ children }) => {
         dispatch({ type: 'LOAD_DATA', payload: initialState });
     };
 
+    // Helper to enrich projects with completion field
+    const enrichProjectsWithCompletion = (projects, dataSource) => {
+        return projects.map(p => ({
+            ...p,
+            completion: calculateCompletion(p.id, 'project', dataSource)
+        }));
+    };
+
     // Data Fetching
     const fetchData = async (token) => {
         if (!token) return;
@@ -233,14 +253,23 @@ export const StoreProvider = ({ children }) => {
                 fetchJson('/api/work-packages')
             ]);
 
+            // Create data source for completion calculation
+            const dataSource = {
+                projects: Array.isArray(projects) ? projects : [],
+                finalProducts: Array.isArray(finalProducts) ? finalProducts : [],
+                phases: Array.isArray(phases) ? phases : [],
+                deliverables: Array.isArray(deliverables) ? deliverables : [],
+                workPackages: Array.isArray(workPackages) ? workPackages : []
+            };
+
+            // Enrich projects with completion field
+            const enrichedProjects = enrichProjectsWithCompletion(dataSource.projects, dataSource);
+
             dispatch({
                 type: 'LOAD_DATA',
                 payload: {
-                    projects: Array.isArray(projects) ? projects : [],
-                    finalProducts: Array.isArray(finalProducts) ? finalProducts : [],
-                    phases: Array.isArray(phases) ? phases : [],
-                    deliverables: Array.isArray(deliverables) ? deliverables : [],
-                    workPackages: Array.isArray(workPackages) ? workPackages : []
+                    ...dataSource,
+                    projects: enrichedProjects
                 }
             });
         } catch (e) {
@@ -393,6 +422,23 @@ export const StoreProvider = ({ children }) => {
             }
 
             dispatch(action); // Update local state only if API call succeeded
+
+            // Recalculate project completions after changes to work packages or deliverables
+            const needsRecalculation = [
+                'ADD_WORK_PACKAGE',
+                'UPDATE_WORK_PACKAGE',
+                'ADD_DELIVERABLE',
+                'ADD_PHASE',
+                'ADD_FINAL_PRODUCT'
+            ].includes(action.type) ||
+                (action.type === 'UPDATE_ENTITY' && ['work-package', 'deliverable', 'phase', 'final-product'].includes(action.payload.type));
+
+            if (needsRecalculation) {
+                dispatch({
+                    type: 'RECALCULATE_COMPLETIONS',
+                    payload: { calculateCompletion }
+                });
+            }
         } catch (e) {
             console.error("API Action failed", e);
             alert("Action failed: " + e.message);

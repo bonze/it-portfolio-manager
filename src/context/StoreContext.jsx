@@ -9,6 +9,7 @@ const initialState = {
     phases: [],
     deliverables: [],
     workPackages: [],
+    kpis: []
 };
 
 const reducer = (state, action) => {
@@ -245,12 +246,13 @@ export const StoreProvider = ({ children }) => {
                 return await r.json();
             };
 
-            const [projects, finalProducts, phases, deliverables, workPackages] = await Promise.all([
+            const [projects, finalProducts, phases, deliverables, workPackages, kpis] = await Promise.all([
                 fetchJson('/api/projects'),
                 fetchJson('/api/final-products'),
                 fetchJson('/api/phases'),
                 fetchJson('/api/deliverables'),
-                fetchJson('/api/work-packages')
+                fetchJson('/api/work-packages'),
+                fetchJson('/api/kpis')
             ]);
 
             // Create data source for completion calculation
@@ -259,7 +261,8 @@ export const StoreProvider = ({ children }) => {
                 finalProducts: Array.isArray(finalProducts) ? finalProducts : [],
                 phases: Array.isArray(phases) ? phases : [],
                 deliverables: Array.isArray(deliverables) ? deliverables : [],
-                workPackages: Array.isArray(workPackages) ? workPackages : []
+                workPackages: Array.isArray(workPackages) ? workPackages : [],
+                kpis: Array.isArray(kpis) ? kpis : []
             };
 
             // Enrich projects with completion field

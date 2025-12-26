@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
+import YearFilter from './YearFilter';
 import MetricCard from './MetricCard';
 import PieChart from './PieChart';
 import BarChart from './BarChart';
@@ -42,9 +43,43 @@ import {
 } from '../utils/analytics';
 
 const AnalyticsDashboard = () => {
-    const { state } = useStore();
-    const { projects, finalProducts, phases, deliverables, workPackages } = state;
+    const { state, calculateTimeline } = useStore();
+    const { projects: allProjects, finalProducts: allFinalProducts, phases: allPhases, deliverables: allDeliverables, workPackages: allWorkPackages, kpis: allKpis } = state;
+    const currentYear = new Date().getFullYear();
+    const [selectedYears, setSelectedYears] = useState([currentYear]);
     const [activeTab, setActiveTab] = useState('overview');
+
+    // Filter projects
+    const projects = allProjects.filter(project => {
+        const timeline = calculateTimeline(project.id, 'project');
+        const projectYear = timeline.startDate ? new Date(timeline.startDate).getFullYear() : (project.year || currentYear);
+        return selectedYears.includes(projectYear);
+    });
+
+    const projectIds = new Set(projects.map(p => p.id));
+
+    // Filter child entities
+    const finalProducts = allFinalProducts.filter(fp => projectIds.has(fp.projectId));
+    const finalProductIds = new Set(finalProducts.map(fp => fp.id));
+
+    const phases = allPhases.filter(p => finalProductIds.has(p.finalProductId));
+    const phaseIds = new Set(phases.map(p => p.id));
+
+    const deliverables = allDeliverables.filter(d => phaseIds.has(d.phaseId));
+    const deliverableIds = new Set(deliverables.map(d => d.id));
+
+    const workPackages = allWorkPackages.filter(wp => deliverableIds.has(wp.deliverableId));
+    const workPackageIds = new Set(workPackages.map(wp => wp.id));
+
+    // Filter KPIs
+    const kpis = allKpis.filter(kpi => {
+        if (kpi.entityType === 'project') return projectIds.has(kpi.entityId);
+        if (kpi.entityType === 'final-product') return finalProductIds.has(kpi.entityId);
+        if (kpi.entityType === 'phase') return phaseIds.has(kpi.entityId);
+        if (kpi.entityType === 'deliverable') return deliverableIds.has(kpi.entityId);
+        if (kpi.entityType === 'work-package') return workPackageIds.has(kpi.entityId);
+        return false;
+    });
 
     // Calculate all metrics
     const portfolioMetrics = calculatePortfolioMetrics(projects, finalProducts, phases, deliverables, workPackages);
@@ -53,7 +88,7 @@ const AnalyticsDashboard = () => {
     const costVariance = getTotalCostVariance(projects);
     const cpi = getCostPerformanceIndex(projects);
     const resourceUtilization = getResourceUtilizationRate(projects);
-    const kpiAchievement = getKPIAchievementRate(projects, finalProducts);
+    const kpiAchievement = getKPIAchievementRate(kpis);
 
     const statusDist = getStatusDistribution(projects);
     const budgetByProject = getBudgetByProject(projects).slice(0, 10);
@@ -83,7 +118,10 @@ const AnalyticsDashboard = () => {
 
     return (
         <div className="w-full px-4 py-6 md:px-6 lg:px-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-6">Analytics Dashboard</h1>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-text-primary">Analytics Dashboard</h1>
+                <YearFilter selectedYears={selectedYears} onChange={setSelectedYears} />
+            </div>
 
             {/* Tab Navigation */}
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2">

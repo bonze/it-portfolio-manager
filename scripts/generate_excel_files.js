@@ -49,6 +49,16 @@ const COLUMNS = {
         { header: 'Assignee', key: 'assignee', width: 20 },
         { header: 'Budget', key: 'budget', width: 15 },
         { header: 'Status', key: 'status', width: 10 }
+    ],
+    kpis: [
+        { header: 'Entity Type', key: 'entityType', width: 15 },
+        { header: 'Entity Name', key: 'entityName', width: 30 },
+        { header: 'Entity ID', key: 'entityId', width: 36 },
+        { header: 'KPI Name', key: 'name', width: 30 },
+        { header: 'Target', key: 'target', width: 12 },
+        { header: 'Actual', key: 'actual', width: 12 },
+        { header: 'Unit', key: 'unit', width: 12 },
+        { header: 'Status', key: 'status', width: 15 }
     ]
 };
 
@@ -59,6 +69,7 @@ function generateSampleData() {
     const phases = [];
     const deliverables = [];
     const workPackages = [];
+    const kpis = [];
 
     const projectList = [
         { name: 'Cloud Migration 2025', bu: 'Infrastructure', owner: 'John Doe' },
@@ -85,6 +96,18 @@ function generateSampleData() {
             vendorValue: 50000 * (pIdx + 1),
             manDaysPlan: 100 * (pIdx + 1),
             manDaysActual: 20 * (pIdx + 1)
+        });
+
+        // Add Project KPI
+        kpis.push({
+            entityType: 'project',
+            entityName: p.name,
+            entityId: '', // ID not known in sample data generation
+            name: 'Budget Variance',
+            target: 0,
+            actual: 5,
+            unit: '%',
+            status: 'On Track'
         });
 
         // Create 2-3 Final Products per Project
@@ -138,7 +161,9 @@ function generateSampleData() {
         }
     });
 
-    return { projects, finalProducts, phases, deliverables, workPackages };
+
+
+    return { projects, finalProducts, phases, deliverables, workPackages, kpis };
 }
 
 const SAMPLE_DATA = generateSampleData();
@@ -152,6 +177,7 @@ async function generateFile(filename, data = null) {
     const phasesSheet = workbook.addWorksheet('Phases');
     const deliverablesSheet = workbook.addWorksheet('Deliverables');
     const workPackagesSheet = workbook.addWorksheet('Work Packages');
+    const kpisSheet = workbook.addWorksheet('KPIs');
 
     // Set Columns
     projectsSheet.columns = COLUMNS.projects;
@@ -159,9 +185,10 @@ async function generateFile(filename, data = null) {
     phasesSheet.columns = COLUMNS.phases;
     deliverablesSheet.columns = COLUMNS.deliverables;
     workPackagesSheet.columns = COLUMNS.workPackages;
+    kpisSheet.columns = COLUMNS.kpis;
 
     // Style Headers
-    [projectsSheet, finalProductsSheet, phasesSheet, deliverablesSheet, workPackagesSheet].forEach(sheet => {
+    [projectsSheet, finalProductsSheet, phasesSheet, deliverablesSheet, workPackagesSheet, kpisSheet].forEach(sheet => {
         sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
         sheet.getRow(1).fill = {
             type: 'pattern',
@@ -177,6 +204,7 @@ async function generateFile(filename, data = null) {
         data.phases.forEach(r => phasesSheet.addRow(r));
         data.deliverables.forEach(r => deliverablesSheet.addRow(r));
         data.workPackages.forEach(r => workPackagesSheet.addRow(r));
+        data.kpis.forEach(r => kpisSheet.addRow(r));
     }
 
     // Write File

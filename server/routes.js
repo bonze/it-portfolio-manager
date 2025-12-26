@@ -722,8 +722,45 @@ router.get('/export', authenticateToken, async (req, res) => {
             }
         });
 
+        // Sheet 6: KPIs
+        const kpisSheet = workbook.addWorksheet('KPIs');
+        kpisSheet.columns = [
+            { header: 'Entity Type', key: 'entityType', width: 15 },
+            { header: 'Entity Name', key: 'entityName', width: 30 },
+            { header: 'Entity ID', key: 'entityId', width: 36 },
+            { header: 'KPI Name', key: 'name', width: 30 },
+            { header: 'Target', key: 'target', width: 12 },
+            { header: 'Actual', key: 'actual', width: 12 },
+            { header: 'Unit', key: 'unit', width: 12 },
+            { header: 'Status', key: 'status', width: 15 }
+        ];
+
+        const kpis = await dbOps.getAllKPIs();
+
+        const getEntityName = (type, id) => {
+            if (type === 'project') return projects.find(p => p.id === id)?.name;
+            if (type === 'final-product') return finalProducts.find(p => p.id === id)?.description;
+            if (type === 'phase') return phases.find(p => p.id === id)?.description;
+            if (type === 'deliverable') return deliverables.find(p => p.id === id)?.description;
+            if (type === 'work-package') return workPackages.find(p => p.id === id)?.description;
+            return '';
+        };
+
+        kpis.forEach(kpi => {
+            kpisSheet.addRow({
+                entityType: kpi.entityType,
+                entityName: getEntityName(kpi.entityType, kpi.entityId),
+                entityId: kpi.entityId,
+                name: kpi.name,
+                target: kpi.target,
+                actual: kpi.actual,
+                unit: kpi.unit,
+                status: kpi.status
+            });
+        });
+
         // Style headers for all sheets
-        [projectsSheet, finalProductsSheet, phasesSheet, deliverablesSheet, workPackagesSheet].forEach(sheet => {
+        [projectsSheet, finalProductsSheet, phasesSheet, deliverablesSheet, workPackagesSheet, kpisSheet].forEach(sheet => {
             sheet.getRow(1).font = { bold: true };
             sheet.getRow(1).fill = {
                 type: 'pattern',

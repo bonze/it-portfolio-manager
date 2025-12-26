@@ -6,8 +6,9 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import Login from './components/Login';
 import Register from './components/Register';
 import AdminPanel from './components/AdminPanel';
+import KPIManagementPage from './components/KPIManagementPage';
 import ChangePasswordModal from './components/ChangePasswordModal';
-import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt, FaUserCog, FaMoon, FaSun, FaKey } from 'react-icons/fa';
+import { FaProjectDiagram, FaChartBar, FaFileDownload, FaSignOutAlt, FaUserCog, FaMoon, FaSun, FaKey, FaTrophy } from 'react-icons/fa';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
 
@@ -111,6 +112,16 @@ const MainLayout = () => {
                 <FaChartBar />
                 <span>Analytics</span>
               </button>
+              <button
+                onClick={() => setActiveView('kpis')}
+                className={`btn ${activeView === 'kpis'
+                  ? 'bg-accent-color text-white'
+                  : 'bg-bg-secondary text-muted hover:text-text-primary hover:bg-bg-primary'
+                  }`}
+              >
+                <FaTrophy />
+                <span>KPIs</span>
+              </button>
               {user?.role === 'admin' && (
                 <button
                   onClick={() => setActiveView('admin')}
@@ -148,6 +159,16 @@ const MainLayout = () => {
               >
                 <FaChartBar />
                 <span>Analytics</span>
+              </button>
+              <button
+                onClick={() => setActiveView('kpis')}
+                className={`btn transition-all ${activeView === 'kpis'
+                  ? 'bg-accent-color text-white'
+                  : 'text-muted hover:text-text-primary hover:bg-bg-primary'
+                  }`}
+              >
+                <FaTrophy />
+                <span>KPIs</span>
               </button>
               {user?.role === 'admin' && (
                 <button
@@ -203,6 +224,7 @@ const MainLayout = () => {
       {/* Main Content */}
       {activeView === 'projects' && <Dashboard />}
       {activeView === 'analytics' && <AnalyticsDashboard />}
+      {activeView === 'kpis' && <KPIManagementPage />}
       {activeView === 'admin' && <AdminPanel />}
 
       {/* Change Password Modal */}

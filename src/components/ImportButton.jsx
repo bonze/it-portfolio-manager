@@ -52,6 +52,7 @@ const ImportButton = () => {
                 const finalProductMap = {}; // Description -> ID
                 const phaseMap = {}; // Description -> ID
                 const deliverableMap = {}; // Description -> ID
+                const workPackageMap = {}; // Description -> ID
 
                 // 1. Import Projects
                 for (const p of projectsData) {
@@ -179,10 +180,12 @@ const ImportButton = () => {
                 for (const wp of workPackagesData) {
                     const deliverableId = deliverableMap[wp['Deliverable Description']];
                     if (deliverableId) {
+                        const id = uuidv4();
+                        workPackageMap[wp.Description] = id;
                         await apiDispatch({
                             type: 'ADD_WORK_PACKAGE',
                             payload: {
-                                id: uuidv4(),
+                                id,
                                 deliverableId,
                                 description: wp.Description,
                                 assignee: wp.Assignee || 'Unassigned',
@@ -194,6 +197,41 @@ const ImportButton = () => {
                                 status: wp.Status || 0
                             }
                         });
+                    }
+                }
+
+                // 6. Import KPIs
+                const kpisSheet = workbook.Sheets['KPIs'];
+                if (kpisSheet) {
+                    const kpisData = XLSX.utils.sheet_to_json(kpisSheet);
+                    for (const k of kpisData) {
+                        let entityId = null;
+                        const type = k['Entity Type'];
+                        const name = k['Entity Name'];
+
+                        if (type === 'project') entityId = projectMap[name];
+                        else if (type === 'final-product') entityId = finalProductMap[name];
+                        else if (type === 'phase') entityId = phaseMap[name];
+                        else if (type === 'deliverable') entityId = deliverableMap[name];
+                        else if (type === 'work-package') entityId = workPackageMap[name];
+
+                        if (entityId) {
+                            await apiDispatch({
+                                type: 'ADD_KPI',
+                                payload: {
+                                    entityId,
+                                    entityType: type,
+                                    kpi: {
+                                        id: uuidv4(),
+                                        name: k['KPI Name'],
+                                        target: parseFloat(k.Target) || 0,
+                                        actual: parseFloat(k.Actual) || 0,
+                                        unit: k.Unit || '',
+                                        status: k.Status || 'On Track'
+                                    }
+                                }
+                            });
+                        }
                     }
                 }
 

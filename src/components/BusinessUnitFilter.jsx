@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FaBuilding, FaTimes, FaCheck } from 'react-icons/fa';
 
 const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }) => {
@@ -9,10 +9,6 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
         const units = new Set(projects.map(p => p.businessUnit).filter(Boolean));
         return Array.from(units).sort();
     }, [projects]);
-
-    // Initialize with all BUs if selection is empty (optional, or handle "All" logic in parent)
-    // But usually filters start with "All" (empty selection implies all or explicit all)
-    // Let's assume empty array = All
 
     const toggleBU = (bu) => {
         const newSelection = selectedBUs.includes(bu)
@@ -46,16 +42,35 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
 
             {isOpen && (
                 <>
-                    <div className="fixed inset-0 z-[998]" onClick={() => setIsOpen(false)} />
-                    <div className={`absolute top-full mt-2 z-[999] bg-bg-secondary border border-border-color rounded-lg shadow-lg w-64 p-2 ${align === 'right' ? 'right-0' : 'left-0'} ${align === 'responsive' ? 'left-0 md:left-auto md:right-0' : ''}`}>
-                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-border-color px-2">
+                    {/* Backdrop - Fixed for both mobile and desktop to ensure click-outside works, added blur and dim */}
+                    <div
+                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                    />
+
+                    {/* Dropdown/Modal Container */}
+                    <div className={`
+                        bg-bg-secondary border border-border-color rounded-lg shadow-xl 
+                        z-[1001] flex flex-col
+                        
+                        /* Mobile: Fixed Centered Modal */
+                        fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                        w-[90vw] max-w-sm max-h-[80vh]
+                        
+                        /* Desktop: Absolute Dropdown */
+                        md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
+                        md:w-64 md:max-h-[600px]
+                        ${align === 'right' ? 'md:right-0' : 'md:left-0'} 
+                        ${align === 'responsive' ? 'md:right-0' : ''}
+                    `}>
+                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-border-color px-2 pt-2">
                             <span className="font-semibold text-sm">Filter Business Unit</span>
-                            <button onClick={() => setIsOpen(false)} className="text-muted hover:text-text-primary">
+                            <button onClick={() => setIsOpen(false)} className="text-muted hover:text-text-primary p-1">
                                 <FaTimes />
                             </button>
                         </div>
 
-                        <div className="max-h-60 overflow-y-auto space-y-1">
+                        <div className="overflow-y-auto p-2 space-y-1">
                             <button
                                 onClick={selectAll}
                                 className={`w-full text-left px-3 py-2 rounded text-sm flex justify-between items-center hover:bg-bg-primary ${isAllSelected ? 'bg-accent-color text-white' : ''}`}

@@ -60,8 +60,27 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
 
             {isOpen && (
                 <>
-                    <div className="fixed inset-0 z-[998]" onClick={() => setIsOpen(false)} />
-                    <div className={`year-filter-dropdown absolute top-full mt-2 z-[999] bg-bg-secondary border border-border-color rounded-lg shadow-lg w-[320px] max-w-[90vw] ${align === 'right' ? 'right-0' : 'left-0'} ${align === 'responsive' ? 'left-0 md:left-auto md:right-0' : ''}`}>
+                    {/* Backdrop - Fixed for both mobile and desktop to ensure click-outside works, added blur and dim */}
+                    <div
+                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                    />
+
+                    {/* Dropdown/Modal Container */}
+                    <div className={`
+                        bg-bg-secondary border border-border-color rounded-lg shadow-xl 
+                        z-[1001] flex flex-col
+                        
+                        /* Mobile: Fixed Centered Modal */
+                        fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                        w-[90vw] max-w-sm max-h-[80vh]
+                        
+                        /* Desktop: Absolute Dropdown */
+                        md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
+                        md:w-[320px] md:max-h-[600px]
+                        ${align === 'right' ? 'md:right-0' : 'md:left-0'} 
+                        ${align === 'responsive' ? 'md:right-0' : ''}
+                    `}>
                         <div className="year-filter-header">
                             <h4>Select Years</h4>
                             <button onClick={() => setIsOpen(false)} className="btn-icon">
@@ -153,7 +172,6 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
                     grid-template-columns: repeat(3, 1fr);
                     gap: 0.5rem;
                     padding: 1rem;
-                    max-height: 300px;
                     overflow-y: auto;
                 }
 

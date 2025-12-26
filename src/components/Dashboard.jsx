@@ -83,7 +83,7 @@ const Dashboard = () => {
     return (
         <div className="w-full px-4 py-6 md:px-6 lg:px-8">
             {/* Mobile Header */}
-            <div className="mb-6">
+            <div className="mb-6 relative z-50">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                     <h1 className="text-2xl md:text-3xl font-bold text-text-primary">IT Portfolio Manager</h1>
                     <div className="flex gap-2 self-end md:self-auto">

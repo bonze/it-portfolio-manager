@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import YearFilter from './YearFilter';
+import BusinessUnitFilter from './BusinessUnitFilter';
 import MetricCard from './MetricCard';
 import PieChart from './PieChart';
 import BarChart from './BarChart';
@@ -47,13 +48,16 @@ const AnalyticsDashboard = () => {
     const { projects: allProjects, finalProducts: allFinalProducts, phases: allPhases, deliverables: allDeliverables, workPackages: allWorkPackages, kpis: allKpis } = state;
     const currentYear = new Date().getFullYear();
     const [selectedYears, setSelectedYears] = useState([currentYear]);
+    const [selectedBUs, setSelectedBUs] = useState([]);
     const [activeTab, setActiveTab] = useState('overview');
 
     // Filter projects
     const projects = allProjects.filter(project => {
         const timeline = calculateTimeline(project.id, 'project');
         const projectYear = timeline.startDate ? new Date(timeline.startDate).getFullYear() : (project.year || currentYear);
-        return selectedYears.includes(projectYear);
+        const matchesYear = selectedYears.includes(projectYear);
+        const matchesBU = selectedBUs.length === 0 || selectedBUs.includes(project.businessUnit);
+        return matchesYear && matchesBU;
     });
 
     const projectIds = new Set(projects.map(p => p.id));
@@ -120,7 +124,19 @@ const AnalyticsDashboard = () => {
         <div className="w-full px-4 py-6 md:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-2xl md:text-3xl font-bold text-text-primary">Analytics Dashboard</h1>
-                <YearFilter selectedYears={selectedYears} onChange={setSelectedYears} />
+                <div className="flex gap-2 w-full md:w-auto">
+                    <BusinessUnitFilter
+                        projects={allProjects}
+                        selectedBUs={selectedBUs}
+                        onChange={setSelectedBUs}
+                        align="responsive"
+                    />
+                    <YearFilter
+                        selectedYears={selectedYears}
+                        onChange={setSelectedYears}
+                        align="responsive"
+                    />
+                </div>
             </div>
 
             {/* Tab Navigation */}

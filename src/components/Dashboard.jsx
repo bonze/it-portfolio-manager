@@ -4,6 +4,7 @@ import ProjectItem from './ProjectItem';
 import ImportButton from './ImportButton';
 import AddProjectModal from './AddProjectModal';
 import YearFilter from './YearFilter';
+import BusinessUnitFilter from './BusinessUnitFilter';
 import { v4 as uuidv4 } from 'uuid';
 import { FaTrash, FaPlus } from 'react-icons/fa';
 
@@ -12,6 +13,7 @@ const Dashboard = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const currentYear = new Date().getFullYear();
     const [selectedYears, setSelectedYears] = useState([currentYear]);
+    const [selectedBUs, setSelectedBUs] = useState([]);
     const [selectedProjectIds, setSelectedProjectIds] = useState([]);
 
     const handleReset = async () => {
@@ -55,11 +57,13 @@ const Dashboard = () => {
     };
 
 
-    // Filter projects by selected years
+    // Filter projects by selected years and business units
     const filteredProjects = state.projects.filter(project => {
         const timeline = calculateTimeline(project.id, 'project');
         const projectYear = timeline.startDate ? new Date(timeline.startDate).getFullYear() : (project.year || currentYear);
-        return selectedYears.includes(projectYear);
+        const matchesYear = selectedYears.includes(projectYear);
+        const matchesBU = selectedBUs.length === 0 || selectedBUs.includes(project.businessUnit);
+        return matchesYear && matchesBU;
     });
 
     // Calculate quick stats for sidebar
@@ -80,9 +84,21 @@ const Dashboard = () => {
         <div className="w-full px-4 py-6 md:px-6 lg:px-8">
             {/* Mobile Header */}
             <div className="mb-6">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                     <h1 className="text-2xl md:text-3xl font-bold text-text-primary">IT Portfolio Manager</h1>
-                    <YearFilter selectedYears={selectedYears} onChange={setSelectedYears} />
+                    <div className="flex gap-2 self-end md:self-auto">
+                        <BusinessUnitFilter
+                            projects={state.projects}
+                            selectedBUs={selectedBUs}
+                            onChange={setSelectedBUs}
+                            align="right"
+                        />
+                        <YearFilter
+                            selectedYears={selectedYears}
+                            onChange={setSelectedYears}
+                            align="right"
+                        />
+                    </div>
                 </div>
 
                 {/* Mobile Actions - Full width on mobile, inline on desktop */}

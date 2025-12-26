@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaTimes } from 'react-icons/fa';
 
-const YearFilter = ({ selectedYears, onChange }) => {
+const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
     const currentYear = new Date().getFullYear();
     const [isOpen, setIsOpen] = useState(false);
     const [years, setYears] = useState([]);
@@ -49,10 +49,10 @@ const YearFilter = ({ selectedYears, onChange }) => {
     };
 
     return (
-        <div className="year-filter">
+        <div className="year-filter relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="btn bg-bg-secondary hover:bg-bg-primary border border-border-color"
+                className="btn bg-bg-secondary hover:bg-bg-primary border border-border-color flex items-center gap-2"
             >
                 <FaCalendarAlt />
                 <span>{getDisplayText()}</span>
@@ -60,8 +60,8 @@ const YearFilter = ({ selectedYears, onChange }) => {
 
             {isOpen && (
                 <>
-                    <div className="year-filter-overlay" onClick={() => setIsOpen(false)} />
-                    <div className="year-filter-dropdown">
+                    <div className="fixed inset-0 z-[998]" onClick={() => setIsOpen(false)} />
+                    <div className={`year-filter-dropdown absolute top-full mt-2 z-[999] bg-bg-secondary border border-border-color rounded-lg shadow-lg w-[320px] max-w-[90vw] ${align === 'right' ? 'right-0' : 'left-0'} ${align === 'responsive' ? 'left-0 md:left-auto md:right-0' : ''}`}>
                         <div className="year-filter-header">
                             <h4>Select Years</h4>
                             <button onClick={() => setIsOpen(false)} className="btn-icon">
@@ -97,43 +97,6 @@ const YearFilter = ({ selectedYears, onChange }) => {
             )}
 
             <style jsx>{`
-                .year-filter {
-                    position: relative;
-                }
-
-                .year-filter-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    z-index: 999;
-                }
-
-                .year-filter-dropdown {
-                    position: absolute;
-                    top: calc(100% + 0.5rem);
-                    right: 0;
-                    background: var(--bg-secondary);
-                    border: 1px solid var(--border-color);
-                    border-radius: var(--radius-lg);
-                    box-shadow: var(--shadow-lg);
-                    z-index: 1000;
-                    min-width: 320px;
-                    max-width: 400px;
-                }
-
-                @media (max-width: 768px) {
-                    .year-filter-dropdown {
-                        right: auto;
-                        left: 0;
-                        transform: none;
-                        width: 300px;
-                        max-width: 85vw;
-                        min-width: auto;
-                    }
-                }
-
                 .year-filter-header {
                     display: flex;
                     justify-content: space-between;
@@ -141,7 +104,7 @@ const YearFilter = ({ selectedYears, onChange }) => {
                     padding: 1rem;
                     border-bottom: 1px solid var(--border-color);
                 }
-
+                
                 .year-filter-header h4 {
                     margin: 0;
                     font-size: 1rem;

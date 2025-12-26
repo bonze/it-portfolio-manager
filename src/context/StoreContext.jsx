@@ -69,17 +69,17 @@ const reducer = (state, action) => {
 
         // --- KPI Management ---
         case 'ADD_KPI': {
-            const { kpi } = action.payload;
+            const { entityId, entityType, kpi } = action.payload;
             return {
                 ...state,
-                kpis: [...state.kpis, kpi]
+                kpis: [...state.kpis, { ...kpi, entityId, entityType }]
             };
         }
         case 'UPDATE_KPI': {
             const { kpi } = action.payload;
             return {
                 ...state,
-                kpis: state.kpis.map(k => k.id === kpi.id ? kpi : k)
+                kpis: state.kpis.map(k => k.id === kpi.id ? { ...k, ...kpi } : k)
             };
         }
         case 'DELETE_KPI': {

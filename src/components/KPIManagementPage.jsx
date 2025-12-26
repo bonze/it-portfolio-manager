@@ -214,7 +214,7 @@ const KPIManagementPage = () => {
                                             <td className="p-3">
                                                 <div className="flex flex-col">
                                                     <span className="text-sm font-medium">{getEntityName(kpi.entityType, kpi.entityId)}</span>
-                                                    <span className="text-xs text-muted capitalize">{kpi.entityType.replace('-', ' ')}</span>
+                                                    <span className="text-xs text-muted capitalize">{(kpi.entityType || 'unknown').replace('-', ' ')}</span>
                                                 </div>
                                             </td>
                                             <td className="p-3">
@@ -231,9 +231,9 @@ const KPIManagementPage = () => {
                                                     <div className="w-full bg-bg-secondary rounded-full h-2">
                                                         <div
                                                             className={`h-full rounded-full ${progress >= 100 ? 'bg-success-color' :
-                                                                    progress >= 80 ? 'bg-primary-color' :
-                                                                        progress >= 60 ? 'bg-warning-color' :
-                                                                            'bg-error-color'
+                                                                progress >= 80 ? 'bg-primary-color' :
+                                                                    progress >= 60 ? 'bg-warning-color' :
+                                                                        'bg-error-color'
                                                                 }`}
                                                             style={{ width: `${Math.min(progress, 100)}%` }}
                                                         />

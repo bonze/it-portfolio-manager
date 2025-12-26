@@ -27,23 +27,29 @@ const Login = () => {
                 {error && <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Username</label>
+                        <label htmlFor="username" className="block text-gray-700 mb-2">Username</label>
                         <input
+                            id="username"
+                            name="username"
                             type="text"
                             className="w-full p-2 border rounded"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
+                            autoComplete="username"
                         />
                     </div>
                     <div className="mb-6">
-                        <label className="block text-gray-700 mb-2">Password</label>
+                        <label htmlFor="password" className="block text-gray-700 mb-2">Password</label>
                         <input
+                            id="password"
+                            name="password"
                             type="password"
                             className="w-full p-2 border rounded"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            autoComplete="current-password"
                         />
                     </div>
                     <button

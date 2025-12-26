@@ -60,9 +60,15 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
 
             {isOpen && (
                 <>
-                    {/* Backdrop - Fixed for both mobile and desktop to ensure click-outside works, added blur and dim */}
+                    {/* Mobile Backdrop - Only visible on mobile */}
                     <div
-                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
+                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm md:hidden"
+                        onClick={() => setIsOpen(false)}
+                    />
+
+                    {/* Desktop Transparent Backdrop - To close dropdown when clicking outside */}
+                    <div
+                        className="fixed inset-0 z-[998] hidden md:block"
                         onClick={() => setIsOpen(false)}
                     />
 
@@ -77,7 +83,7 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
                         
                         /* Desktop: Absolute Dropdown */
                         md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
-                        md:w-[320px] md:max-h-[600px]
+                        md:w-[320px] md:max-h-[400px]
                         ${align === 'right' ? 'md:right-0' : 'md:left-0'} 
                         ${align === 'responsive' ? 'md:right-0' : ''}
                     `}>

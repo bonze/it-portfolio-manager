@@ -42,9 +42,15 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
 
             {isOpen && (
                 <>
-                    {/* Backdrop - Fixed for both mobile and desktop to ensure click-outside works, added blur and dim */}
+                    {/* Mobile Backdrop - Only visible on mobile */}
                     <div
-                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
+                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm md:hidden"
+                        onClick={() => setIsOpen(false)}
+                    />
+
+                    {/* Desktop Transparent Backdrop - To close dropdown when clicking outside */}
+                    <div
+                        className="fixed inset-0 z-[998] hidden md:block"
                         onClick={() => setIsOpen(false)}
                     />
 
@@ -59,18 +65,18 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                         
                         /* Desktop: Absolute Dropdown */
                         md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
-                        md:w-64 md:max-h-[600px]
+                        md:w-64 md:max-h-[400px]
                         ${align === 'right' ? 'md:right-0' : 'md:left-0'} 
                         ${align === 'responsive' ? 'md:right-0' : ''}
                     `}>
-                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-border-color px-2 pt-2">
+                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-border-color px-2 pt-2 flex-shrink-0">
                             <span className="font-semibold text-sm">Filter Business Unit</span>
                             <button onClick={() => setIsOpen(false)} className="text-muted hover:text-text-primary p-1">
                                 <FaTimes />
                             </button>
                         </div>
 
-                        <div className="overflow-y-auto p-2 space-y-1">
+                        <div className="overflow-y-auto p-2 space-y-1 flex-grow min-h-0">
                             <button
                                 onClick={selectAll}
                                 className={`w-full text-left px-3 py-2 rounded text-sm flex justify-between items-center hover:bg-bg-primary ${isAllSelected ? 'bg-accent-color text-white' : ''}`}

@@ -48,6 +48,20 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
         return `${sorted[0]} - ${sorted[sorted.length - 1]} (${selectedYears.length})`;
     };
 
+    // Lock body scroll on mobile when open
+    useEffect(() => {
+        if (isOpen) {
+            if (window.innerWidth < 768) {
+                document.body.style.overflow = 'hidden';
+            }
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     return (
         <div className="year-filter relative">
             <button
@@ -99,7 +113,7 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
                             <button onClick={clearAll} className="btn-link">Clear</button>
                         </div>
 
-                        <div className="year-filter-grid">
+                        <div className="year-filter-grid overscroll-y-contain">
                             {years.map(year => (
                                 <button
                                     key={year}

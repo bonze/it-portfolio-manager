@@ -29,6 +29,20 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
         return `${selectedBUs.length} Units`;
     };
 
+    // Lock body scroll on mobile when open
+    React.useEffect(() => {
+        if (isOpen) {
+            if (window.innerWidth < 768) {
+                document.body.style.overflow = 'hidden';
+            }
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     return (
         <div className="bu-filter relative">
             <button
@@ -76,7 +90,7 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                             </button>
                         </div>
 
-                        <div className="overflow-y-auto p-2 space-y-1 flex-grow min-h-0">
+                        <div className="overflow-y-auto overscroll-y-contain p-2 space-y-1 flex-grow min-h-0">
                             <button
                                 onClick={selectAll}
                                 className={`w-full text-left px-3 py-2 rounded text-sm flex justify-between items-center hover:bg-bg-primary ${isAllSelected ? 'bg-accent-color text-white' : ''}`}

@@ -15,6 +15,7 @@ const PhaseItem = ({ phase }) => {
 
     const completion = calculateCompletion(phase.id, 'phase');
     const deliverables = state.deliverables.filter(d => d.phaseId === phase.id);
+    const kpis = state.kpis.filter(k => k.entityId === phase.id && k.entityType === 'phase');
 
     const handleAddDeliverable = (description) => {
         dispatch({
@@ -99,7 +100,7 @@ const PhaseItem = ({ phase }) => {
                             <KPIManager
                                 entityId={phase.id}
                                 entityType="phase"
-                                kpis={phase.kpis || []}
+                                kpis={kpis}
                             />
                         </div>
                     </div>

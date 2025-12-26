@@ -69,72 +69,24 @@ const reducer = (state, action) => {
 
         // --- KPI Management ---
         case 'ADD_KPI': {
-            const { entityId, entityType, kpi } = action.payload;
-            let list = '';
-            if (entityType === 'project') list = 'projects';
-            else if (entityType === 'final-product') list = 'finalProducts';
-            else if (entityType === 'phase') list = 'phases';
-            else if (entityType === 'deliverable') list = 'deliverables';
-            else if (entityType === 'work-package') list = 'workPackages';
-
-            if (!list) return state;
-
+            const { kpi } = action.payload;
             return {
                 ...state,
-                [list]: state[list].map(item => {
-                    if (item.id === entityId) {
-                        return { ...item, kpis: [...(item.kpis || []), kpi] };
-                    }
-                    return item;
-                })
+                kpis: [...state.kpis, kpi]
             };
         }
         case 'UPDATE_KPI': {
-            const { entityId, entityType, kpi } = action.payload;
-            let list = '';
-            if (entityType === 'project') list = 'projects';
-            else if (entityType === 'final-product') list = 'finalProducts';
-            else if (entityType === 'phase') list = 'phases';
-            else if (entityType === 'deliverable') list = 'deliverables';
-            else if (entityType === 'work-package') list = 'workPackages';
-
-            if (!list) return state;
-
+            const { kpi } = action.payload;
             return {
                 ...state,
-                [list]: state[list].map(item => {
-                    if (item.id === entityId) {
-                        return {
-                            ...item,
-                            kpis: item.kpis.map(k => k.id === kpi.id ? kpi : k)
-                        };
-                    }
-                    return item;
-                })
+                kpis: state.kpis.map(k => k.id === kpi.id ? kpi : k)
             };
         }
         case 'DELETE_KPI': {
-            const { entityId, entityType, kpiId } = action.payload;
-            let list = '';
-            if (entityType === 'project') list = 'projects';
-            else if (entityType === 'final-product') list = 'finalProducts';
-            else if (entityType === 'phase') list = 'phases';
-            else if (entityType === 'deliverable') list = 'deliverables';
-            else if (entityType === 'work-package') list = 'workPackages';
-
-            if (!list) return state;
-
+            const { kpiId } = action.payload;
             return {
                 ...state,
-                [list]: state[list].map(item => {
-                    if (item.id === entityId) {
-                        return {
-                            ...item,
-                            kpis: item.kpis.filter(k => k.id !== kpiId)
-                        };
-                    }
-                    return item;
-                })
+                kpis: state.kpis.filter(k => k.id !== kpiId)
             };
         }
 

@@ -69,7 +69,11 @@ const KPIManager = ({ entityId, entityType, kpis = [] }) => {
 
         dispatch({
             type: 'UPDATE_KPI',
-            payload: { entityType, entityId, kpiId, kpiData: updatedKPI }
+            payload: {
+                entityType,
+                entityId,
+                kpi: { id: kpiId, ...updatedKPI }
+            }
         });
 
         setFormData({ name: '', target: 0, actual: 0, unit: '' });
@@ -137,14 +141,14 @@ const KPIManager = ({ entityId, entityType, kpis = [] }) => {
                                                 type="number"
                                                 placeholder="Target"
                                                 value={formData.target}
-                                                onChange={(e) => setFormData({ ...formData, target: parseFloat(e.target.value) })}
+                                                onChange={(e) => setFormData({ ...formData, target: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                                                 className="text-xs"
                                             />
                                             <input
                                                 type="number"
                                                 placeholder="Actual"
                                                 value={formData.actual}
-                                                onChange={(e) => setFormData({ ...formData, actual: parseFloat(e.target.value) })}
+                                                onChange={(e) => setFormData({ ...formData, actual: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                                                 className="text-xs"
                                             />
                                             <input
@@ -219,14 +223,14 @@ const KPIManager = ({ entityId, entityType, kpis = [] }) => {
                             type="number"
                             placeholder="Target"
                             value={formData.target}
-                            onChange={(e) => setFormData({ ...formData, target: parseFloat(e.target.value) })}
+                            onChange={(e) => setFormData({ ...formData, target: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                             className="text-xs"
                         />
                         <input
                             type="number"
                             placeholder="Actual"
                             value={formData.actual}
-                            onChange={(e) => setFormData({ ...formData, actual: parseFloat(e.target.value) })}
+                            onChange={(e) => setFormData({ ...formData, actual: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                             className="text-xs"
                         />
                         <input

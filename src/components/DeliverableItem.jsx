@@ -15,6 +15,7 @@ const DeliverableItem = ({ deliverable }) => {
 
     const completion = calculateCompletion(deliverable.id, 'deliverable');
     const workPackages = state.workPackages.filter(wp => wp.deliverableId === deliverable.id);
+    const kpis = state.kpis.filter(k => k.entityId === deliverable.id && k.entityType === 'deliverable');
 
     const handleAddWorkPackage = (description) => {
         dispatch({
@@ -99,7 +100,7 @@ const DeliverableItem = ({ deliverable }) => {
                             <KPIManager
                                 entityId={deliverable.id}
                                 entityType="deliverable"
-                                kpis={deliverable.kpis || []}
+                                kpis={kpis}
                             />
                         </div>
                     </div>

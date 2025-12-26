@@ -123,6 +123,16 @@ const YearFilter = ({ selectedYears, onChange }) => {
                     max-width: 400px;
                 }
 
+                @media (max-width: 768px) {
+                    .year-filter-dropdown {
+                        right: auto;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        width: 90vw;
+                        min-width: auto;
+                    }
+                }
+
                 .year-filter-header {
                     display: flex;
                     justify-content: space-between;

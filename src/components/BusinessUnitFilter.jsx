@@ -29,18 +29,15 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
         return `${selectedBUs.length} Units`;
     };
 
-    // Lock body scroll on mobile when open
+    // Lock body scroll when open (both mobile and desktop)
     React.useEffect(() => {
         if (isOpen) {
-            if (window.innerWidth < 768) {
-                document.body.style.overflow = 'hidden';
-            }
-        } else {
-            document.body.style.overflow = 'unset';
+            const originalStyle = window.getComputedStyle(document.body).overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = originalStyle;
+            };
         }
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
     }, [isOpen]);
 
     return (
@@ -56,26 +53,20 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
 
             {isOpen && (
                 <>
-                    {/* Mobile Backdrop */}
+                    {/* Backdrop */}
                     <div
-                        className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm md:hidden"
-                        onClick={() => setIsOpen(false)}
-                    />
-
-                    {/* Desktop Transparent Backdrop */}
-                    <div
-                        className="fixed inset-0 z-[998] hidden md:block"
+                        className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm"
                         onClick={() => setIsOpen(false)}
                     />
 
                     {/* Dropdown/Modal Container */}
                     <div className={`
                         bg-bg-secondary border border-border-color rounded-xl shadow-2xl 
-                        z-[1001] flex flex-col overflow-hidden
+                        z-[1001] flex flex-col overflow-hidden pointer-events-auto
                         
                         /* Mobile: Fixed Centered Modal */
                         fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                        w-[90vw] max-w-sm h-auto max-h-[85vh]
+                        w-[90vw] max-w-sm h-auto max-h-[80vh]
                         
                         /* Desktop: Absolute Dropdown */
                         md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
@@ -97,7 +88,7 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                             </button>
                         </div>
 
-                        {/* Search/Actions */}
+                        {/* Actions */}
                         <div className="p-3 border-b border-border-color bg-bg-secondary flex-shrink-0">
                             <button
                                 onClick={selectAll}
@@ -109,7 +100,7 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                         </div>
 
                         {/* Scrollable List */}
-                        <div className="overflow-y-auto overscroll-y-contain p-2 space-y-1 flex-grow min-h-0 custom-scrollbar">
+                        <div className="overflow-y-auto overscroll-y-contain p-2 space-y-1 flex-grow min-h-0 custom-scrollbar" style={{ touchAction: 'pan-y' }}>
                             {businessUnits.map(bu => {
                                 const isSelected = selectedBUs.includes(bu);
                                 return (
@@ -130,9 +121,6 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                                     <p className="text-xs">No Business Units found</p>
                                 </div>
                             )}
-
-                            {/* Bottom Padding to ensure last item is fully visible */}
-                            <div className="h-2 flex-shrink-0" />
                         </div>
 
                         {/* Footer */}

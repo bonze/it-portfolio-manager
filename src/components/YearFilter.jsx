@@ -48,18 +48,15 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
         return `${sorted[0]} - ${sorted[sorted.length - 1]} (${selectedYears.length})`;
     };
 
-    // Lock body scroll on mobile when open
+    // Lock body scroll when open (both mobile and desktop)
     useEffect(() => {
         if (isOpen) {
-            if (window.innerWidth < 768) {
-                document.body.style.overflow = 'hidden';
-            }
-        } else {
-            document.body.style.overflow = 'unset';
+            const originalStyle = window.getComputedStyle(document.body).overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = originalStyle;
+            };
         }
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
     }, [isOpen]);
 
     return (
@@ -74,26 +71,20 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
 
             {isOpen && (
                 <>
-                    {/* Mobile Backdrop */}
+                    {/* Backdrop */}
                     <div
-                        className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm md:hidden"
-                        onClick={() => setIsOpen(false)}
-                    />
-
-                    {/* Desktop Transparent Backdrop */}
-                    <div
-                        className="fixed inset-0 z-[998] hidden md:block"
+                        className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm"
                         onClick={() => setIsOpen(false)}
                     />
 
                     {/* Dropdown/Modal Container */}
                     <div className={`
                         bg-bg-secondary border border-border-color rounded-xl shadow-2xl 
-                        z-[1001] flex flex-col overflow-hidden
+                        z-[1001] flex flex-col overflow-hidden pointer-events-auto
                         
                         /* Mobile: Fixed Centered Modal */
                         fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                        w-[90vw] max-w-sm h-auto max-h-[85vh]
+                        w-[90vw] max-w-sm h-auto max-h-[80vh]
                         
                         /* Desktop: Absolute Dropdown */
                         md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
@@ -132,7 +123,7 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
                         </div>
 
                         {/* Scrollable Grid */}
-                        <div className="overflow-y-auto overscroll-y-contain p-4 flex-grow min-h-0 custom-scrollbar">
+                        <div className="overflow-y-auto overscroll-y-contain p-4 flex-grow min-h-0 custom-scrollbar" style={{ touchAction: 'pan-y' }}>
                             <div className="grid grid-cols-3 gap-3">
                                 {years.map(year => (
                                     <button
@@ -155,9 +146,6 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
                                     </button>
                                 ))}
                             </div>
-
-                            {/* Bottom Padding */}
-                            <div className="h-4 flex-shrink-0" />
                         </div>
 
                         {/* Footer */}

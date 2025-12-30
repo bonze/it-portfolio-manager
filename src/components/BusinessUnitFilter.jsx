@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FaBuilding, FaTimes, FaCheck } from 'react-icons/fa';
 
 const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }) => {
@@ -29,13 +29,20 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
         return `${selectedBUs.length} Units`;
     };
 
-    // Lock body scroll when open (both mobile and desktop)
-    React.useEffect(() => {
+    // Robust Scroll Lock
+    useEffect(() => {
         if (isOpen) {
-            const originalStyle = window.getComputedStyle(document.body).overflow;
+            const originalOverflow = document.body.style.overflow;
+            const originalHTMLOverflow = document.documentElement.style.overflow;
+
             document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.paddingRight = 'var(--scrollbar-width, 0px)'; // Prevent layout shift
+
             return () => {
-                document.body.style.overflow = originalStyle;
+                document.body.style.overflow = originalOverflow;
+                document.documentElement.style.overflow = originalHTMLOverflow;
+                document.body.style.paddingRight = '0px';
             };
         }
     }, [isOpen]);
@@ -53,7 +60,7 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
 
             {isOpen && (
                 <>
-                    {/* Backdrop */}
+                    {/* Backdrop - Fixed to cover everything */}
                     <div
                         className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm"
                         onClick={() => setIsOpen(false)}
@@ -66,15 +73,15 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                         
                         /* Mobile: Fixed Centered Modal */
                         fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                        w-[90vw] max-w-sm h-auto max-h-[80vh]
+                        w-[90vw] max-w-sm h-auto max-h-[85vh]
                         
                         /* Desktop: Absolute Dropdown */
-                        md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
-                        md:w-72 md:max-h-[450px]
-                        ${align === 'right' ? 'md:right-0' : 'md:left-0'} 
-                        ${align === 'responsive' ? 'md:right-0' : ''}
+                        md:absolute md:top-full md:mt-2 md:w-80
+                        md:left-auto md:right-auto md:bottom-auto
+                        md:translate-x-0 md:translate-y-0
+                        ${align === 'right' ? 'md:right-0 md:left-auto' : 'md:left-0 md:right-auto'}
                     `}>
-                        {/* Header */}
+                        {/* Header - Fixed Height */}
                         <div className="flex justify-between items-center p-4 border-b border-border-color bg-bg-primary/50 flex-shrink-0">
                             <div className="flex items-center gap-2">
                                 <FaBuilding className="text-accent-color" />
@@ -88,7 +95,7 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                             </button>
                         </div>
 
-                        {/* Actions */}
+                        {/* Actions - Fixed Height */}
                         <div className="p-3 border-b border-border-color bg-bg-secondary flex-shrink-0">
                             <button
                                 onClick={selectAll}
@@ -99,8 +106,15 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                             </button>
                         </div>
 
-                        {/* Scrollable List */}
-                        <div className="overflow-y-auto overscroll-y-contain p-2 space-y-1 flex-grow min-h-0 custom-scrollbar" style={{ touchAction: 'pan-y' }}>
+                        {/* Scrollable List - Explicit Max Height to force scrollbar */}
+                        <div
+                            className="overflow-y-auto overscroll-contain p-2 space-y-1 flex-grow custom-scrollbar"
+                            style={{
+                                maxHeight: 'min(400px, 50vh)',
+                                touchAction: 'pan-y',
+                                WebkitOverflowScrolling: 'touch'
+                            }}
+                        >
                             {businessUnits.map(bu => {
                                 const isSelected = selectedBUs.includes(bu);
                                 return (
@@ -123,7 +137,7 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                             )}
                         </div>
 
-                        {/* Footer */}
+                        {/* Footer - Fixed Height */}
                         <div className="p-3 border-t border-border-color bg-bg-primary/30 flex-shrink-0">
                             <button
                                 onClick={() => setIsOpen(false)}
@@ -138,17 +152,21 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
 
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
+                    width: 8px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
+                    background: rgba(0,0,0,0.05);
+                    border-radius: 10px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
                     background: var(--border-color);
                     border-radius: 10px;
+                    border: 2px solid transparent;
+                    background-clip: content-box;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                     background: var(--text-muted);
+                    background-clip: content-box;
                 }
             `}</style>
         </div>

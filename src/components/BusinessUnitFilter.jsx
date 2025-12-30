@@ -47,22 +47,22 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
         <div className="bu-filter relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`btn bg-bg-secondary hover:bg-bg-primary border border-border-color flex items-center gap-2 ${!isAllSelected ? 'text-accent-color border-accent-color' : ''}`}
+                className={`btn bg-bg-secondary hover:bg-bg-primary border border-border-color flex items-center gap-2 transition-all ${!isAllSelected ? 'text-accent-color border-accent-color ring-1 ring-accent-color/20' : ''}`}
             >
-                <FaBuilding />
-                <span className="hidden md:inline">{getDisplayText()}</span>
-                {!isAllSelected && <span className="md:hidden">BU</span>}
+                <FaBuilding className={!isAllSelected ? 'text-accent-color' : 'text-text-muted'} />
+                <span className="hidden md:inline font-medium">{getDisplayText()}</span>
+                {!isAllSelected && <span className="md:hidden font-medium">BU</span>}
             </button>
 
             {isOpen && (
                 <>
-                    {/* Mobile Backdrop - Only visible on mobile */}
+                    {/* Mobile Backdrop */}
                     <div
-                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm md:hidden"
+                        className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm md:hidden"
                         onClick={() => setIsOpen(false)}
                     />
 
-                    {/* Desktop Transparent Backdrop - To close dropdown when clicking outside */}
+                    {/* Desktop Transparent Backdrop */}
                     <div
                         className="fixed inset-0 z-[998] hidden md:block"
                         onClick={() => setIsOpen(false)}
@@ -70,56 +70,99 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
 
                     {/* Dropdown/Modal Container */}
                     <div className={`
-                        bg-bg-secondary border border-border-color rounded-lg shadow-xl 
-                        z-[1001] flex flex-col
+                        bg-bg-secondary border border-border-color rounded-xl shadow-2xl 
+                        z-[1001] flex flex-col overflow-hidden
                         
                         /* Mobile: Fixed Centered Modal */
                         fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                        w-[90vw] max-w-sm max-h-[80vh]
+                        w-[90vw] max-w-sm h-auto max-h-[85vh]
                         
                         /* Desktop: Absolute Dropdown */
                         md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
-                        md:w-64 md:max-h-[400px]
+                        md:w-72 md:max-h-[450px]
                         ${align === 'right' ? 'md:right-0' : 'md:left-0'} 
                         ${align === 'responsive' ? 'md:right-0' : ''}
                     `}>
-                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-border-color px-2 pt-2 flex-shrink-0">
-                            <span className="font-semibold text-sm">Filter Business Unit</span>
-                            <button onClick={() => setIsOpen(false)} className="text-muted hover:text-text-primary p-1">
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-4 border-b border-border-color bg-bg-primary/50 flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                                <FaBuilding className="text-accent-color" />
+                                <span className="font-bold text-text-primary">Business Units</span>
+                            </div>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="p-2 hover:bg-bg-primary rounded-full transition-colors text-text-muted hover:text-text-primary"
+                            >
                                 <FaTimes />
                             </button>
                         </div>
 
-                        <div className="overflow-y-auto overscroll-y-contain p-2 space-y-1 flex-grow min-h-0">
+                        {/* Search/Actions */}
+                        <div className="p-3 border-b border-border-color bg-bg-secondary flex-shrink-0">
                             <button
                                 onClick={selectAll}
-                                className={`w-full text-left px-3 py-2 rounded text-sm flex justify-between items-center hover:bg-bg-primary ${isAllSelected ? 'bg-accent-color text-white' : ''}`}
+                                className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-all flex justify-between items-center ${isAllSelected ? 'bg-accent-color text-white shadow-lg shadow-accent-color/20' : 'bg-bg-primary text-text-primary hover:bg-bg-primary/80 border border-border-color'}`}
                             >
                                 <span>All Business Units</span>
-                                {isAllSelected && <FaCheck size={10} />}
+                                {isAllSelected && <FaCheck size={12} />}
                             </button>
+                        </div>
 
+                        {/* Scrollable List */}
+                        <div className="overflow-y-auto overscroll-y-contain p-2 space-y-1 flex-grow min-h-0 custom-scrollbar">
                             {businessUnits.map(bu => {
                                 const isSelected = selectedBUs.includes(bu);
                                 return (
                                     <button
                                         key={bu}
                                         onClick={() => toggleBU(bu)}
-                                        className={`w-full text-left px-3 py-2 rounded text-sm flex justify-between items-center hover:bg-bg-primary ${isSelected ? 'bg-accent-color/10 text-accent-color font-medium' : ''}`}
+                                        className={`w-full text-left px-4 py-3 rounded-lg text-sm flex justify-between items-center transition-all group ${isSelected ? 'bg-accent-color/10 text-accent-color font-semibold border border-accent-color/20' : 'text-text-primary hover:bg-bg-primary border border-transparent'}`}
                                     >
-                                        <span>{bu}</span>
-                                        {isSelected && <FaCheck size={10} />}
+                                        <span className="truncate pr-2">{bu}</span>
+                                        {isSelected && <FaCheck size={12} className="flex-shrink-0" />}
                                     </button>
                                 );
                             })}
 
                             {businessUnits.length === 0 && (
-                                <div className="text-center text-muted text-xs py-4">No Business Units found</div>
+                                <div className="flex flex-col items-center justify-center py-8 text-text-muted">
+                                    <FaBuilding size={32} className="opacity-20 mb-2" />
+                                    <p className="text-xs">No Business Units found</p>
+                                </div>
                             )}
+
+                            {/* Bottom Padding to ensure last item is fully visible */}
+                            <div className="h-2 flex-shrink-0" />
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-3 border-t border-border-color bg-bg-primary/30 flex-shrink-0">
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="w-full py-2.5 bg-accent-color hover:bg-accent-hover text-white rounded-lg font-bold text-sm shadow-lg shadow-accent-color/20 transition-all active:scale-[0.98]"
+                            >
+                                Done
+                            </button>
                         </div>
                     </div>
                 </>
             )}
+
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: var(--border-color);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-muted);
+                }
+            `}</style>
         </div>
     );
 };

@@ -66,21 +66,21 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
         <div className="year-filter relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="btn bg-bg-secondary hover:bg-bg-primary border border-border-color flex items-center gap-2"
+                className={`btn bg-bg-secondary hover:bg-bg-primary border border-border-color flex items-center gap-2 transition-all ${selectedYears.length > 0 ? 'text-accent-color border-accent-color ring-1 ring-accent-color/20' : ''}`}
             >
-                <FaCalendarAlt />
-                <span>{getDisplayText()}</span>
+                <FaCalendarAlt className={selectedYears.length > 0 ? 'text-accent-color' : 'text-text-muted'} />
+                <span className="font-medium">{getDisplayText()}</span>
             </button>
 
             {isOpen && (
                 <>
-                    {/* Mobile Backdrop - Only visible on mobile */}
+                    {/* Mobile Backdrop */}
                     <div
-                        className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm md:hidden"
+                        className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm md:hidden"
                         onClick={() => setIsOpen(false)}
                     />
 
-                    {/* Desktop Transparent Backdrop - To close dropdown when clicking outside */}
+                    {/* Desktop Transparent Backdrop */}
                     <div
                         className="fixed inset-0 z-[998] hidden md:block"
                         onClick={() => setIsOpen(false)}
@@ -88,157 +88,110 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
 
                     {/* Dropdown/Modal Container */}
                     <div className={`
-                        bg-bg-secondary border border-border-color rounded-lg shadow-xl 
-                        z-[1001] flex flex-col
+                        bg-bg-secondary border border-border-color rounded-xl shadow-2xl 
+                        z-[1001] flex flex-col overflow-hidden
                         
                         /* Mobile: Fixed Centered Modal */
                         fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                        w-[90vw] max-w-sm max-h-[80vh]
+                        w-[90vw] max-w-sm h-auto max-h-[85vh]
                         
                         /* Desktop: Absolute Dropdown */
                         md:absolute md:top-full md:left-auto md:translate-x-0 md:translate-y-0 md:mt-2 
-                        md:w-[320px] md:max-h-[400px]
+                        md:w-[320px] md:max-h-[450px]
                         ${align === 'right' ? 'md:right-0' : 'md:left-0'} 
                         ${align === 'responsive' ? 'md:right-0' : ''}
                     `}>
-                        <div className="year-filter-header">
-                            <h4>Select Years</h4>
-                            <button onClick={() => setIsOpen(false)} className="btn-icon">
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-4 border-b border-border-color bg-bg-primary/50 flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                                <FaCalendarAlt className="text-accent-color" />
+                                <span className="font-bold text-text-primary">Select Years</span>
+                            </div>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="p-2 hover:bg-bg-primary rounded-full transition-colors text-text-muted hover:text-text-primary"
+                            >
                                 <FaTimes />
                             </button>
                         </div>
 
-                        <div className="year-filter-actions">
-                            <button onClick={selectAll} className="btn-link">Select All</button>
-                            <button onClick={clearAll} className="btn-link">Clear</button>
+                        {/* Actions */}
+                        <div className="p-3 border-b border-border-color bg-bg-secondary flex gap-2 flex-shrink-0">
+                            <button
+                                onClick={selectAll}
+                                className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-bg-primary text-text-primary hover:bg-bg-primary/80 border border-border-color transition-all"
+                            >
+                                Select All
+                            </button>
+                            <button
+                                onClick={clearAll}
+                                className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-bg-primary text-text-primary hover:bg-bg-primary/80 border border-border-color transition-all"
+                            >
+                                Reset
+                            </button>
                         </div>
 
-                        <div className="year-filter-grid overscroll-y-contain">
-                            {years.map(year => (
-                                <button
-                                    key={year}
-                                    onClick={() => toggleYear(year)}
-                                    className={`year-button ${selectedYears.includes(year) ? 'selected' : ''} ${year === currentYear ? 'current' : ''}`}
-                                >
-                                    {year}
-                                    {year === currentYear && <span className="current-badge">Now</span>}
-                                </button>
-                            ))}
+                        {/* Scrollable Grid */}
+                        <div className="overflow-y-auto overscroll-y-contain p-4 flex-grow min-h-0 custom-scrollbar">
+                            <div className="grid grid-cols-3 gap-3">
+                                {years.map(year => (
+                                    <button
+                                        key={year}
+                                        onClick={() => toggleYear(year)}
+                                        className={`
+                                            relative py-3 px-2 rounded-xl text-sm font-bold transition-all
+                                            ${selectedYears.includes(year)
+                                                ? 'bg-accent-color text-white shadow-lg shadow-accent-color/20 scale-[1.02]'
+                                                : 'bg-bg-primary text-text-primary hover:bg-bg-primary/80 border border-border-color'}
+                                            ${year === currentYear ? 'ring-2 ring-success-color ring-offset-2 ring-offset-bg-secondary' : ''}
+                                        `}
+                                    >
+                                        {year}
+                                        {year === currentYear && (
+                                            <span className="absolute -top-2 -right-1 bg-success-color text-[8px] text-white px-1.5 py-0.5 rounded-full shadow-sm">
+                                                NOW
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Bottom Padding */}
+                            <div className="h-4 flex-shrink-0" />
                         </div>
 
-                        <div className="year-filter-footer">
-                            <span className="text-sm text-muted">
-                                {selectedYears.length} year{selectedYears.length !== 1 ? 's' : ''} selected
-                            </span>
+                        {/* Footer */}
+                        <div className="p-4 border-t border-border-color bg-bg-primary/30 flex-shrink-0">
+                            <div className="flex justify-between items-center mb-3 px-1">
+                                <span className="text-xs text-text-muted font-medium">Selected</span>
+                                <span className="text-xs font-bold text-accent-color bg-accent-color/10 px-2 py-0.5 rounded-full">
+                                    {selectedYears.length} Year{selectedYears.length !== 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="w-full py-3 bg-accent-color hover:bg-accent-hover text-white rounded-xl font-bold text-sm shadow-lg shadow-accent-color/20 transition-all active:scale-[0.98]"
+                            >
+                                Done
+                            </button>
                         </div>
                     </div>
                 </>
             )}
 
             <style jsx>{`
-                .year-filter-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 1rem;
-                    border-bottom: 1px solid var(--border-color);
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
                 }
-                
-                .year-filter-header h4 {
-                    margin: 0;
-                    font-size: 1rem;
-                    font-weight: 600;
-                    color: var(--text-primary);
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
                 }
-
-                .btn-icon {
-                    background: none;
-                    border: none;
-                    color: var(--text-muted);
-                    cursor: pointer;
-                    padding: 0.25rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: var(--border-color);
+                    border-radius: 10px;
                 }
-
-                .btn-icon:hover {
-                    color: var(--text-primary);
-                }
-
-                .year-filter-actions {
-                    display: flex;
-                    gap: 1rem;
-                    padding: 0.75rem 1rem;
-                    border-bottom: 1px solid var(--border-color);
-                }
-
-                .btn-link {
-                    background: none;
-                    border: none;
-                    color: var(--accent-color);
-                    cursor: pointer;
-                    font-size: 0.875rem;
-                    padding: 0;
-                }
-
-                .btn-link:hover {
-                    color: var(--accent-hover);
-                    text-decoration: underline;
-                }
-
-                .year-filter-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 0.5rem;
-                    padding: 1rem;
-                    overflow-y: auto;
-                }
-
-                .year-button {
-                    position: relative;
-                    padding: 0.75rem;
-                    border: 1px solid var(--border-color);
-                    border-radius: var(--radius-md);
-                    background: var(--bg-card);
-                    color: var(--text-primary);
-                    cursor: pointer;
-                    font-size: 0.9375rem;
-                    font-weight: 500;
-                    transition: all 0.2s;
-                }
-
-                .year-button:hover {
-                    background: var(--card-hover);
-                    border-color: var(--accent-color);
-                }
-
-                .year-button.selected {
-                    background: var(--accent-color);
-                    color: #0f172a;
-                    border-color: var(--accent-color);
-                }
-
-                .year-button.current {
-                    border-width: 2px;
-                }
-
-                .current-badge {
-                    position: absolute;
-                    top: -0.5rem;
-                    right: -0.5rem;
-                    background: var(--success-color);
-                    color: white;
-                    font-size: 0.625rem;
-                    padding: 0.125rem 0.375rem;
-                    border-radius: 9999px;
-                    font-weight: 600;
-                }
-
-                .year-filter-footer {
-                    padding: 0.75rem 1rem;
-                    border-top: 1px solid var(--border-color);
-                    text-align: center;
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-muted);
                 }
             `}</style>
         </div>

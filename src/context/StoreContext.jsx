@@ -321,6 +321,16 @@ export const StoreProvider = ({ children }) => {
             'Content-Type': 'application/json'
         };
 
+        const needsRecalculation = [
+            'ADD_WORK_PACKAGE',
+            'UPDATE_WORK_PACKAGE',
+            'ADD_DELIVERABLE',
+            'ADD_PHASE',
+            'ADD_FINAL_PRODUCT',
+            'UPDATE_ENTITY',
+            'DELETE_ENTITY'
+        ].includes(action.type);
+
         try {
             let res;
             switch (action.type) {
@@ -472,7 +482,7 @@ export const StoreProvider = ({ children }) => {
 
             dispatch(action); // Update local state only if API call succeeded
 
-            if (needsRecalculation || action.type === 'DELETE_ENTITY') {
+            if (needsRecalculation) {
                 dispatch({
                     type: 'RECALCULATE_COMPLETIONS',
                     payload: { calculateCompletion }

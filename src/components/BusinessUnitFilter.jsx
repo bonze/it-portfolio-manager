@@ -110,7 +110,7 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                         <div
                             className="overflow-y-auto overscroll-contain p-2 space-y-1 flex-grow custom-scrollbar"
                             style={{
-                                maxHeight: 'min(400px, 50vh)',
+                                maxHeight: 'min(600px, 70vh)',
                                 touchAction: 'pan-y',
                                 WebkitOverflowScrolling: 'touch'
                             }}
@@ -121,7 +121,7 @@ const BusinessUnitFilter = ({ projects, selectedBUs, onChange, align = 'right' }
                                     <button
                                         key={bu}
                                         onClick={() => toggleBU(bu)}
-                                        className={`w-full text-left px-4 py-3 rounded-lg text-sm flex justify-between items-center transition-all group ${isSelected ? 'bg-accent-color/10 text-accent-color font-semibold border border-accent-color/20' : 'text-text-primary hover:bg-bg-primary border border-transparent'}`}
+                                        className={`w-full text-left px-4 py-2 rounded-lg text-sm flex justify-between items-center transition-all group ${isSelected ? 'bg-accent-color/10 text-accent-color font-semibold border border-accent-color/20' : 'text-text-primary hover:bg-bg-primary border border-transparent'}`}
                                     >
                                         <span className="truncate pr-2">{bu}</span>
                                         {isSelected && <FaCheck size={12} className="flex-shrink-0" />}

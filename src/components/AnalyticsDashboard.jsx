@@ -54,8 +54,15 @@ const AnalyticsDashboard = () => {
     // Filter projects
     const projects = allProjects.filter(project => {
         const timeline = calculateTimeline(project.id, 'project');
-        const projectYear = timeline.startDate ? new Date(timeline.startDate).getFullYear() : (project.year || currentYear);
-        const matchesYear = selectedYears.includes(projectYear);
+        const startYear = timeline.startDate ? new Date(timeline.startDate).getFullYear() : (project.year || currentYear);
+        const endYear = timeline.endDate ? new Date(timeline.endDate).getFullYear() : startYear;
+
+        // Check if any year in [startYear, endYear] is in selectedYears
+        const projectYears = [];
+        for (let y = startYear; y <= endYear; y++) {
+            projectYears.push(y);
+        }
+        const matchesYear = projectYears.some(y => selectedYears.includes(y));
         const matchesBU = selectedBUs.length === 0 || selectedBUs.includes(project.businessUnit);
         return matchesYear && matchesBU;
     });

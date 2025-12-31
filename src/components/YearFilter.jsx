@@ -127,31 +127,31 @@ const YearFilter = ({ selectedYears, onChange, align = 'right' }) => {
                             </button>
                         </div>
 
-                        {/* Scrollable Grid - Explicit Max Height */}
+                        {/* Grid - No Max Height on Desktop to show all */}
                         <div
                             className="overflow-y-auto overscroll-contain p-4 flex-grow custom-scrollbar"
                             style={{
-                                maxHeight: 'min(400px, 50vh)',
+                                maxHeight: 'min(600px, 70vh)',
                                 touchAction: 'pan-y',
                                 WebkitOverflowScrolling: 'touch'
                             }}
                         >
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
                                 {years.map(year => (
                                     <button
                                         key={year}
                                         onClick={() => toggleYear(year)}
                                         className={`
-                                            relative py-3 px-2 rounded-xl text-sm font-bold transition-all
+                                            relative py-2.5 px-2 rounded-lg text-sm font-bold transition-all
                                             ${selectedYears.includes(year)
                                                 ? 'bg-accent-color text-white shadow-lg shadow-accent-color/20 scale-[1.02]'
                                                 : 'bg-bg-primary text-text-primary hover:bg-bg-primary/80 border border-border-color'}
-                                            ${year === currentYear ? 'ring-2 ring-success-color ring-offset-2 ring-offset-bg-secondary' : ''}
+                                            ${year === currentYear ? 'ring-2 ring-success-color ring-offset-1 ring-offset-bg-secondary' : ''}
                                         `}
                                     >
                                         {year}
                                         {year === currentYear && (
-                                            <span className="absolute -top-2 -right-1 bg-success-color text-[8px] text-white px-1.5 py-0.5 rounded-full shadow-sm">
+                                            <span className="absolute -top-1.5 -right-1 bg-success-color text-[7px] text-white px-1 py-0.5 rounded-full shadow-sm">
                                                 NOW
                                             </span>
                                         )}

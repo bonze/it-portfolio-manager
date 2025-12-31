@@ -4,7 +4,7 @@ import ProgressBar from './ProgressBar';
 import WorkPackageItem from './WorkPackageItem';
 import InlineAdd from './InlineAdd';
 import KPIManager from './KPIManager';
-import { FaChevronDown, FaChevronRight, FaCube, FaTrophy } from 'react-icons/fa';
+import { FaChevronDown, FaChevronRight, FaCube, FaTrophy, FaTrash } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 import { formatDate } from '../utils/dateFormat';
 
@@ -66,7 +66,18 @@ const DeliverableItem = ({ deliverable }) => {
                         >
                             <FaTrophy size={10} />
                         </button>
-                        <span className="text-xs text-muted">Budget: ${((deliverable.budget?.plan || 0) + (deliverable.budget?.additional || 0)).toLocaleString()}</span>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Are you sure you want to delete this deliverable? All child work packages will also be deleted.')) {
+                                    dispatch({ type: 'DELETE_ENTITY', payload: { type: 'deliverable', id: deliverable.id } });
+                                }
+                            }}
+                            className="btn btn-sm btn-outline text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                            title="Delete Deliverable"
+                        >
+                            <FaTrash size={10} />
+                        </button>
                         <div style={{ width: '60px' }}>
                             <ProgressBar percentage={completion} />
                         </div>

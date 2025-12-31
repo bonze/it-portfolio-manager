@@ -431,28 +431,25 @@ const createCrud = (entityName, tableName) => {
                 res.status(500).json({ error: e.message });
             }
         });
-
         // Create Baseline Snapshot (Manual/Approve)
         router.post('/baselines', authenticateToken, authorizeRole(['admin', 'operator']), async (req, res) => {
             try {
-                const { projectId, version, snapshot } = req.body;
-                // If snapshot is provided, we use it. Otherwise we create a new one.
-                if (snapshot) {
-                    // We need to handle the snapshot format which is usually a full project tree
-                    // dbOps.insert for project_baselines expects a specific structure if using IS_VERCEL
-                    // For SQLite it's just JSON.stringify
-                    // Let's use a dedicated method or ensure dbOps.insert handles it.
-                    // Actually dbOps.createBaselineSnapshot is better but it fetches from DB.
-                    // If the frontend sends a snapshot, it's likely because it wants to save the CURRENT state.
-
-                    // For now, let's just use createBaselineSnapshot if snapshot is not provided,
-                    // or implement a way to save the provided snapshot.
-                    await dbOps.createBaselineSnapshot(projectId, version);
-                } else {
-                    await dbOps.createBaselineSnapshot(projectId, version);
-                }
+                const { projectId, version } = req.body;
+                await dbOps.createBaselineSnapshot(projectId, version);
                 res.status(201).json({ message: 'Baseline created successfully' });
             } catch (e) {
+                res.status(500).json({ error: e.message });
+            }
+        });
+
+        // Restore Baseline
+        router.post('/projects/:id/baselines/:version/restore', authenticateToken, authorizeRole(['admin', 'operator']), async (req, res) => {
+            try {
+                const { id, version } = req.params;
+                const snapshot = await dbOps.restoreBaseline(id, parseInt(version));
+                res.json({ message: 'Baseline restored successfully', snapshot });
+            } catch (e) {
+                console.error('Restore error:', e);
                 res.status(500).json({ error: e.message });
             }
         });

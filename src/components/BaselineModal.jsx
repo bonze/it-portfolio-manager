@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useStore } from '../context/StoreContext';
 import '../styles/BaselineModal.css';
 import BaselineViewer from './BaselineViewer';
 import { formatDate } from '../utils/dateFormat';
 
 const BaselineModal = ({ project, onClose, onUpdate, userRole }) => {
+    const { apiDispatch } = useStore();
     const [baseline, setBaseline] = useState(project.baseline || 0);
     const [manualOverride, setManualOverride] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -29,6 +31,26 @@ const BaselineModal = ({ project, onClose, onUpdate, userRole }) => {
             }
         } catch (e) {
             console.error('Failed to fetch history', e);
+        }
+    };
+
+    const handleRestore = async (version) => {
+        if (!window.confirm(`Are you sure you want to restore baseline v${version}? This will overwrite the current project state.`)) {
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+        try {
+            await apiDispatch({
+                type: 'RESTORE_BASELINE',
+                payload: { projectId: project.id, version }
+            });
+            alert(`Baseline v${version} restored successfully!`);
+            onClose();
+        } catch (err) {
+            setError('Failed to restore baseline: ' + err.message);
+            setLoading(false);
         }
     };
 
@@ -131,12 +153,24 @@ const BaselineModal = ({ project, onClose, onUpdate, userRole }) => {
                                                 <span className="history-ver">v{item.version}</span>
                                                 <span className="history-date">{formatDate(item.createdAt)}</span>
                                             </div>
-                                            <button
-                                                className="btn btn-sm btn-outline"
-                                                onClick={() => setSelectedSnapshot(item)}
-                                            >
-                                                View
-                                            </button>
+                                            <div className="history-actions">
+                                                <button
+                                                    className="btn btn-sm btn-outline"
+                                                    onClick={() => setSelectedSnapshot(item)}
+                                                >
+                                                    View
+                                                </button>
+                                                {isAdmin && (
+                                                    <button
+                                                        className="btn btn-sm btn-warning"
+                                                        onClick={() => handleRestore(item.version)}
+                                                        disabled={loading}
+                                                        style={{ marginLeft: '5px' }}
+                                                    >
+                                                        Restore
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     ))
                                 )}

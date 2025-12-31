@@ -716,6 +716,100 @@ export const dbOps = {
         }
     },
 
+    // Restore a baseline snapshot
+    async restoreBaseline(projectId, version) {
+        // 1. Fetch the snapshot
+        let snapshot;
+        if (IS_VERCEL) {
+            const { data, error } = await supabase
+                .from('project_baselines')
+                .select('data')
+                .eq('projectId', projectId)
+                .eq('version', version)
+                .single();
+            if (error) throw new Error('Baseline not found: ' + error.message);
+            snapshot = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+        } else {
+            const result = db.exec('SELECT data FROM project_baselines WHERE projectId = ? AND version = ?', [projectId, version]);
+            if (result.length === 0 || result[0].values.length === 0) throw new Error('Baseline not found');
+            snapshot = JSON.parse(result[0].values[0][0]);
+        }
+
+        if (!snapshot) throw new Error('Invalid snapshot data');
+
+        const { project, finalProducts, phases, deliverables, workPackages } = snapshot;
+
+        // 2. Clear current data (Cascading delete handles children if FKs are set, but let's be explicit)
+        // Actually, our SQLite schema has ON DELETE CASCADE, but Supabase might not have it configured the same way.
+        // Let's delete in order: WP -> D -> Ph -> FP -> P
+        if (IS_VERCEL) {
+            // Delete existing children
+            const { data: currentFPs } = await supabase.from('final_products').select('id').eq('projectId', projectId);
+            const fpIds = (currentFPs || []).map(f => f.id);
+
+            if (fpIds.length > 0) {
+                const { data: currentPhases } = await supabase.from('phases').select('id').in('finalProductId', fpIds);
+                const phaseIds = (currentPhases || []).map(p => p.id);
+
+                if (phaseIds.length > 0) {
+                    const { data: currentDeliverables } = await supabase.from('deliverables').select('id').in('phaseId', phaseIds);
+                    const deliverableIds = (currentDeliverables || []).map(d => d.id);
+
+                    if (deliverableIds.length > 0) {
+                        await supabase.from('work_packages').delete().in('deliverableId', deliverableIds);
+                    }
+                    await supabase.from('deliverables').delete().in('phaseId', phaseIds);
+                }
+                await supabase.from('phases').delete().in('finalProductId', fpIds);
+            }
+            await supabase.from('final_products').delete().eq('projectId', projectId);
+
+            // Update project and insert new children
+            await supabase.from('projects').update({ data: project }).eq('id', projectId);
+
+            if (finalProducts?.length > 0) {
+                await supabase.from('final_products').insert(finalProducts.map(fp => ({ id: fp.id, projectId, data: fp })));
+            }
+            if (phases?.length > 0) {
+                await supabase.from('phases').insert(phases.map(ph => ({ id: ph.id, finalProductId: ph.finalProductId, data: ph })));
+            }
+            if (deliverables?.length > 0) {
+                await supabase.from('deliverables').insert(deliverables.map(d => ({ id: d.id, phaseId: d.phaseId, data: d })));
+            }
+            if (workPackages?.length > 0) {
+                await supabase.from('work_packages').insert(workPackages.map(wp => ({ id: wp.id, deliverableId: wp.deliverableId, data: wp })));
+            }
+        } else {
+            // SQLite: Delete and Insert
+            db.run('DELETE FROM final_products WHERE projectId = ?', [projectId]);
+            // (Cascading delete should handle the rest in SQLite if configured, but let's be safe)
+            db.run('DELETE FROM phases WHERE finalProductId NOT IN (SELECT id FROM final_products)');
+            db.run('DELETE FROM deliverables WHERE phaseId NOT IN (SELECT id FROM phases)');
+            db.run('DELETE FROM work_packages WHERE deliverableId NOT IN (SELECT id FROM deliverables)');
+
+            // Update project
+            db.run('UPDATE projects SET data = ? WHERE id = ?', [JSON.stringify(project), projectId]);
+
+            // Insert new children
+            finalProducts?.forEach(fp => {
+                db.run('INSERT INTO final_products (id, projectId, data) VALUES (?, ?, ?)', [fp.id, projectId, JSON.stringify(fp)]);
+            });
+            phases?.forEach(ph => {
+                db.run('INSERT INTO phases (id, finalProductId, data) VALUES (?, ?, ?)', [ph.id, ph.finalProductId, JSON.stringify(ph)]);
+            });
+            deliverables?.forEach(d => {
+                db.run('INSERT INTO deliverables (id, phaseId, data) VALUES (?, ?, ?)', [d.id, d.phaseId, JSON.stringify(d)]);
+            });
+            workPackages?.forEach(wp => {
+                db.run('INSERT INTO work_packages (id, deliverableId, data) VALUES (?, ?, ?)', [wp.id, wp.deliverableId, JSON.stringify(wp)]);
+            });
+
+            saveDatabase();
+        }
+
+        return snapshot;
+    },
+
     // Update user password
     async updateUserPassword(userId, hashedPassword) {
         if (IS_VERCEL) {

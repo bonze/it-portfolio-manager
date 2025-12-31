@@ -4,7 +4,7 @@ import ProgressBar from './ProgressBar';
 import DeliverableItem from './DeliverableItem';
 import InlineAdd from './InlineAdd';
 import KPIManager from './KPIManager';
-import { FaChevronDown, FaChevronRight, FaLayerGroup, FaTrophy } from 'react-icons/fa';
+import { FaChevronDown, FaChevronRight, FaLayerGroup, FaTrophy, FaTrash } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 import { formatDate } from '../utils/dateFormat';
 
@@ -68,7 +68,18 @@ const PhaseItem = ({ phase }) => {
                         >
                             <FaTrophy size={10} />
                         </button>
-                        <span className="text-xs text-muted">Budget: ${((phase.budget?.plan || 0) + (phase.budget?.additional || 0)).toLocaleString()}</span>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Are you sure you want to delete this phase? All child deliverables and work packages will also be deleted.')) {
+                                    dispatch({ type: 'DELETE_ENTITY', payload: { type: 'phase', id: phase.id } });
+                                }
+                            }}
+                            className="btn btn-sm btn-outline text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                            title="Delete Phase"
+                        >
+                            <FaTrash size={10} />
+                        </button>
                         <div style={{ width: '80px' }}>
                             <ProgressBar percentage={completion} />
                         </div>

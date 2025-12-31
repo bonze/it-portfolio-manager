@@ -4,7 +4,7 @@ import ProgressBar from './ProgressBar';
 import PhaseItem from './PhaseItem';
 import InlineAdd from './InlineAdd';
 import KPIManager from './KPIManager';
-import { FaChevronDown, FaChevronRight, FaBoxOpen, FaTrophy } from 'react-icons/fa';
+import { FaChevronDown, FaChevronRight, FaBoxOpen, FaTrophy, FaTrash } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 import { formatDate } from '../utils/dateFormat';
 
@@ -50,6 +50,18 @@ const FinalProductItem = ({ finalProduct }) => {
                             title="Manage KPIs"
                         >
                             <FaTrophy size={12} />
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Are you sure you want to delete this final product? All child phases, deliverables, and work packages will also be deleted.')) {
+                                    dispatch({ type: 'DELETE_ENTITY', payload: { type: 'final-product', id: finalProduct.id } });
+                                }
+                            }}
+                            className="btn btn-sm btn-outline text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                            title="Delete Final Product"
+                        >
+                            <FaTrash size={12} />
                         </button>
                         <div className="flex flex-col items-end gap-1">
                             <div style={{ width: '100px' }}>

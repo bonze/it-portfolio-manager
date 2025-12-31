@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { FaCheckCircle, FaRegCircle, FaEdit } from 'react-icons/fa';
+import { FaCheckCircle, FaRegCircle, FaEdit, FaTrash } from 'react-icons/fa';
 import EditModal from './EditModal';
 import { formatDate } from '../utils/dateFormat';
 
@@ -65,6 +65,17 @@ const WorkPackageItem = ({ workPackage }) => {
                     </div>
                     <button onClick={() => setIsEditOpen(true)} className="text-muted hover:text-accent-color opacity-0 group-hover:opacity-100 transition-opacity ml-2">
                         <FaEdit size={12} />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm('Are you sure you want to delete this work package?')) {
+                                dispatch({ type: 'DELETE_ENTITY', payload: { type: 'work-package', id: workPackage.id } });
+                            }
+                        }}
+                        className="text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                    >
+                        <FaTrash size={12} />
                     </button>
                 </div>
 

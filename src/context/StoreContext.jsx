@@ -67,6 +67,77 @@ const reducer = (state, action) => {
                 [listName]: state[listName].map(item => item.id === id ? { ...item, ...data } : item)
             };
 
+        case 'DELETE_ENTITY': {
+            const { type: delType, id: delId } = action.payload;
+            let delListName = '';
+            if (delType === 'project') delListName = 'projects';
+            else if (delType === 'final-product') delListName = 'finalProducts';
+            else if (delType === 'phase') delListName = 'phases';
+            else if (delType === 'deliverable') delListName = 'deliverables';
+            else if (delType === 'work-package') delListName = 'workPackages';
+
+            if (!delListName) return state;
+
+            let newState = {
+                ...state,
+                [delListName]: state[delListName].filter(item => item.id !== delId)
+            };
+
+            // Cascading delete in local state
+            if (delType === 'project') {
+                const fpIds = state.finalProducts.filter(fp => fp.projectId === delId).map(fp => fp.id);
+                const phIds = state.phases.filter(ph => fpIds.includes(ph.finalProductId)).map(ph => ph.id);
+                const dIds = state.deliverables.filter(d => phIds.includes(d.phaseId)).map(d => d.id);
+
+                newState.finalProducts = newState.finalProducts.filter(fp => fp.projectId !== delId);
+                newState.phases = newState.phases.filter(ph => !fpIds.includes(ph.finalProductId));
+                newState.deliverables = newState.deliverables.filter(d => !phIds.includes(d.phaseId));
+                newState.workPackages = newState.workPackages.filter(wp => !dIds.includes(wp.deliverableId));
+            } else if (delType === 'final-product') {
+                const phIds = state.phases.filter(ph => ph.finalProductId === delId).map(ph => ph.id);
+                const dIds = state.deliverables.filter(d => phIds.includes(d.phaseId)).map(d => d.id);
+
+                newState.phases = newState.phases.filter(ph => ph.finalProductId !== delId);
+                newState.deliverables = newState.deliverables.filter(d => !phIds.includes(d.phaseId));
+                newState.workPackages = newState.workPackages.filter(wp => !dIds.includes(wp.deliverableId));
+            } else if (delType === 'phase') {
+                const dIds = state.deliverables.filter(d => d.phaseId === delId).map(d => d.id);
+
+                newState.deliverables = newState.deliverables.filter(d => d.phaseId !== delId);
+                newState.workPackages = newState.workPackages.filter(wp => !dIds.includes(wp.deliverableId));
+            } else if (delType === 'deliverable') {
+                newState.workPackages = newState.workPackages.filter(wp => wp.deliverableId !== delId);
+            }
+
+            return newState;
+        }
+
+        case 'LOAD_SNAPSHOT': {
+            const { project, finalProducts, phases, deliverables, workPackages } = action.payload;
+            const projectId = project.id;
+
+            return {
+                ...state,
+                projects: state.projects.map(p => p.id === projectId ? project : p),
+                finalProducts: [
+                    ...state.finalProducts.filter(fp => fp.projectId !== projectId),
+                    ...finalProducts
+                ],
+                phases: [
+                    ...state.phases.filter(ph => !finalProducts.some(fp => fp.id === ph.finalProductId)),
+                    ...phases
+                ],
+                deliverables: [
+                    ...state.deliverables.filter(d => !phases.some(ph => ph.id === d.phaseId)),
+                    ...deliverables
+                ],
+                workPackages: [
+                    ...state.workPackages.filter(wp => !deliverables.some(d => d.id === wp.deliverableId)),
+                    ...workPackages
+                ]
+            };
+        }
+
         // --- KPI Management ---
         case 'ADD_KPI': {
             const { entityId, entityType, kpi } = action.payload;
@@ -286,7 +357,7 @@ export const StoreProvider = ({ children }) => {
                     if (results.some(r => !r.ok)) throw new Error('Failed to delete some projects');
                     break;
 
-                case 'UPDATE_ENTITY':
+                case 'UPDATE_ENTITY': {
                     const { type, id, data } = action.payload;
                     let listName = '';
                     if (type === 'project') listName = 'projects';
@@ -302,6 +373,29 @@ export const StoreProvider = ({ children }) => {
                         res = await fetch(`/api/${endpoint}/${id}`, { method: 'PUT', headers, body: JSON.stringify(updatedItem) });
                     }
                     break;
+                }
+
+                case 'DELETE_ENTITY': {
+                    const { type: delType, id: delId } = action.payload;
+                    const endpoint = delType + 's';
+                    res = await fetch(`/api/${endpoint}/${delId}`, { method: 'DELETE', headers });
+                    break;
+                }
+
+                case 'RESTORE_BASELINE': {
+                    const { projectId, version } = action.payload;
+                    res = await fetch(`/api/projects/${projectId}/baselines/${version}/restore`, {
+                        method: 'POST',
+                        headers
+                    });
+                    if (res.ok) {
+                        const { snapshot } = await res.json();
+                        // Update local state with snapshot data
+                        dispatch({ type: 'LOAD_SNAPSHOT', payload: snapshot });
+                        return; // We already dispatched LOAD_SNAPSHOT
+                    }
+                    break;
+                }
 
                 case 'ADD_KPI': {
                     const { entityId, entityType, kpi } = action.payload;
@@ -378,17 +472,7 @@ export const StoreProvider = ({ children }) => {
 
             dispatch(action); // Update local state only if API call succeeded
 
-            // Recalculate project completions after changes to work packages or deliverables
-            const needsRecalculation = [
-                'ADD_WORK_PACKAGE',
-                'UPDATE_WORK_PACKAGE',
-                'ADD_DELIVERABLE',
-                'ADD_PHASE',
-                'ADD_FINAL_PRODUCT'
-            ].includes(action.type) ||
-                (action.type === 'UPDATE_ENTITY' && ['work-package', 'deliverable', 'phase', 'final-product'].includes(action.payload.type));
-
-            if (needsRecalculation) {
+            if (needsRecalculation || action.type === 'DELETE_ENTITY') {
                 dispatch({
                     type: 'RECALCULATE_COMPLETIONS',
                     payload: { calculateCompletion }
@@ -564,16 +648,8 @@ export const StoreProvider = ({ children }) => {
         let additional = 0;
 
         // If item has its own budget defined, use it
-        if (item.budget && (typeof item.budget === 'number' || (typeof item.budget === 'object' && (item.budget.plan || item.budget.actual)))) {
-            if (typeof item.budget === 'object') {
-                plan = item.budget.plan || 0;
-                actual = item.budget.actual || 0;
-                additional = item.budget.additional || 0;
-            } else {
-                plan = item.budget || 0;
-            }
-        } else if (children.length > 0) {
-            // Otherwise roll up from children
+        // If children exist, roll up from children
+        if (children.length > 0) {
             children.forEach(child => {
                 const childMetrics = calculateBudgetVariance(child.id, childType);
                 if (childMetrics) {
@@ -582,6 +658,16 @@ export const StoreProvider = ({ children }) => {
                     additional += childMetrics.additional;
                 }
             });
+        } else if (item.budget && (typeof item.budget === 'number' || (typeof item.budget === 'object' && (item.budget.plan || item.budget.actual)))) {
+            // Only use own budget if no children (or if you want to add own budget to children's, but usually children define the budget)
+            // The user said "roll up cộng lên trên", which usually means parent = sum(children).
+            if (typeof item.budget === 'object') {
+                plan = item.budget.plan || 0;
+                actual = item.budget.actual || 0;
+                additional = item.budget.additional || 0;
+            } else {
+                plan = item.budget || 0;
+            }
         }
 
         const totalBudget = plan + additional;
